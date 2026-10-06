@@ -10,17 +10,20 @@
 </head>
 <body>
 <header class="topbar">
-  <button class="brand" data-route="home"><span>DULUTH</span><b>BY NIGHT</b></button>
-  <button id="menuBtn" class="menu-btn" aria-label="Open navigation">☰</button>
+  <a class="brand" href="#home" aria-label="Duluth by Night — Tonight"><span>DULUTH</span><b>BY NIGHT</b></a>
+  <button id="menuBtn" class="menu-btn" aria-label="Open navigation" aria-controls="nav" aria-expanded="false">☰</button>
 </header>
-<nav id="nav" class="nav">
-  <button data-route="home">Tonight</button>
-  <button data-route="people">People</button>
-  <button data-route="places">Places</button>
-  <button data-route="threads">Threads</button>
-  <button data-route="chronicle">Chronicle</button>
+<a class="skip-link" href="#app">Skip to content</a>
+<nav id="nav" class="nav" aria-label="Campaign">
+  <a href="#home">Tonight</a>
+  <a href="#people">People</a>
+  <a href="#places">Places</a>
+  <a href="#threads">Threads</a>
+  <a href="#chronicle">Chronicle</a>
+  <a href="#factions">Factions</a>
+  <a href="#search">Search</a>
 </nav>
-<main id="app"></main>
+<main id="app" tabindex="-1"></main>
 <footer>THE LAKE REMEMBERS.</footer>
 <script src="data.js"></script>
 <script src="app.js"></script>
