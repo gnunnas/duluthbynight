@@ -39,3 +39,19 @@ threads:[
 sessions:[
 {id:"2026-09-11",date:"September 11",title:"Chains in the Dark",summary:"The coterie hired Spokes and his bizarre bicycle gang to hunt Kyra's haven, then met Portia at Blacklight to investigate the sigils beneath Nopeming and the whispered Bahari connection."}
 ]};
+// Recorded affiliations only; no faction description or hierarchy is inferred.
+window.CAMPAIGN.factions = [...new Set(window.CAMPAIGN.people.map(person => person.faction).filter(Boolean))]
+  .map(name => ({ id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name }));
+// Links supported by the existing session summary.
+Object.assign(window.CAMPAIGN.sessions[0], {
+  people: ['spokes', 'chains', 'freewheel', 'pedals', 'big-chain', 'kyra', 'portia'],
+  places: ['blacklight', 'nopeming'],
+  threads: ['kyra-hunt', 'dark-mother']
+});
+window.CAMPAIGN.tonight = {
+  status: [['Current night', 'After Sept. 11'], ['Coterie status', 'Playing Both Sides'], ['Current lead', "Kyra’s Haven"], ['Next stop', 'Chantry Library']],
+  place: 'blacklight',
+  summary: 'The coterie met Portia to investigate the sigils and drowned creatures beneath Nopeming. She connected their discoveries to whispers of the Bahari and invited Iris alone to continue the research at the Tremere Chantry.',
+  followup: "Meanwhile, Spokes and his bicycle gang are hunting for Kyra’s haven and mapping her security.",
+  faces: ['spokes', 'portia', 'kyra']
+};
