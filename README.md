@@ -16,13 +16,14 @@ Hash routes support direct record links and browser history without server rewri
 
 - `data.js`: normalized **public** campaign data (`schemaVersion: 2`). Records have globally unique IDs, stable route keys, contextual names, sections/items, typed relationships, claims, explicit membership implications, and provenance. IDs distinguish the Bliss organization from the Bliss location.
 - `campaign-model.js`: validation, relationship resolution, membership derivation, search, and an adapter for the existing views. Its projected fields are computed, not a second editable dataset.
-- `app.js`: navigation and presentation. Existing detail layouts remain; full flexible-section interfaces are Phase 2.
+- `campaign-additions.js`: authored public additions loaded after the reproducible Phase 1 baseline. Contains Alan Sovereign’s explicitly approved note and minimal linked records.
+- `app.js`: navigation, presentation, and populated NPC sections. The detailed NPC layout is an incremental Phase 2 addition; remaining modules are still future work.
 - `styles.css` / `index.html`: existing visual system and application shell.
 - `migration/phase-1-source.js`: retained pre-migration public source. It is not loaded by the application.
 - `migration/phase-1-report.json`: complete ID/route map, counts, semantic changes, and unresolved geography.
 - `scripts/migrate-phase-1.cjs`: deterministic source-to-normalized migration and comparison check.
 
-Only names and safe facts confirmed in this conversation were added; the supplied private OneNote dossiers were not imported. All data delivered by this static site is readable by visitors. There is no private-data permission system. Authentication, row-level security, and protected storage remain Phase 3 requirements.
+The original Phase 1 migration adds only confirmed public names and safe facts. Alan Sovereign’s note was subsequently explicitly approved for publication and is imported in the separate additions file. The other supplied OneNote dossiers remain unimported. All data delivered by this static site is readable by visitors. There is no private-data permission system. Authentication, row-level security, and protected storage remain Phase 3 requirements.
 
 ### Relationship rules
 
@@ -42,7 +43,8 @@ Old person/place/clan/thread/chronicle links still work. Group/faction bookmarks
 node --check app.js
 node --check data.js
 node --check campaign-model.js
-node --test tests/model.cjs
+node --check campaign-additions.js
+node --test tests/model.cjs tests/npc.cjs
 node scripts/migrate-phase-1.cjs --check
 ```
 
@@ -65,3 +67,13 @@ The migration script defaults to **comparison only**; it does not refresh depend
 Data and adapter versions must be restored together during rollback. Restoring the old `data.js` alone is not compatible with the normalized adapter. Git retains the pre-migration application, and the source snapshot/report retain the complete data identity map.
 
 Phase 2 will render flexible sections, entries, formal offices, detail modules, and attachments. Phase 3 will add Supabase, authenticated editing, and real granular disclosure permissions. No database or private note import is part of Phase 1.
+
+## NPC detail layout
+
+Single-value facts stay in the overview. Attributes, Skills, and Disciplines have separate compact sections with individual ratings. Disciplines hold `rating`, optional `referenceRecordId`, and selected `abilities`; missing selected abilities are not inferred from the score. Name/description entries can be added now, and links can point to real reference records once those records are authored.
+
+Lists such as groups/associates, affiliations, places, touchstones, and relationships have their own boxes below the overview. Narrative sections use ordered optional entries with nested notes and explicit record links. Empty sections stay absent. Linked minor NPCs need only a name.
+
+The [Alan NPC layout notes](docs/alan-npc-layout.md) describe the public import, optional fields, and remaining reference-page work. The frozen migration check compares `data.js`; it deliberately does not overwrite `campaign-additions.js`.
+
+The **Disciplines** library groups reference abilities by level and provides individual rules pages. NPC discipline ratings and explicitly selected powers link to these pages, with reciprocal NPC links and global search. Reference data lives in `discipline-data.js`; see [the discipline field model](docs/discipline-library.md). Sense The Beast and Heightened Senses have supplied rules. Alan’s Heightened Senses link opens a popup that closes on outside click, Close, or Escape without leaving his page.
