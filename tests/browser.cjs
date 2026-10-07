@@ -4,6 +4,13 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH || undefined,headless:true,args:['--no-sandbox']});
  const page=await browser.newPage(); const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ // This suite verifies the archived public snapshot. Production uses Supabase.
+ await page.route(baseURL+'/',async route=>{
+  const response=await route.fetch();let html=await response.text();
+  const start=html.indexOf('<script src="supabase-config.js">');
+  html=html.slice(0,start)+['data.js','campaign-additions.js','discipline-data.js','watchtower-data.js','source-notes.js','campaign-model.js','app.js'].map(file=>'<script src="'+file+'"></script>').join('')+'</body></html>';
+  await route.fulfill({response,body:html});
+ });
  async function visit(targetURL) {
   await page.goto(targetURL);
   // Fragment navigation finishes before hashchange renders; wait for the route state.

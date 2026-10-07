@@ -81,7 +81,9 @@ function flexibleSections(record, mechanicOnly = false) {
     if(['player-notes','storyteller-notes'].includes(section.templateKey)){
       if(mechanicOnly)return '';
       const entry=items.find(x=>x.sectionId===section.id);
-      return panel(section.heading,entry?.body ? `<p class="rules-text">${textWithLinks(entry.body,entry.links)}</p>` : `<p class="mechanic-notes">No ${section.templateKey==='player-notes'?'player':'storyteller'} notes recorded yet.</p>`,'author-notes');
+      const content=entry?.body ? `<p class="rules-text">${textWithLinks(entry.body,entry.links)}</p>` : `<p class="mechanic-notes">No ${section.templateKey==='player-notes'?'player':'storyteller'} notes recorded yet.</p>`;
+      const editable=entry&&window.campaignSession&&(section.templateKey==='player-notes'||window.campaignSession.isStoryteller);
+      return panel(section.heading,content+(editable?`<details class="note-editor"><summary>Edit notes</summary><form data-note-id="${escapeHTML(entry.id)}"><label>Notes<textarea name="body" rows="6">${escapeHTML(entry.body||'')}</textarea></label><button type="submit">Save notes</button><p role="status" aria-live="polite"></p></form></details>`:''),'author-notes');
     }
     if(section.templateKey==='source-text')return panel(section.heading,`<div class="source-text">${escapeHTML(items.find(x=>x.sectionId===section.id)?.body||'')}</div>`);
     const entries = items.filter(x => x.sectionId === section.id && x.fieldKey !== 'relationship.role' && (x.body || x.title || x.itemKind === 'mechanic'));
@@ -145,6 +147,8 @@ function detail(type, id) {
   if(type === 'disciplines' || type === 'powers')return disciplineDetail(type,record);
   const facts = [];
   if (type === 'people') {
+    const status=D.personStatus?.find(x=>x.personRecordId===record.recordId);
+    if(status)facts.push(['For Real Dead?',escapeHTML({unknown:'Unknown',no:'No',yes:'Yes'}[status.permanentlyDead])]);
     const clan = by('clans', record.clan);
     if (record.type) facts.push(['Nature / type', escapeHTML(record.type)]);
     if (clan || record.type) facts.push(['Clan', clan ? link('clans', clan) : record.type === 'Mortal' ? 'Not applicable' : 'Unknown']);
@@ -167,7 +171,7 @@ function detail(type, id) {
       facts.push(['Domain', 'Recorded claim'], ['Claimant', escapeHTML(record.domain.claimant || 'Unknown')]);
     }
   }
-  if(type === 'notes')facts.push(['Archive type','Text snapshot of imported content'],['Visibility','Public']);
+  if(type === 'notes')facts.push(['Archive type','Text snapshot of imported content'],['Visibility',D.publication==='supabase-rls'?escapeHTML(D.records.find(x=>x.id===record.recordId)?.audience||'Unknown'):'Public']);
   if (type === 'chronicle') facts.push(['Session date', escapeHTML(record.date || 'Unknown')]);
   return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}${record.portrait ? `<div class="person-header"><img class="person-portrait" src="${escapeHTML(record.portrait.src)}" alt="${escapeHTML(record.portrait.alt)}" width="326" height="405" decoding="async"><div><h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}</div></div>` : `<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}`}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${['Ambition','Security coverage'].includes(label) || (index === facts.length - 1 && (facts.length - facts.filter(([key]) => ['Ambition','Security coverage'].includes(key)).length) % 2 === 1) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
 }
@@ -181,6 +185,7 @@ function disciplineDetail(type, record) {
     }).join('') : '<p class="empty">No abilities recorded yet.</p>'}</article>`;
   }
   const discipline=model.byId(record.disciplineId), items=model.itemsFor(record.recordId);
+  if(!discipline||record.level===undefined)return `<article class="detail"><a class="back" href="#disciplines">← Disciplines</a><h1>${escapeHTML(record.name)}</h1><p>Discipline and level information is not available to this account.</p>${record.summary?`<p>${escapeHTML(record.summary)}</p>`:''}</article>`;
   const get=key=>items.find(x=>x.fieldKey===key);
   const facts=[['Level',String(record.level)],...['cost','dicePools','duration'].map(key=>[({cost:'Cost',dicePools:'Dice pools',duration:'Duration'})[key],get('power.'+key)?.body]).filter(([,value])=>value)];
   return `<article class="detail power-detail"><nav class="crumbs" aria-label="Discipline hierarchy"><a href="#disciplines">Disciplines</a> / ${referenceLink(discipline.recordId)} / Level ${record.level}</nav><h1>${escapeHTML(record.name)}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : '<p class="empty">Rules not yet recorded.</p>'}<dl class="facts">${facts.map(([label,value])=>`<div><dt>${label}</dt><dd>${escapeHTML(value)}</dd></div>`).join('')}</dl>${['system','notes'].map(key=>get('power.'+key)?.body ? panel(key==='system'?'System':'Notes',`<p class="rules-text">${escapeHTML(get('power.'+key).body)}</p>`) : '').join('')}</article>`;
@@ -188,6 +193,7 @@ function disciplineDetail(type, record) {
 
 function home() {
   const tonight = model.tonight;
+  if(!tonight)return `<section class="hero"><img class="hero-image" src="assets/duluth night.jpg" alt="Duluth harbor at night" fetchpriority="high"><div class="eyebrow">VAMPIRE: THE MASQUERADE // LAKE SUPERIOR</div><h1>DULUTH<br>BY NIGHT</h1><p>The lake is black. The harbor never sleeps. Every favor leaves a mark.</p></section>${!D.records.length?'<p>No campaign records have been revealed to this account yet.</p>':''}${section('Active threads',collections.threads,'threads')}${section('Latest chronicle',collections.chronicle.slice(0,1),'chronicle')}`;
   return `<section class="hero">${tonight.heroImage ? `<img class="hero-image" src="${escapeHTML(tonight.heroImage.src)}" alt="${escapeHTML(tonight.heroImage.alt)}" fetchpriority="high" decoding="async">` : ''}<div class="eyebrow">VAMPIRE: THE MASQUERADE // LAKE SUPERIOR</div><h1>DULUTH<br>BY NIGHT</h1><p>The lake is black. The harbor never sleeps. Every favor leaves a mark.</p></section><section class="status">${tonight.status.map(([label, value]) => `<div><small>${escapeHTML(label)}</small>${escapeHTML(value)}</div>`).join('')}</section><h2 class="section-title">Tonight in Duluth</h2><section class="card recap"><div class="eyebrow">WHERE WE LEFT OFF // ${escapeHTML(collections.chronicle[0].date)}</div><h2>${link('places', by('places', tonight.place))}</h2><p>${escapeHTML(tonight.summary)}</p><p>${escapeHTML(tonight.followup)}</p><div class="badges">${['portia', 'spokes'].map(id => link('people', by('people', id))).join(' ')} ${['chantry', 'bliss'].map(id => link('places', by('places', id))).join(' ')}</div></section>${section('Active threads', collections.threads, 'threads')}${section('Latest chronicle', collections.chronicle.slice(0, 1), 'chronicle')}${section('Faces to remember', tonight.faces.map(id => by('people', id)), 'people')}`;
 }
 function listing(type) {
@@ -216,6 +222,7 @@ function search() { return `<h1>Campaign search</h1><form id="searchForm" role="
 function missing() { return '<h1>Record not found</h1><p class="empty">This campaign link does not match a recorded page.</p><a href="#home">Return to Tonight</a> · <a href="#search">Search the campaign</a>'; }
 function closeMenu() { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); menu.setAttribute('aria-label', 'Open navigation'); }
 function render() {
+  if(D.publication==='supabase-rls'&&!window.campaignAccess)return;
   if(abilityDialog.open)abilityDialog.close();
   for (const item of nav.querySelectorAll('a')) {
     const active = item.getAttribute('href').split('?')[0] === '#' + state.route;
@@ -275,3 +282,11 @@ app.addEventListener('input', event => {
 app.addEventListener('submit', event => { if (event.target.id === 'searchForm') { event.preventDefault(); document.querySelector('#searchResults').innerHTML = searchResults(); } });
 window.addEventListener('hashchange', () => boot(true));
 boot();
+
+app.addEventListener('submit',async event=>{
+ const form=event.target.closest('form[data-note-id]');if(!form)return;
+ event.preventDefault();const entry=D.items.find(x=>x.id===form.dataset.noteId),button=form.querySelector('button'),status=form.querySelector('[role="status"]');
+ button.disabled=true;status.textContent='Saving…';
+ try{const saved=await window.campaignSession.saveNote(entry.id,form.elements.body.value,entry.revision);entry.body=saved.body;entry.revision=saved.revision;render();}
+ catch(error){status.textContent=error.message;button.disabled=false;}
+});

@@ -41,3 +41,14 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 .location-detail .facts{grid-template-columns:repeat(2,minmax(0,1fr))}.location-detail .facts .fact-wide{grid-column:1/-1}
 .person-header{display:flex;gap:22px;align-items:center;margin-top:20px}.person-header>div{min-width:0}.person-portrait{display:block;width:clamp(110px,22vw,180px);height:auto;flex-shrink:0;border:1px solid var(--line);background:var(--panel)}@media(max-width:420px){.person-header{align-items:flex-start;gap:16px}.person-header h1{font-size:28px}.person-portrait{width:100px}}
 .source-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;font-size:16px}.author-notes .mechanic-notes{margin-top:0}.source-text::selection{background:#493034}
+
+/* Auth uses the campaign's existing visual system. */
+.nav[hidden]{display:none}
+.account{display:flex;align-items:center;gap:.75rem;margin-left:auto;font-size:.8rem}
+.account button,.login-panel button{color:var(--text,#eee);background:#171e22;border:1px solid #435059;padding:.7rem 1rem;cursor:pointer}
+.login-panel{max-width:30rem;margin:3rem auto;padding:1.5rem;border:1px solid #29363c;background:#0e1417}
+.login-panel label{display:block;margin:1rem 0}
+.login-panel input{display:block;width:100%;box-sizing:border-box;margin-top:.5rem;padding:.8rem;background:#090b0d;color:#eee;border:1px solid #435059;font:inherit}
+.note-editor summary{cursor:pointer;margin-top:1rem;color:#bdd3de}
+.note-editor textarea{display:block;box-sizing:border-box;width:100%;background:#090b0d;color:#eee;border:1px solid #435059;padding:.8rem;font:inherit;margin:.6rem 0}
+.note-editor button{background:#171e22;color:#eee;border:1px solid #435059;padding:.6rem 1rem;cursor:pointer}
