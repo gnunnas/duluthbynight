@@ -4,7 +4,7 @@
 begin;
 do $$
 declare
- storyteller_user_id uuid := 'PASTE_STORYTELLER_AUTH_USER_UUID_HERE';
+ storyteller_user_id uuid := 'fa79cb5f-aca6-4015-a6cf-7d7168028d7b';
  test_player_user_id uuid := null; -- Optional: replace null with 'PLAYER_AUTH_UUID'.
  existing_owner uuid;
 begin
