@@ -21,7 +21,7 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
 
  await visit(baseURL);
  const records=await page.evaluate(()=>Object.entries(createCampaignModel(CAMPAIGN).collections).flatMap(([type,items])=>items.map(x=>[type,x.id,x.name||x.title])));
- const routes=['home','people','places','threads','organizations','clans','chronicle','schemes','events','disciplines','powers','search',...records.map(([type,id])=>type+'/'+id)];
+ const routes=['home','people','places','threads','organizations','clans','chronicle','schemes','events','disciplines','powers','notes','search',...records.map(([type,id])=>type+'/'+id)];
  for(const width of [375,1280]) {
   await page.setViewportSize({width,height:900});
   for(const route of routes){
@@ -132,7 +132,7 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
  await page.reload();
  await visit(baseURL+'/#people/marlon-falcone');
  assert.equal(await page.locator('.facts').count(),0);
- assert.equal(await page.locator('.npc-panel').count(),0);
+ assert.equal(await page.locator('.npc-panel').count(),2);
  await visit(baseURL+'/#people/alan-sovereign');
  assert.equal(await page.locator('main a[href="#disciplines/dominate"]').count(),1);
  await page.locator('main a[href="#disciplines/dominate"]').click();
