@@ -2,7 +2,7 @@
 // Access decisions are made by Supabase RLS, never by the displayed role label.
 (async function(){
  const config=window.SUPABASE_CONFIG,app=document.querySelector('#app');
- const tables=['records','record_names','sections','content_items','relationship_types','relationships','domain_claims','membership_implications','attachments','sources','item_references','selected_powers','power_definitions','route_aliases','review_issues','person_status',...['record_names','content_items','relationships','domain_claims','membership_implications','attachments','power_definitions'].map(x=>x+'_sources')];
+ const tables=['campaign_status','records','record_names','sections','content_items','relationship_types','relationships','domain_claims','membership_implications','attachments','sources','item_references','selected_powers','power_definitions','route_aliases','review_issues','person_status',...['record_names','content_items','relationships','domain_claims','membership_implications','attachments','power_definitions'].map(x=>x+'_sources')];
  let session=null,refreshTimer=null;
  const headers=()=>({apikey:config.publishableKey,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'});
  async function auth(path,body,token){
@@ -15,6 +15,7 @@
   for(let offset=0;;offset+=500){
    const query=new URLSearchParams({select:'*',campaign_id:'eq.'+config.campaignId,limit:'500',offset:String(offset),order:table.endsWith('_sources')?'owner_id,source_id':table==='power_definitions'?'power_record_id':table==='route_aliases'?'old_route':table==='campaign_memberships'?'user_id':'id'});
    const response=await fetch(config.url+'/rest/v1/'+table+'?'+query,{headers:headers(),cache:'no-store'});
+   if(table==='campaign_status'&&response.status===404)return []; // Status migration may not be installed yet.
    if(!response.ok)throw Error('Could not load campaign data. Check your connection and campaign access.');
    const batch=await response.json();rows.push(...batch);if(batch.length<500)return rows;
   }

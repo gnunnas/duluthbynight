@@ -16,7 +16,7 @@ done
 if [[ "$ready" != true ]];then echo 'Local PostgreSQL did not become ready';exit 1;fi
 run_sql(){ docker exec -i "$review_container" psql -h 127.0.0.1 -U postgres -q -v ON_ERROR_STOP=1; }
 run_sql < tests/postgres/supabase-stubs.sql
-for schema_file in supabase/migrations/*.sql;do run_sql < "$schema_file";done
+run_sql < supabase/migrations/20261007000100_campaign_schema.sql
 node tests/postgres/export-fixture.cjs > "$fixture_sql"
 run_sql < "$fixture_sql"
 run_sql < tests/postgres/permissions.sql
@@ -24,10 +24,15 @@ run_sql < tests/postgres/integrity.sql
 run_sql < supabase/setup/00_verify_installation.sql
 # Exercise the actual dashboard setup scripts with mock accounts in this disposable database.
 echo "insert into auth.users(id) values('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002');" | run_sql
-sed -e "s/PASTE_STORYTELLER_AUTH_USER_UUID_HERE/00000000-0000-0000-0000-000000000001/g" -e "s/test_player_user_id uuid := null/test_player_user_id uuid := '00000000-0000-0000-0000-000000000002'/g" supabase/setup/01_initialize_campaign.sql | run_sql
+sed -E -e "s/storyteller_user_id uuid := [^;]+;/storyteller_user_id uuid := '00000000-0000-0000-0000-000000000001';/" -e "s/test_player_user_id uuid := [^;]+;/test_player_user_id uuid := '00000000-0000-0000-0000-000000000002';/" supabase/setup/01_initialize_campaign.sql | run_sql
 # A repeat setup must be safe for the same owner and roles.
-sed -e "s/PASTE_STORYTELLER_AUTH_USER_UUID_HERE/00000000-0000-0000-0000-000000000001/g" -e "s/test_player_user_id uuid := null/test_player_user_id uuid := '00000000-0000-0000-0000-000000000002'/g" supabase/setup/01_initialize_campaign.sql | run_sql
-sed 's/PASTE_TEST_PLAYER_AUTH_USER_UUID_HERE/00000000-0000-0000-0000-000000000002/g' supabase/setup/02_check_permissions.sql | run_sql
+sed -E -e "s/storyteller_user_id uuid := [^;]+;/storyteller_user_id uuid := '00000000-0000-0000-0000-000000000001';/" -e "s/test_player_user_id uuid := [^;]+;/test_player_user_id uuid := '00000000-0000-0000-0000-000000000002';/" supabase/setup/01_initialize_campaign.sql | run_sql
+sed -E "s/select owner_user_id,'[^']+'::uuid/select owner_user_id,'00000000-0000-0000-0000-000000000002'::uuid/" supabase/setup/02_check_permissions.sql | run_sql
+
+# Exercise later migrations against an initialized campaign, as in the real project.
+for schema_file in supabase/migrations/*.sql;do
+ if [[ "$schema_file" != supabase/migrations/20261007000100_campaign_schema.sql ]];then run_sql < "$schema_file";fi
+done
 
 # Exercise the deployable campaign import and its refusal to overwrite existing data.
 node scripts/build-supabase-import.cjs --out "$fixture_sql"
@@ -41,4 +46,6 @@ if ! rg -q 'Campaign already contains records' "$repeat_log";then
  cat "$repeat_log";rm -f "$repeat_log";exit 1
 fi
 rm -f "$repeat_log"
+run_sql < tests/postgres/status.sql
+
 echo 'PASS: versioned SQL applies; current dataset imports; role, note, reveal, archive, audit, AI approval, asset and integrity checks pass.'

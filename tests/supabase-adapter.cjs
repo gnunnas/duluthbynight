@@ -19,3 +19,8 @@ test('hidden alias targets are removed from player projections',()=>{
  const data=adaptSupabase({route_aliases:[{old_route:'people/old',target_route:'people/secret'}]},'duluth-by-night');
  assert.deepEqual(data.routeAliases,{});
 });
+test('campaign status keeps authored labels, blanks and ordering without static fallback',()=>{
+ const data=adaptSupabase({campaign_status:[{id:'weather',label:'Weather',value:'',sort_order:1},{id:'date',label:'Current night',value:'After Sept. 11',sort_order:0}]},'duluth-by-night');
+ assert.deepEqual(data.campaignStatus.map(x=>x.id),['date','weather']);assert.equal(data.campaignStatus[1].value,'');
+ assert.equal(adaptSupabase({},'duluth-by-night').campaignStatus.length,0);
+});
