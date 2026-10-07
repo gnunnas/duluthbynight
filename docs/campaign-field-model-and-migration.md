@@ -1,8 +1,10 @@
 # Campaign field model and migration plan
 
-Status: **design draft for review; not implemented**.
+Status: **Phase 1 static normalization implemented; Phases 2 and 3 remain proposed**.
 
-This document defines a flexible model for Duluth by Night and a staged migration from the current static website. It does not import the supplied OneNote screenshots, publish their contents, introduce a database, or change application behavior. Private notes in those examples are deliberately not reproduced here.
+See [Phase 1 migration report](phase-1-migration-report.md) for the concrete outputs, retained source, validation, and open questions. The field vocabulary below includes future capabilities, not a claim that all detail interfaces or permissions exist today.
+
+This document defines a flexible model for Duluth by Night and a staged migration from the current static website. The design does not authorize importing the supplied OneNote screenshots or publishing their contents. Phase 1 implements the public data foundation and route adapter without introducing a database; future phases remain separate. Private notes in those examples are deliberately not reproduced here.
 
 ## 1. Decisions and scope
 

@@ -1,83 +1,3421 @@
-window.CAMPAIGN={
-people:[
-{id:"kyra",name:"Kyra Ripa",type:"Kindred",clan:"toreador",affiliations:[{faction:"duluth-camarilla",role:null}],places:["bliss"],summary:"Toreador tied to Bliss and the Circulatory System. The coterie has agreed she has to go."},
-{id:"spokes",name:"Spokes",type:"Kindred",clan:"nosferatu",memberships:[{group:"spokes-crew",role:null}],summary:"An impeccably dressed early-1900s Nosferatu who rides a black penny-farthing with supernatural speed. He has agreed to find Kyra's haven."},
-{id:"chains",name:"Chains",type:"Kindred",memberships:[{group:"spokes-crew",role:null}],summary:"Stocky, massively bearded, patched leather vest. His chromed bicycle has ape hangers and a skull over the reflector."},
-{id:"freewheel",name:"Freewheel",type:"Kindred",memberships:[{group:"spokes-crew",role:null}],summary:"Head-to-toe denim, tattoos, and a cigarette rolled into his sleeve."},
-{id:"pedals",name:"Pedals",type:"Kindred",memberships:[{group:"spokes-crew",role:null}],summary:"Mullet, handlebar mustache, and a patchwork leather vest with nothing underneath."},
-{id:"big-chain",name:"Big Chain",type:"Kindred",memberships:[{group:"spokes-crew",role:null}],summary:"Nearly seven feet tall and built like a freight train. Somehow rides a tiny bicycle with training wheels."},
-{id:"portia",name:"Portia",type:"Kindred",clan:"tremere",affiliations:[{faction:"duluth-camarilla",role:null}],places:["chantry"],summary:"A sharp Tremere acquaintance of Iris. She connected the Nopeming mystery to whispers of the Bahari and invited Iris to the Chantry library."},
-{id:"sydney",name:"Sydney",type:"Kindred",affiliationStatus:"Independent",places:["pink-slips"],summary:"Rebecca's sire. She introduced the coterie to Spokes and his crew."},
-{id:"georgia",name:"Georgia Stein",type:"Mortal",memberships:[{group:"bliss",role:null}],places:["bliss"],summary:"A mortal closely connected to Bliss and Kyra."},
-{id:"nora",name:"Nora",type:"Thin-Blood",memberships:[{group:"night-forum",role:null}],summary:"Thin-Blood friend and Night Forum associate."},
-{id:"lucas",name:"Lucas",type:"Ghoul",affiliations:[{faction:"duluth-camarilla",role:null}],summary:"A ghoul who has served as an intermediary for dangerous business."}
-],
-places:[
-{id:"duluth",name:"Duluth",kind:"City",summary:"Camarilla capital on Lake Superior.",children:["downtown","umd","eldes-corner"]},
-{id:"superior",name:"Superior",kind:"City",summary:"Wisconsin city with significant Tremere influence.",children:["billings"]},
-{id:"wrenshall",name:"Wrenshall",kind:"City",summary:"Anarch territory south of Duluth."},
-{id:"twig",name:"Twig",kind:"Community",summary:"Industrial satellite with Anarch leanings.",children:["watchtower","bliss","crimson-roots"]},
-{id:"downtown",name:"Downtown & Waterfront",kind:"District",parent:"duluth",summary:"Harbor, nightlife, skywalks, tunnels, and the coterie's growing domain.",children:["rack","pink-slips","blacklight"]},
-{id:"umd",name:"UMD / East Duluth",kind:"District",parent:"duluth",children:["critias-umd"],summary:"University district and Critias's sphere of influence."},
-{id:"eldes-corner",name:"Eldes Corner",kind:"Suburb",parent:"duluth",children:["nopeming"],summary:"A suburb of Duluth in the campaign setting."},
-{id:"nopeming",name:"Nopeming Sanatorium",kind:"Site",parent:"eldes-corner",summary:"Beneath the abandoned sanatorium, a long wet stair descends toward black water and the things that call from below."},
-{id:"watchtower",name:"The Watchtower",kind:"Building",domain:{claimant:null},parent:"twig",summary:"The coterie's 17-floor home and operational base."},
-{id:"bliss",name:"Bliss",kind:"Nightclub",parent:"twig",summary:"Kyra's club, only blocks from the coterie's territory—and a prize worth taking."},
-{id:"rack",name:"The Rack",kind:"Territory",parent:"downtown",summary:"Duluth's connected skywalk and tunnel network after dark."},
-{id:"pink-slips",name:"Pink Slips",kind:"Bar",parent:"downtown",summary:"Where Sydney introduced the coterie to Spokes and his bicycle gang."},
-{id:"blacklight",name:"Blacklight",kind:"Nightclub",parent:"downtown",summary:"The coterie met Portia here in a private VIP room overlooking the dance floor."},
-{id:"billings",name:"Billings Park",kind:"District",parent:"superior",children:["chantry"],summary:"Superior neighborhood containing the Tremere Chantry."},
-{id:"chantry",name:"Tremere Chantry",kind:"Haven",parent:"billings",summary:"The Tremere stronghold in Superior. Portia invited Iris alone to research its library."},
-{id:"critias-umd",name:"Critias at UMD",kind:"Site",parent:"umd",summary:"Critias's academic foothold at the university."},
-{id:"crimson-roots",name:"Crimson Roots Wellness",kind:"Business",parent:"twig",summary:"A coterie asset in Twig."}
-],
-threads:[
-{id:"kyra-hunt",name:"The Hunt for Kyra",summary:"Spokes and his crew are trying to find Kyra's haven and map her security. Removing her could put Bliss within the coterie's reach.",people:["kyra","spokes","sydney","georgia"],places:["bliss","pink-slips"]},
-{id:"dark-mother",name:"The Dark Mother",summary:"The creatures beneath Nopeming spoke of a Dark Mother and an ancient enemy. Portia suspects a connection to the Bahari and Lilith.",people:["portia"],places:["nopeming","blacklight","chantry"]},
-{id:"maxwell",name:"Maxwell's Offer",summary:"The coterie intends to string Maxwell along while bringing what they learn to Prince Jackson, hoping to gain politically without committing too early."},
-{id:"lasombra",name:"The Lasombra Gambit",summary:"Sylens is working with Sierra as she maneuvers to bring the Lasombra into the Camarilla, even offering older members of her clan as proof of loyalty."}
-],
-sessions:[
-{id:"2026-09-11",date:"September 11",title:"Chains in the Dark",summary:"The coterie hired Spokes and his bizarre bicycle gang to hunt Kyra's haven, then met Portia at Blacklight to investigate the sigils beneath Nopeming and the whispered Bahari connection."}
-]};
-// Stable IDs separate lineage, membership, and political affiliation.
-window.CAMPAIGN.clans = [
-  {id:'toreador',name:'Toreador'},
-  {id:'nosferatu',name:'Nosferatu'},
-  {id:'tremere',name:'Tremere'}
-];
-window.CAMPAIGN.groups = [
-  {id:'spokes-crew',name:'Spokes Crew',kind:'Crew',parent:null},
-  {id:'night-forum',name:'Night Forum',kind:null,parent:null},
-  {id:'bliss',name:'Bliss',kind:'Business association',parent:null,places:['bliss']}
-];
-window.CAMPAIGN.factions = [
-  {id:'duluth-camarilla',name:'Duluth Camarilla',parent:null}
-];
-// The previous related-person links establish association, not its exact nature.
-window.CAMPAIGN.relationships = [
-  {id:'spokes-chains',from:'spokes',to:'chains',kind:'association',label:null},
-  {id:'spokes-freewheel',from:'spokes',to:'freewheel',kind:'association',label:null},
-  {id:'spokes-pedals',from:'spokes',to:'pedals',kind:'association',label:null},
-  {id:'spokes-big-chain',from:'spokes',to:'big-chain',kind:'association',label:null}
-];
-// Preserve bookmarked faction URLs after correcting their classification.
-window.CAMPAIGN.legacyRoutes = {
-  'factions/spokes-crew':'groups/spokes-crew',
-  'factions/night-forum':'groups/night-forum',
-  'factions/bliss':'groups/bliss',
-  'factions/independent':'search?q=Independent'
-};
-// Links supported by the existing session summary.
-Object.assign(window.CAMPAIGN.sessions[0], {
-  people: ['spokes', 'chains', 'freewheel', 'pedals', 'big-chain', 'kyra', 'portia'],
-  places: ['blacklight', 'nopeming'],
-  threads: ['kyra-hunt', 'dark-mother']
-});
-window.CAMPAIGN.tonight = {
-  status: [['Current night', 'After Sept. 11'], ['Coterie status', 'Playing Both Sides'], ['Current lead', "Kyra’s Haven"], ['Next stop', 'Chantry Library']],
-  place: 'blacklight',
-  summary: 'The coterie met Portia to investigate the sigils and drowned creatures beneath Nopeming. She connected their discoveries to whispers of the Bahari and invited Iris alone to continue the research at the Tremere Chantry.',
-  followup: "Meanwhile, Spokes and his bicycle gang are hunting for Kyra’s haven and mapping her security.",
-  faces: ['spokes', 'portia', 'kyra']
+// Public static campaign dataset. Generated by scripts/migrate-phase-1.cjs.
+window.CAMPAIGN = {
+  "schemaVersion": 2,
+  "campaignId": "duluth-by-night",
+  "publication": "public-static",
+  "records": [
+    {
+      "id": "person:kyra",
+      "recordType": "person",
+      "routeKey": "kyra",
+      "displayName": "Kyra Ripa"
+    },
+    {
+      "id": "person:spokes",
+      "recordType": "person",
+      "routeKey": "spokes",
+      "displayName": "Spokes"
+    },
+    {
+      "id": "person:chains",
+      "recordType": "person",
+      "routeKey": "chains",
+      "displayName": "Chains"
+    },
+    {
+      "id": "person:freewheel",
+      "recordType": "person",
+      "routeKey": "freewheel",
+      "displayName": "Freewheel"
+    },
+    {
+      "id": "person:pedals",
+      "recordType": "person",
+      "routeKey": "pedals",
+      "displayName": "Pedals"
+    },
+    {
+      "id": "person:big-chain",
+      "recordType": "person",
+      "routeKey": "big-chain",
+      "displayName": "Big Chain"
+    },
+    {
+      "id": "person:portia",
+      "recordType": "person",
+      "routeKey": "portia",
+      "displayName": "Portia"
+    },
+    {
+      "id": "person:sydney",
+      "recordType": "person",
+      "routeKey": "sydney",
+      "displayName": "Sydney"
+    },
+    {
+      "id": "person:georgia",
+      "recordType": "person",
+      "routeKey": "georgia",
+      "displayName": "Georgia Stein"
+    },
+    {
+      "id": "person:nora",
+      "recordType": "person",
+      "routeKey": "nora",
+      "displayName": "Nora"
+    },
+    {
+      "id": "person:lucas",
+      "recordType": "person",
+      "routeKey": "lucas",
+      "displayName": "Lucas"
+    },
+    {
+      "id": "place:duluth",
+      "recordType": "place",
+      "routeKey": "duluth",
+      "displayName": "Duluth"
+    },
+    {
+      "id": "place:superior",
+      "recordType": "place",
+      "routeKey": "superior",
+      "displayName": "Superior"
+    },
+    {
+      "id": "place:wrenshall",
+      "recordType": "place",
+      "routeKey": "wrenshall",
+      "displayName": "Wrenshall"
+    },
+    {
+      "id": "place:twig",
+      "recordType": "place",
+      "routeKey": "twig",
+      "displayName": "Twig"
+    },
+    {
+      "id": "place:downtown",
+      "recordType": "place",
+      "routeKey": "downtown",
+      "displayName": "Downtown & Waterfront"
+    },
+    {
+      "id": "place:umd",
+      "recordType": "place",
+      "routeKey": "umd",
+      "displayName": "UMD / East Duluth"
+    },
+    {
+      "id": "place:eldes-corner",
+      "recordType": "place",
+      "routeKey": "eldes-corner",
+      "displayName": "Eldes Corner"
+    },
+    {
+      "id": "place:nopeming",
+      "recordType": "place",
+      "routeKey": "nopeming",
+      "displayName": "Nopeming Sanatorium"
+    },
+    {
+      "id": "place:watchtower",
+      "recordType": "place",
+      "routeKey": "watchtower",
+      "displayName": "The Watchtower"
+    },
+    {
+      "id": "place:bliss",
+      "recordType": "place",
+      "routeKey": "bliss",
+      "displayName": "Bliss"
+    },
+    {
+      "id": "place:rack",
+      "recordType": "place",
+      "routeKey": "rack",
+      "displayName": "Canal Park · The Rack"
+    },
+    {
+      "id": "place:pink-slips",
+      "recordType": "place",
+      "routeKey": "pink-slips",
+      "displayName": "Pink Slips"
+    },
+    {
+      "id": "place:blacklight",
+      "recordType": "place",
+      "routeKey": "blacklight",
+      "displayName": "Blacklight"
+    },
+    {
+      "id": "place:billings",
+      "recordType": "place",
+      "routeKey": "billings",
+      "displayName": "Billings Park"
+    },
+    {
+      "id": "place:chantry",
+      "recordType": "place",
+      "routeKey": "chantry",
+      "displayName": "Tremere Chantry"
+    },
+    {
+      "id": "place:critias-umd",
+      "recordType": "place",
+      "routeKey": "critias-umd",
+      "displayName": "Critias at UMD"
+    },
+    {
+      "id": "place:crimson-roots",
+      "recordType": "place",
+      "routeKey": "crimson-roots",
+      "displayName": "Crimson Roots Wellness"
+    },
+    {
+      "id": "clan:toreador",
+      "recordType": "clan",
+      "routeKey": "toreador",
+      "displayName": "Toreador"
+    },
+    {
+      "id": "clan:nosferatu",
+      "recordType": "clan",
+      "routeKey": "nosferatu",
+      "displayName": "Nosferatu"
+    },
+    {
+      "id": "clan:tremere",
+      "recordType": "clan",
+      "routeKey": "tremere",
+      "displayName": "Tremere"
+    },
+    {
+      "id": "organization:spokes-crew",
+      "recordType": "organization",
+      "routeKey": "spokes-crew",
+      "displayName": "Spokes Crew"
+    },
+    {
+      "id": "organization:night-forum",
+      "recordType": "organization",
+      "routeKey": "night-forum",
+      "displayName": "Night Forum"
+    },
+    {
+      "id": "organization:bliss",
+      "recordType": "organization",
+      "routeKey": "bliss",
+      "displayName": "Bliss"
+    },
+    {
+      "id": "organization:duluth-camarilla",
+      "recordType": "organization",
+      "routeKey": "duluth-camarilla",
+      "displayName": "Duluth Camarilla"
+    },
+    {
+      "id": "thread:kyra-hunt",
+      "recordType": "thread",
+      "routeKey": "kyra-hunt",
+      "displayName": "The Hunt for Kyra"
+    },
+    {
+      "id": "thread:dark-mother",
+      "recordType": "thread",
+      "routeKey": "dark-mother",
+      "displayName": "The Dark Mother"
+    },
+    {
+      "id": "thread:maxwell",
+      "recordType": "thread",
+      "routeKey": "maxwell",
+      "displayName": "Maxwell's Offer"
+    },
+    {
+      "id": "thread:lasombra",
+      "recordType": "thread",
+      "routeKey": "lasombra",
+      "displayName": "The Lasombra Gambit"
+    },
+    {
+      "id": "session:2026-09-11",
+      "recordType": "session",
+      "routeKey": "2026-09-11",
+      "displayName": "Chains in the Dark"
+    },
+    {
+      "id": "organization:anarchs",
+      "recordType": "organization",
+      "routeKey": "anarchs",
+      "displayName": "Anarchs"
+    }
+  ],
+  "names": [
+    {
+      "id": "name:person:kyra:primary",
+      "recordId": "person:kyra",
+      "text": "Kyra Ripa",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:spokes:primary",
+      "recordId": "person:spokes",
+      "text": "Spokes",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:chains:primary",
+      "recordId": "person:chains",
+      "text": "Chains",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:freewheel:primary",
+      "recordId": "person:freewheel",
+      "text": "Freewheel",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:pedals:primary",
+      "recordId": "person:pedals",
+      "text": "Pedals",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:big-chain:primary",
+      "recordId": "person:big-chain",
+      "text": "Big Chain",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:portia:primary",
+      "recordId": "person:portia",
+      "text": "Portia",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:sydney:primary",
+      "recordId": "person:sydney",
+      "text": "Sydney",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:georgia:primary",
+      "recordId": "person:georgia",
+      "text": "Georgia Stein",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:nora:primary",
+      "recordId": "person:nora",
+      "text": "Nora",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:person:lucas:primary",
+      "recordId": "person:lucas",
+      "text": "Lucas",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:duluth:primary",
+      "recordId": "place:duluth",
+      "text": "Duluth",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:superior:primary",
+      "recordId": "place:superior",
+      "text": "Superior",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:wrenshall:primary",
+      "recordId": "place:wrenshall",
+      "text": "Wrenshall",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:twig:primary",
+      "recordId": "place:twig",
+      "text": "Twig",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:downtown:primary",
+      "recordId": "place:downtown",
+      "text": "Downtown & Waterfront",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:umd:primary",
+      "recordId": "place:umd",
+      "text": "UMD / East Duluth",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:eldes-corner:primary",
+      "recordId": "place:eldes-corner",
+      "text": "Eldes Corner",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:nopeming:primary",
+      "recordId": "place:nopeming",
+      "text": "Nopeming Sanatorium",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:watchtower:primary",
+      "recordId": "place:watchtower",
+      "text": "The Watchtower",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:bliss:primary",
+      "recordId": "place:bliss",
+      "text": "Bliss",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:rack:primary",
+      "recordId": "place:rack",
+      "text": "Canal Park",
+      "nameKind": "common",
+      "context": "Mortal / common",
+      "sourceRefs": [
+        {
+          "sourceId": "source:confirmed-names"
+        }
+      ]
+    },
+    {
+      "id": "name:place:pink-slips:primary",
+      "recordId": "place:pink-slips",
+      "text": "Pink Slips",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:blacklight:primary",
+      "recordId": "place:blacklight",
+      "text": "Blacklight",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:billings:primary",
+      "recordId": "place:billings",
+      "text": "Billings Park",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:chantry:primary",
+      "recordId": "place:chantry",
+      "text": "Tremere Chantry",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:critias-umd:primary",
+      "recordId": "place:critias-umd",
+      "text": "Critias at UMD",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:crimson-roots:primary",
+      "recordId": "place:crimson-roots",
+      "text": "Crimson Roots Wellness",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:clan:toreador:primary",
+      "recordId": "clan:toreador",
+      "text": "Toreador",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:clan:nosferatu:primary",
+      "recordId": "clan:nosferatu",
+      "text": "Nosferatu",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:clan:tremere:primary",
+      "recordId": "clan:tremere",
+      "text": "Tremere",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:organization:spokes-crew:primary",
+      "recordId": "organization:spokes-crew",
+      "text": "Spokes Crew",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:organization:night-forum:primary",
+      "recordId": "organization:night-forum",
+      "text": "Night Forum",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:organization:bliss:primary",
+      "recordId": "organization:bliss",
+      "text": "Bliss",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:organization:duluth-camarilla:primary",
+      "recordId": "organization:duluth-camarilla",
+      "text": "Duluth Camarilla",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:thread:kyra-hunt:primary",
+      "recordId": "thread:kyra-hunt",
+      "text": "The Hunt for Kyra",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:thread:dark-mother:primary",
+      "recordId": "thread:dark-mother",
+      "text": "The Dark Mother",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:thread:maxwell:primary",
+      "recordId": "thread:maxwell",
+      "text": "Maxwell's Offer",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:thread:lasombra:primary",
+      "recordId": "thread:lasombra",
+      "text": "The Lasombra Gambit",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:session:2026-09-11:primary",
+      "recordId": "session:2026-09-11",
+      "text": "Chains in the Dark",
+      "nameKind": "common"
+    },
+    {
+      "id": "name:place:rack:kindred",
+      "recordId": "place:rack",
+      "text": "The Rack",
+      "nameKind": "alias",
+      "context": "Kindred",
+      "sourceRefs": [
+        {
+          "sourceId": "source:confirmed-names"
+        }
+      ]
+    },
+    {
+      "id": "name:organization:anarchs:primary",
+      "recordId": "organization:anarchs",
+      "text": "Anarchs",
+      "nameKind": "common",
+      "sourceRefs": [
+        {
+          "sourceId": "source:confirmed-inheritance"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "section:person:kyra:overview",
+      "recordId": "person:kyra",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:kyra:facts",
+      "recordId": "person:kyra",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:spokes:overview",
+      "recordId": "person:spokes",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:spokes:facts",
+      "recordId": "person:spokes",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:chains:overview",
+      "recordId": "person:chains",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:chains:facts",
+      "recordId": "person:chains",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:freewheel:overview",
+      "recordId": "person:freewheel",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:freewheel:facts",
+      "recordId": "person:freewheel",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:pedals:overview",
+      "recordId": "person:pedals",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:pedals:facts",
+      "recordId": "person:pedals",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:big-chain:overview",
+      "recordId": "person:big-chain",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:big-chain:facts",
+      "recordId": "person:big-chain",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:portia:overview",
+      "recordId": "person:portia",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:portia:facts",
+      "recordId": "person:portia",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:sydney:overview",
+      "recordId": "person:sydney",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:sydney:facts",
+      "recordId": "person:sydney",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:georgia:overview",
+      "recordId": "person:georgia",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:georgia:facts",
+      "recordId": "person:georgia",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:nora:overview",
+      "recordId": "person:nora",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:nora:facts",
+      "recordId": "person:nora",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:lucas:overview",
+      "recordId": "person:lucas",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:person:lucas:facts",
+      "recordId": "person:lucas",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:duluth:overview",
+      "recordId": "place:duluth",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:duluth:facts",
+      "recordId": "place:duluth",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:superior:overview",
+      "recordId": "place:superior",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:superior:facts",
+      "recordId": "place:superior",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:wrenshall:overview",
+      "recordId": "place:wrenshall",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:wrenshall:facts",
+      "recordId": "place:wrenshall",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:twig:overview",
+      "recordId": "place:twig",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:twig:facts",
+      "recordId": "place:twig",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:downtown:overview",
+      "recordId": "place:downtown",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:downtown:facts",
+      "recordId": "place:downtown",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:umd:overview",
+      "recordId": "place:umd",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:umd:facts",
+      "recordId": "place:umd",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:eldes-corner:overview",
+      "recordId": "place:eldes-corner",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:eldes-corner:facts",
+      "recordId": "place:eldes-corner",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:nopeming:overview",
+      "recordId": "place:nopeming",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:nopeming:facts",
+      "recordId": "place:nopeming",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:watchtower:overview",
+      "recordId": "place:watchtower",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:watchtower:facts",
+      "recordId": "place:watchtower",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:bliss:overview",
+      "recordId": "place:bliss",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:bliss:facts",
+      "recordId": "place:bliss",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:rack:overview",
+      "recordId": "place:rack",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:rack:facts",
+      "recordId": "place:rack",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:pink-slips:overview",
+      "recordId": "place:pink-slips",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:pink-slips:facts",
+      "recordId": "place:pink-slips",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:blacklight:overview",
+      "recordId": "place:blacklight",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:blacklight:facts",
+      "recordId": "place:blacklight",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:billings:overview",
+      "recordId": "place:billings",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:billings:facts",
+      "recordId": "place:billings",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:chantry:overview",
+      "recordId": "place:chantry",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:chantry:facts",
+      "recordId": "place:chantry",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:critias-umd:overview",
+      "recordId": "place:critias-umd",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:critias-umd:facts",
+      "recordId": "place:critias-umd",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:place:crimson-roots:overview",
+      "recordId": "place:crimson-roots",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:place:crimson-roots:facts",
+      "recordId": "place:crimson-roots",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:organization:spokes-crew:facts",
+      "recordId": "organization:spokes-crew",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:organization:night-forum:facts",
+      "recordId": "organization:night-forum",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:organization:bliss:facts",
+      "recordId": "organization:bliss",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:organization:duluth-camarilla:facts",
+      "recordId": "organization:duluth-camarilla",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:thread:kyra-hunt:overview",
+      "recordId": "thread:kyra-hunt",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:thread:dark-mother:overview",
+      "recordId": "thread:dark-mother",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:thread:maxwell:overview",
+      "recordId": "thread:maxwell",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:thread:lasombra:overview",
+      "recordId": "thread:lasombra",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:session:2026-09-11:overview",
+      "recordId": "session:2026-09-11",
+      "templateKey": "overview",
+      "heading": "Overview",
+      "sortOrder": 0
+    },
+    {
+      "id": "section:session:2026-09-11:facts",
+      "recordId": "session:2026-09-11",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 1
+    },
+    {
+      "id": "section:person:kyra:connections",
+      "recordId": "person:kyra",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:spokes:connections",
+      "recordId": "person:spokes",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:chains:connections",
+      "recordId": "person:chains",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:freewheel:connections",
+      "recordId": "person:freewheel",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:pedals:connections",
+      "recordId": "person:pedals",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:big-chain:connections",
+      "recordId": "person:big-chain",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:portia:connections",
+      "recordId": "person:portia",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:georgia:connections",
+      "recordId": "person:georgia",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:nora:connections",
+      "recordId": "person:nora",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:person:lucas:connections",
+      "recordId": "person:lucas",
+      "templateKey": "connections",
+      "heading": "Connections",
+      "sortOrder": 2
+    },
+    {
+      "id": "section:organization:anarchs:facts",
+      "recordId": "organization:anarchs",
+      "templateKey": "facts",
+      "heading": "Recorded facts",
+      "sortOrder": 0
+    }
+  ],
+  "items": [
+    {
+      "id": "item:person:kyra:overview",
+      "recordId": "person:kyra",
+      "sectionId": "section:person:kyra:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Toreador tied to Bliss and the Circulatory System. The coterie has agreed she has to go."
+    },
+    {
+      "id": "item:person:kyra:person.nature",
+      "recordId": "person:kyra",
+      "sectionId": "section:person:kyra:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Kindred",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:spokes:overview",
+      "recordId": "person:spokes",
+      "sectionId": "section:person:spokes:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "An impeccably dressed early-1900s Nosferatu who rides a black penny-farthing with supernatural speed. He has agreed to find Kyra's haven."
+    },
+    {
+      "id": "item:person:spokes:person.nature",
+      "recordId": "person:spokes",
+      "sectionId": "section:person:spokes:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Kindred",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:chains:overview",
+      "recordId": "person:chains",
+      "sectionId": "section:person:chains:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Stocky, massively bearded, patched leather vest. His chromed bicycle has ape hangers and a skull over the reflector."
+    },
+    {
+      "id": "item:person:chains:person.nature",
+      "recordId": "person:chains",
+      "sectionId": "section:person:chains:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Kindred",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:freewheel:overview",
+      "recordId": "person:freewheel",
+      "sectionId": "section:person:freewheel:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Head-to-toe denim, tattoos, and a cigarette rolled into his sleeve."
+    },
+    {
+      "id": "item:person:freewheel:person.nature",
+      "recordId": "person:freewheel",
+      "sectionId": "section:person:freewheel:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Kindred",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:pedals:overview",
+      "recordId": "person:pedals",
+      "sectionId": "section:person:pedals:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Mullet, handlebar mustache, and a patchwork leather vest with nothing underneath."
+    },
+    {
+      "id": "item:person:pedals:person.nature",
+      "recordId": "person:pedals",
+      "sectionId": "section:person:pedals:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Kindred",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:big-chain:overview",
+      "recordId": "person:big-chain",
+      "sectionId": "section:person:big-chain:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Nearly seven feet tall and built like a freight train. Somehow rides a tiny bicycle with training wheels."
+    },
+    {
+      "id": "item:person:big-chain:person.nature",
+      "recordId": "person:big-chain",
+      "sectionId": "section:person:big-chain:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Kindred",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:portia:overview",
+      "recordId": "person:portia",
+      "sectionId": "section:person:portia:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "A sharp Tremere acquaintance of Iris. She connected the Nopeming mystery to whispers of the Bahari and invited Iris to the Chantry library."
+    },
+    {
+      "id": "item:person:portia:person.nature",
+      "recordId": "person:portia",
+      "sectionId": "section:person:portia:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Kindred",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:sydney:overview",
+      "recordId": "person:sydney",
+      "sectionId": "section:person:sydney:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Rebecca's sire. She introduced the coterie to Spokes and his crew."
+    },
+    {
+      "id": "item:person:sydney:person.nature",
+      "recordId": "person:sydney",
+      "sectionId": "section:person:sydney:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Kindred",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:sydney:person.affiliationStatus",
+      "recordId": "person:sydney",
+      "sectionId": "section:person:sydney:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.affiliationStatus",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 1,
+      "value": "Independent",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:georgia:overview",
+      "recordId": "person:georgia",
+      "sectionId": "section:person:georgia:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "A mortal closely connected to Bliss and Kyra."
+    },
+    {
+      "id": "item:person:georgia:person.nature",
+      "recordId": "person:georgia",
+      "sectionId": "section:person:georgia:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Mortal",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:nora:overview",
+      "recordId": "person:nora",
+      "sectionId": "section:person:nora:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Thin-Blood friend and Night Forum associate."
+    },
+    {
+      "id": "item:person:nora:person.nature",
+      "recordId": "person:nora",
+      "sectionId": "section:person:nora:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Thin-Blood",
+      "valueType": "text"
+    },
+    {
+      "id": "item:person:lucas:overview",
+      "recordId": "person:lucas",
+      "sectionId": "section:person:lucas:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "A ghoul who has served as an intermediary for dangerous business."
+    },
+    {
+      "id": "item:person:lucas:person.nature",
+      "recordId": "person:lucas",
+      "sectionId": "section:person:lucas:facts",
+      "itemKind": "fact",
+      "fieldKey": "person.nature",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Ghoul",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:duluth:overview",
+      "recordId": "place:duluth",
+      "sectionId": "section:place:duluth:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Camarilla capital on Lake Superior."
+    },
+    {
+      "id": "item:place:duluth:place.kind",
+      "recordId": "place:duluth",
+      "sectionId": "section:place:duluth:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "City",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:superior:overview",
+      "recordId": "place:superior",
+      "sectionId": "section:place:superior:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Wisconsin city with significant Tremere influence."
+    },
+    {
+      "id": "item:place:superior:place.kind",
+      "recordId": "place:superior",
+      "sectionId": "section:place:superior:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "City",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:wrenshall:overview",
+      "recordId": "place:wrenshall",
+      "sectionId": "section:place:wrenshall:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Anarch territory south of Duluth."
+    },
+    {
+      "id": "item:place:wrenshall:place.kind",
+      "recordId": "place:wrenshall",
+      "sectionId": "section:place:wrenshall:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "City",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:twig:overview",
+      "recordId": "place:twig",
+      "sectionId": "section:place:twig:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Industrial satellite with Anarch leanings."
+    },
+    {
+      "id": "item:place:twig:place.kind",
+      "recordId": "place:twig",
+      "sectionId": "section:place:twig:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Community",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:downtown:overview",
+      "recordId": "place:downtown",
+      "sectionId": "section:place:downtown:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Harbor, nightlife, skywalks, tunnels, and the coterie's growing domain."
+    },
+    {
+      "id": "item:place:downtown:place.kind",
+      "recordId": "place:downtown",
+      "sectionId": "section:place:downtown:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "District",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:umd:overview",
+      "recordId": "place:umd",
+      "sectionId": "section:place:umd:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "University district and Critias's sphere of influence."
+    },
+    {
+      "id": "item:place:umd:place.kind",
+      "recordId": "place:umd",
+      "sectionId": "section:place:umd:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "District",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:eldes-corner:overview",
+      "recordId": "place:eldes-corner",
+      "sectionId": "section:place:eldes-corner:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "A suburb of Duluth in the campaign setting."
+    },
+    {
+      "id": "item:place:eldes-corner:place.kind",
+      "recordId": "place:eldes-corner",
+      "sectionId": "section:place:eldes-corner:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Suburb",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:nopeming:overview",
+      "recordId": "place:nopeming",
+      "sectionId": "section:place:nopeming:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Beneath the abandoned sanatorium, a long wet stair descends toward black water and the things that call from below."
+    },
+    {
+      "id": "item:place:nopeming:place.kind",
+      "recordId": "place:nopeming",
+      "sectionId": "section:place:nopeming:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Site",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:watchtower:overview",
+      "recordId": "place:watchtower",
+      "sectionId": "section:place:watchtower:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "The coterie's 17-floor home and operational base."
+    },
+    {
+      "id": "item:place:watchtower:place.kind",
+      "recordId": "place:watchtower",
+      "sectionId": "section:place:watchtower:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Building",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:bliss:overview",
+      "recordId": "place:bliss",
+      "sectionId": "section:place:bliss:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Kyra's club, only blocks from the coterie's territory—and a prize worth taking."
+    },
+    {
+      "id": "item:place:bliss:place.kind",
+      "recordId": "place:bliss",
+      "sectionId": "section:place:bliss:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Nightclub",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:rack:overview",
+      "recordId": "place:rack",
+      "sectionId": "section:place:rack:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:confirmed-names"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Canal Park is known to Kindred as The Rack."
+    },
+    {
+      "id": "item:place:rack:place.kind",
+      "recordId": "place:rack",
+      "sectionId": "section:place:rack:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Territory",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:pink-slips:overview",
+      "recordId": "place:pink-slips",
+      "sectionId": "section:place:pink-slips:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Where Sydney introduced the coterie to Spokes and his bicycle gang."
+    },
+    {
+      "id": "item:place:pink-slips:place.kind",
+      "recordId": "place:pink-slips",
+      "sectionId": "section:place:pink-slips:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Bar",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:blacklight:overview",
+      "recordId": "place:blacklight",
+      "sectionId": "section:place:blacklight:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "The coterie met Portia here in a private VIP room overlooking the dance floor."
+    },
+    {
+      "id": "item:place:blacklight:place.kind",
+      "recordId": "place:blacklight",
+      "sectionId": "section:place:blacklight:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Nightclub",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:billings:overview",
+      "recordId": "place:billings",
+      "sectionId": "section:place:billings:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Superior neighborhood containing the Tremere Chantry."
+    },
+    {
+      "id": "item:place:billings:place.kind",
+      "recordId": "place:billings",
+      "sectionId": "section:place:billings:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "District",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:chantry:overview",
+      "recordId": "place:chantry",
+      "sectionId": "section:place:chantry:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "The Tremere stronghold in Superior. Portia invited Iris alone to research its library."
+    },
+    {
+      "id": "item:place:chantry:place.kind",
+      "recordId": "place:chantry",
+      "sectionId": "section:place:chantry:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Haven",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:critias-umd:overview",
+      "recordId": "place:critias-umd",
+      "sectionId": "section:place:critias-umd:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Critias's academic foothold at the university."
+    },
+    {
+      "id": "item:place:critias-umd:place.kind",
+      "recordId": "place:critias-umd",
+      "sectionId": "section:place:critias-umd:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Site",
+      "valueType": "text"
+    },
+    {
+      "id": "item:place:crimson-roots:overview",
+      "recordId": "place:crimson-roots",
+      "sectionId": "section:place:crimson-roots:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "A coterie asset in Twig."
+    },
+    {
+      "id": "item:place:crimson-roots:place.kind",
+      "recordId": "place:crimson-roots",
+      "sectionId": "section:place:crimson-roots:facts",
+      "itemKind": "fact",
+      "fieldKey": "place.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Business",
+      "valueType": "text"
+    },
+    {
+      "id": "item:organization:spokes-crew:organization.kind",
+      "recordId": "organization:spokes-crew",
+      "sectionId": "section:organization:spokes-crew:facts",
+      "itemKind": "fact",
+      "fieldKey": "organization.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Crew",
+      "valueType": "text"
+    },
+    {
+      "id": "item:organization:spokes-crew:organization.browseCategory",
+      "recordId": "organization:spokes-crew",
+      "sectionId": "section:organization:spokes-crew:facts",
+      "itemKind": "fact",
+      "fieldKey": "organization.browseCategory",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 1,
+      "value": "group",
+      "valueType": "text"
+    },
+    {
+      "id": "item:organization:night-forum:organization.kind",
+      "recordId": "organization:night-forum",
+      "sectionId": "section:organization:night-forum:facts",
+      "itemKind": "fact",
+      "fieldKey": "organization.kind",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:organization:night-forum:organization.browseCategory",
+      "recordId": "organization:night-forum",
+      "sectionId": "section:organization:night-forum:facts",
+      "itemKind": "fact",
+      "fieldKey": "organization.browseCategory",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 1,
+      "value": "group",
+      "valueType": "text"
+    },
+    {
+      "id": "item:organization:bliss:organization.kind",
+      "recordId": "organization:bliss",
+      "sectionId": "section:organization:bliss:facts",
+      "itemKind": "fact",
+      "fieldKey": "organization.kind",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "Business association",
+      "valueType": "text"
+    },
+    {
+      "id": "item:organization:bliss:organization.browseCategory",
+      "recordId": "organization:bliss",
+      "sectionId": "section:organization:bliss:facts",
+      "itemKind": "fact",
+      "fieldKey": "organization.browseCategory",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 1,
+      "value": "group",
+      "valueType": "text"
+    },
+    {
+      "id": "item:organization:duluth-camarilla:organization.browseCategory",
+      "recordId": "organization:duluth-camarilla",
+      "sectionId": "section:organization:duluth-camarilla:facts",
+      "itemKind": "fact",
+      "fieldKey": "organization.browseCategory",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "political",
+      "valueType": "text"
+    },
+    {
+      "id": "item:thread:kyra-hunt:overview",
+      "recordId": "thread:kyra-hunt",
+      "sectionId": "section:thread:kyra-hunt:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Spokes and his crew are trying to find Kyra's haven and map her security. Removing her could put Bliss within the coterie's reach."
+    },
+    {
+      "id": "item:thread:dark-mother:overview",
+      "recordId": "thread:dark-mother",
+      "sectionId": "section:thread:dark-mother:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "The creatures beneath Nopeming spoke of a Dark Mother and an ancient enemy. Portia suspects a connection to the Bahari and Lilith."
+    },
+    {
+      "id": "item:thread:maxwell:overview",
+      "recordId": "thread:maxwell",
+      "sectionId": "section:thread:maxwell:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "The coterie intends to string Maxwell along while bringing what they learn to Prince Jackson, hoping to gain politically without committing too early."
+    },
+    {
+      "id": "item:thread:lasombra:overview",
+      "recordId": "thread:lasombra",
+      "sectionId": "section:thread:lasombra:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "Sylens is working with Sierra as she maneuvers to bring the Lasombra into the Camarilla, even offering older members of her clan as proof of loyalty."
+    },
+    {
+      "id": "item:session:2026-09-11:overview",
+      "recordId": "session:2026-09-11",
+      "sectionId": "section:session:2026-09-11:overview",
+      "itemKind": "note",
+      "fieldKey": "overview",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "body": "The coterie hired Spokes and his bizarre bicycle gang to hunt Kyra's haven, then met Portia at Blacklight to investigate the sigils beneath Nopeming and the whispered Bahari connection."
+    },
+    {
+      "id": "item:session:2026-09-11:session.date",
+      "recordId": "session:2026-09-11",
+      "sectionId": "section:session:2026-09-11:facts",
+      "itemKind": "fact",
+      "fieldKey": "session.date",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "valueType": "date_expression",
+      "value": {
+        "text": "September 11",
+        "precision": "unknown",
+        "calendar": "real_world"
+      }
+    },
+    {
+      "id": "item:person:kyra:relationship:person:kyra:affiliation:duluth-camarilla:role",
+      "recordId": "person:kyra",
+      "sectionId": "section:person:kyra:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:kyra:affiliation:duluth-camarilla"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:spokes:relationship:person:spokes:group:spokes-crew:role",
+      "recordId": "person:spokes",
+      "sectionId": "section:person:spokes:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:spokes:group:spokes-crew"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:chains:relationship:person:chains:group:spokes-crew:role",
+      "recordId": "person:chains",
+      "sectionId": "section:person:chains:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:chains:group:spokes-crew"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:freewheel:relationship:person:freewheel:group:spokes-crew:role",
+      "recordId": "person:freewheel",
+      "sectionId": "section:person:freewheel:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:freewheel:group:spokes-crew"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:pedals:relationship:person:pedals:group:spokes-crew:role",
+      "recordId": "person:pedals",
+      "sectionId": "section:person:pedals:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:pedals:group:spokes-crew"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:big-chain:relationship:person:big-chain:group:spokes-crew:role",
+      "recordId": "person:big-chain",
+      "sectionId": "section:person:big-chain:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:big-chain:group:spokes-crew"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:portia:relationship:person:portia:affiliation:duluth-camarilla:role",
+      "recordId": "person:portia",
+      "sectionId": "section:person:portia:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:portia:affiliation:duluth-camarilla"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:georgia:relationship:person:georgia:group:bliss:role",
+      "recordId": "person:georgia",
+      "sectionId": "section:person:georgia:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:georgia:group:bliss"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:nora:relationship:person:nora:group:night-forum:role",
+      "recordId": "person:nora",
+      "sectionId": "section:person:nora:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:nora:group:night-forum"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:lucas:relationship:person:lucas:affiliation:duluth-camarilla:role",
+      "recordId": "person:lucas",
+      "sectionId": "section:person:lucas:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.role",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 0,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:person:lucas:affiliation:duluth-camarilla"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:spokes:relationship:spokes-chains:details",
+      "recordId": "person:spokes",
+      "sectionId": "section:person:spokes:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.details",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 1,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:spokes-chains"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:spokes:relationship:spokes-freewheel:details",
+      "recordId": "person:spokes",
+      "sectionId": "section:person:spokes:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.details",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 2,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:spokes-freewheel"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:spokes:relationship:spokes-pedals:details",
+      "recordId": "person:spokes",
+      "sectionId": "section:person:spokes:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.details",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 3,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:spokes-pedals"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:person:spokes:relationship:spokes-big-chain:details",
+      "recordId": "person:spokes",
+      "sectionId": "section:person:spokes:connections",
+      "itemKind": "fact",
+      "fieldKey": "relationship.details",
+      "knowledgeState": "unknown",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ],
+      "sortOrder": 4,
+      "subjectRef": {
+        "kind": "relationship",
+        "id": "relationship:spokes-big-chain"
+      },
+      "value": null,
+      "valueType": "unknown"
+    },
+    {
+      "id": "item:organization:anarchs:organization.browseCategory",
+      "recordId": "organization:anarchs",
+      "sectionId": "section:organization:anarchs:facts",
+      "itemKind": "fact",
+      "fieldKey": "organization.browseCategory",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:confirmed-inheritance"
+        }
+      ],
+      "sortOrder": 0,
+      "value": "political",
+      "valueType": "text"
+    }
+  ],
+  "relationshipTypes": [
+    {
+      "id": "associated_with",
+      "fromTypes": [
+        "person"
+      ],
+      "toTypes": [
+        "person"
+      ],
+      "forwardLabel": "Associated with",
+      "reverseLabel": "Associated with",
+      "symmetric": true
+    },
+    {
+      "id": "sire_of",
+      "fromTypes": [
+        "person"
+      ],
+      "toTypes": [
+        "person"
+      ],
+      "forwardLabel": "Sire of",
+      "reverseLabel": "Childe of",
+      "symmetric": false
+    },
+    {
+      "id": "employs",
+      "fromTypes": [
+        "person",
+        "organization"
+      ],
+      "toTypes": [
+        "person"
+      ],
+      "forwardLabel": "Employs",
+      "reverseLabel": "Employed by",
+      "symmetric": false
+    },
+    {
+      "id": "clan_member_of",
+      "fromTypes": [
+        "person"
+      ],
+      "toTypes": [
+        "clan"
+      ],
+      "forwardLabel": "Clan",
+      "reverseLabel": "Recorded clan members",
+      "symmetric": false
+    },
+    {
+      "id": "member_of",
+      "fromTypes": [
+        "person"
+      ],
+      "toTypes": [
+        "organization"
+      ],
+      "forwardLabel": "Member of",
+      "reverseLabel": "Members",
+      "symmetric": false
+    },
+    {
+      "id": "associate_of",
+      "fromTypes": [
+        "person"
+      ],
+      "toTypes": [
+        "organization"
+      ],
+      "forwardLabel": "Associated with",
+      "reverseLabel": "Associates",
+      "symmetric": false
+    },
+    {
+      "id": "affiliated_with",
+      "fromTypes": [
+        "person",
+        "organization"
+      ],
+      "toTypes": [
+        "organization"
+      ],
+      "forwardLabel": "Affiliated with",
+      "reverseLabel": "Affiliates",
+      "symmetric": false
+    },
+    {
+      "id": "associated_with_place",
+      "fromTypes": [
+        "person"
+      ],
+      "toTypes": [
+        "place"
+      ],
+      "forwardLabel": "Associated place",
+      "reverseLabel": "Associated people",
+      "symmetric": false
+    },
+    {
+      "id": "contained_in",
+      "fromTypes": [
+        "place"
+      ],
+      "toTypes": [
+        "place"
+      ],
+      "forwardLabel": "Within",
+      "reverseLabel": "Contains",
+      "symmetric": false
+    },
+    {
+      "id": "subgroup_of",
+      "fromTypes": [
+        "organization"
+      ],
+      "toTypes": [
+        "organization"
+      ],
+      "forwardLabel": "Subgroup of",
+      "reverseLabel": "Subgroups",
+      "symmetric": false
+    },
+    {
+      "id": "related_to",
+      "fromTypes": [
+        "person",
+        "place",
+        "clan",
+        "organization",
+        "thread",
+        "session"
+      ],
+      "toTypes": [
+        "person",
+        "place",
+        "clan",
+        "organization",
+        "thread",
+        "session"
+      ],
+      "forwardLabel": "Related",
+      "reverseLabel": "Related",
+      "symmetric": true
+    },
+    {
+      "id": "involves",
+      "fromTypes": [
+        "thread"
+      ],
+      "toTypes": [
+        "person",
+        "place",
+        "organization",
+        "clan",
+        "session"
+      ],
+      "forwardLabel": "Related records",
+      "reverseLabel": "Related threads",
+      "symmetric": false
+    },
+    {
+      "id": "references",
+      "fromTypes": [
+        "session"
+      ],
+      "toTypes": [
+        "person",
+        "place",
+        "thread",
+        "organization",
+        "clan"
+      ],
+      "forwardLabel": "Referenced records",
+      "reverseLabel": "Session references",
+      "symmetric": false
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship:person:kyra:clan",
+      "relationshipType": "clan_member_of",
+      "fromRecordId": "person:kyra",
+      "toRecordId": "clan:toreador",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:kyra:affiliation:duluth-camarilla",
+      "relationshipType": "affiliated_with",
+      "fromRecordId": "person:kyra",
+      "toRecordId": "organization:duluth-camarilla",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:kyra:place:bliss",
+      "relationshipType": "associated_with_place",
+      "fromRecordId": "person:kyra",
+      "toRecordId": "place:bliss",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:spokes:clan",
+      "relationshipType": "clan_member_of",
+      "fromRecordId": "person:spokes",
+      "toRecordId": "clan:nosferatu",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:spokes:group:spokes-crew",
+      "relationshipType": "member_of",
+      "fromRecordId": "person:spokes",
+      "toRecordId": "organization:spokes-crew",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:chains:group:spokes-crew",
+      "relationshipType": "member_of",
+      "fromRecordId": "person:chains",
+      "toRecordId": "organization:spokes-crew",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:freewheel:group:spokes-crew",
+      "relationshipType": "member_of",
+      "fromRecordId": "person:freewheel",
+      "toRecordId": "organization:spokes-crew",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:pedals:group:spokes-crew",
+      "relationshipType": "member_of",
+      "fromRecordId": "person:pedals",
+      "toRecordId": "organization:spokes-crew",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:big-chain:group:spokes-crew",
+      "relationshipType": "member_of",
+      "fromRecordId": "person:big-chain",
+      "toRecordId": "organization:spokes-crew",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:portia:clan",
+      "relationshipType": "clan_member_of",
+      "fromRecordId": "person:portia",
+      "toRecordId": "clan:tremere",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:portia:affiliation:duluth-camarilla",
+      "relationshipType": "affiliated_with",
+      "fromRecordId": "person:portia",
+      "toRecordId": "organization:duluth-camarilla",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:portia:place:chantry",
+      "relationshipType": "associated_with_place",
+      "fromRecordId": "person:portia",
+      "toRecordId": "place:chantry",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:sydney:place:pink-slips",
+      "relationshipType": "associated_with_place",
+      "fromRecordId": "person:sydney",
+      "toRecordId": "place:pink-slips",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:georgia:group:bliss",
+      "relationshipType": "associate_of",
+      "fromRecordId": "person:georgia",
+      "toRecordId": "organization:bliss",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:georgia:place:bliss",
+      "relationshipType": "associated_with_place",
+      "fromRecordId": "person:georgia",
+      "toRecordId": "place:bliss",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:nora:group:night-forum",
+      "relationshipType": "associate_of",
+      "fromRecordId": "person:nora",
+      "toRecordId": "organization:night-forum",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:person:lucas:affiliation:duluth-camarilla",
+      "relationshipType": "affiliated_with",
+      "fromRecordId": "person:lucas",
+      "toRecordId": "organization:duluth-camarilla",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:downtown:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:downtown",
+      "toRecordId": "place:duluth",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:umd:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:umd",
+      "toRecordId": "place:duluth",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:eldes-corner:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:eldes-corner",
+      "toRecordId": "place:duluth",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:nopeming:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:nopeming",
+      "toRecordId": "place:eldes-corner",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:watchtower:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:watchtower",
+      "toRecordId": "place:twig",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:bliss:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:bliss",
+      "toRecordId": "place:twig",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:rack:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:rack",
+      "toRecordId": "place:downtown",
+      "knowledgeState": "unverified",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:pink-slips:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:pink-slips",
+      "toRecordId": "place:downtown",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:blacklight:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:blacklight",
+      "toRecordId": "place:downtown",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:billings:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:billings",
+      "toRecordId": "place:superior",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:chantry:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:chantry",
+      "toRecordId": "place:billings",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:critias-umd:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:critias-umd",
+      "toRecordId": "place:umd",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:place:crimson-roots:parent",
+      "relationshipType": "contained_in",
+      "fromRecordId": "place:crimson-roots",
+      "toRecordId": "place:twig",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:organization:bliss:place:bliss",
+      "relationshipType": "related_to",
+      "fromRecordId": "organization:bliss",
+      "toRecordId": "place:bliss",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:spokes-chains",
+      "relationshipType": "associated_with",
+      "fromRecordId": "person:spokes",
+      "toRecordId": "person:chains",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:spokes-freewheel",
+      "relationshipType": "associated_with",
+      "fromRecordId": "person:spokes",
+      "toRecordId": "person:freewheel",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:spokes-pedals",
+      "relationshipType": "associated_with",
+      "fromRecordId": "person:spokes",
+      "toRecordId": "person:pedals",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:spokes-big-chain",
+      "relationshipType": "associated_with",
+      "fromRecordId": "person:spokes",
+      "toRecordId": "person:big-chain",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:kyra-hunt:people:kyra",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:kyra-hunt",
+      "toRecordId": "person:kyra",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:kyra-hunt:people:spokes",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:kyra-hunt",
+      "toRecordId": "person:spokes",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:kyra-hunt:people:sydney",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:kyra-hunt",
+      "toRecordId": "person:sydney",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:kyra-hunt:people:georgia",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:kyra-hunt",
+      "toRecordId": "person:georgia",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:kyra-hunt:places:bliss",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:kyra-hunt",
+      "toRecordId": "place:bliss",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:kyra-hunt:places:pink-slips",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:kyra-hunt",
+      "toRecordId": "place:pink-slips",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:dark-mother:people:portia",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:dark-mother",
+      "toRecordId": "person:portia",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:dark-mother:places:nopeming",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:dark-mother",
+      "toRecordId": "place:nopeming",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:dark-mother:places:blacklight",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:dark-mother",
+      "toRecordId": "place:blacklight",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:threads:dark-mother:places:chantry",
+      "relationshipType": "involves",
+      "fromRecordId": "thread:dark-mother",
+      "toRecordId": "place:chantry",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:people:spokes",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "person:spokes",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:people:chains",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "person:chains",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:people:freewheel",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "person:freewheel",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:people:pedals",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "person:pedals",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:people:big-chain",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "person:big-chain",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:people:kyra",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "person:kyra",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:people:portia",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "person:portia",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:places:blacklight",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "place:blacklight",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:places:nopeming",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "place:nopeming",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:threads:kyra-hunt",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "thread:kyra-hunt",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:sessions:2026-09-11:threads:dark-mother",
+      "relationshipType": "references",
+      "fromRecordId": "session:2026-09-11",
+      "toRecordId": "thread:dark-mother",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    },
+    {
+      "id": "relationship:night-forum:anarchs",
+      "relationshipType": "subgroup_of",
+      "fromRecordId": "organization:night-forum",
+      "toRecordId": "organization:anarchs",
+      "knowledgeState": "recorded",
+      "sourceRefs": [
+        {
+          "sourceId": "source:confirmed-inheritance"
+        }
+      ]
+    }
+  ],
+  "domainClaims": [
+    {
+      "id": "claim:place:watchtower:legacy",
+      "placeId": "place:watchtower",
+      "claimantRecordId": null,
+      "status": "unspecified",
+      "sourceRefs": [
+        {
+          "sourceId": "source:phase-1-baseline"
+        }
+      ]
+    }
+  ],
+  "membershipImplications": [
+    {
+      "id": "implication:night-forum:anarchs",
+      "sourceOrganizationId": "organization:night-forum",
+      "targetOrganizationId": "organization:anarchs",
+      "eligibleConnectionTypes": [
+        "member_of"
+      ],
+      "enabled": true,
+      "sourceRefs": [
+        {
+          "sourceId": "source:confirmed-inheritance"
+        }
+      ]
+    }
+  ],
+  "attachments": [],
+  "sources": [
+    {
+      "id": "source:phase-1-baseline",
+      "sourceKind": "note",
+      "label": "Existing public dataset"
+    },
+    {
+      "id": "source:confirmed-names",
+      "sourceKind": "user_confirmation",
+      "label": "Confirmed contextual place names"
+    },
+    {
+      "id": "source:confirmed-inheritance",
+      "sourceKind": "user_confirmation",
+      "label": "Confirmed Night Forum affiliation rule"
+    }
+  ],
+  "routeAliases": {
+    "groups/spokes-crew": "organizations/spokes-crew",
+    "groups/night-forum": "organizations/night-forum",
+    "groups/bliss": "organizations/bliss",
+    "factions/duluth-camarilla": "organizations/duluth-camarilla",
+    "factions/spokes-crew": "organizations/spokes-crew",
+    "factions/night-forum": "organizations/night-forum",
+    "factions/bliss": "organizations/bliss",
+    "factions/independent": "search?q=Independent",
+    "groups": "organizations?category=group",
+    "factions": "organizations?category=political"
+  },
+  "viewConfig": {
+    "tonight": {
+      "status": [
+        [
+          "Current night",
+          "After Sept. 11"
+        ],
+        [
+          "Coterie status",
+          "Playing Both Sides"
+        ],
+        [
+          "Current lead",
+          "Kyra’s Haven"
+        ],
+        [
+          "Next stop",
+          "Chantry Library"
+        ]
+      ],
+      "place": "place:blacklight",
+      "summary": "The coterie met Portia to investigate the sigils and drowned creatures beneath Nopeming. She connected their discoveries to whispers of the Bahari and invited Iris alone to continue the research at the Tremere Chantry.",
+      "followup": "Meanwhile, Spokes and his bicycle gang are hunting for Kyra’s haven and mapping her security.",
+      "faces": [
+        "person:spokes",
+        "person:portia",
+        "person:kyra"
+      ]
+    }
+  },
+  "reviewIssues": [
+    {
+      "id": "review:rack-parent",
+      "recordId": "place:rack",
+      "displayMessage": "Containing district is unconfirmed.",
+      "message": "Primary geographic parent is unconfirmed. Downtown is retained as a legacy value, not a new assertion."
+    },
+    {
+      "id": "review:eldes-parent",
+      "recordId": "place:eldes-corner",
+      "message": "Whether West Duluth is an intermediate geographic parent remains unconfirmed; retain the established Duluth parent."
+    }
+  ]
 };

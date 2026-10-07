@@ -1,0 +1,142 @@
+{
+  "sourceSha256": "57ac0fd3da15cab5998fc279c2f9d191af758ab1c1c43675a43c0e27ba0eaf35",
+  "sourceCounts": {
+    "people": 11,
+    "places": 17,
+    "clans": 3,
+    "groups": 3,
+    "factions": 1,
+    "threads": 4,
+    "sessions": 1
+  },
+  "targetCounts": {
+    "records": 41,
+    "names": 42,
+    "sections": 77,
+    "items": 85,
+    "relationships": 57,
+    "domainClaims": 1,
+    "membershipImplications": 1
+  },
+  "idMap": {
+    "people/kyra": "person:kyra",
+    "people/spokes": "person:spokes",
+    "people/chains": "person:chains",
+    "people/freewheel": "person:freewheel",
+    "people/pedals": "person:pedals",
+    "people/big-chain": "person:big-chain",
+    "people/portia": "person:portia",
+    "people/sydney": "person:sydney",
+    "people/georgia": "person:georgia",
+    "people/nora": "person:nora",
+    "people/lucas": "person:lucas",
+    "places/duluth": "place:duluth",
+    "places/superior": "place:superior",
+    "places/wrenshall": "place:wrenshall",
+    "places/twig": "place:twig",
+    "places/downtown": "place:downtown",
+    "places/umd": "place:umd",
+    "places/eldes-corner": "place:eldes-corner",
+    "places/nopeming": "place:nopeming",
+    "places/watchtower": "place:watchtower",
+    "places/bliss": "place:bliss",
+    "places/rack": "place:rack",
+    "places/pink-slips": "place:pink-slips",
+    "places/blacklight": "place:blacklight",
+    "places/billings": "place:billings",
+    "places/chantry": "place:chantry",
+    "places/critias-umd": "place:critias-umd",
+    "places/crimson-roots": "place:crimson-roots",
+    "clans/toreador": "clan:toreador",
+    "clans/nosferatu": "clan:nosferatu",
+    "clans/tremere": "clan:tremere",
+    "groups/spokes-crew": "organization:spokes-crew",
+    "groups/night-forum": "organization:night-forum",
+    "groups/bliss": "organization:bliss",
+    "factions/duluth-camarilla": "organization:duluth-camarilla",
+    "threads/kyra-hunt": "thread:kyra-hunt",
+    "threads/dark-mother": "thread:dark-mother",
+    "threads/maxwell": "thread:maxwell",
+    "threads/lasombra": "thread:lasombra",
+    "sessions/2026-09-11": "session:2026-09-11",
+    "relationships/spokes-chains": "relationship:spokes-chains",
+    "relationships/spokes-freewheel": "relationship:spokes-freewheel",
+    "relationships/spokes-pedals": "relationship:spokes-pedals",
+    "relationships/spokes-big-chain": "relationship:spokes-big-chain"
+  },
+  "routes": {
+    "people/kyra": "people/kyra",
+    "people/spokes": "people/spokes",
+    "people/chains": "people/chains",
+    "people/freewheel": "people/freewheel",
+    "people/pedals": "people/pedals",
+    "people/big-chain": "people/big-chain",
+    "people/portia": "people/portia",
+    "people/sydney": "people/sydney",
+    "people/georgia": "people/georgia",
+    "people/nora": "people/nora",
+    "people/lucas": "people/lucas",
+    "places/duluth": "places/duluth",
+    "places/superior": "places/superior",
+    "places/wrenshall": "places/wrenshall",
+    "places/twig": "places/twig",
+    "places/downtown": "places/downtown",
+    "places/umd": "places/umd",
+    "places/eldes-corner": "places/eldes-corner",
+    "places/nopeming": "places/nopeming",
+    "places/watchtower": "places/watchtower",
+    "places/bliss": "places/bliss",
+    "places/rack": "places/rack",
+    "places/pink-slips": "places/pink-slips",
+    "places/blacklight": "places/blacklight",
+    "places/billings": "places/billings",
+    "places/chantry": "places/chantry",
+    "places/critias-umd": "places/critias-umd",
+    "places/crimson-roots": "places/crimson-roots",
+    "clans/toreador": "clans/toreador",
+    "clans/nosferatu": "clans/nosferatu",
+    "clans/tremere": "clans/tremere",
+    "groups/spokes-crew": "organizations/spokes-crew",
+    "groups/night-forum": "organizations/night-forum",
+    "groups/bliss": "organizations/bliss",
+    "factions/duluth-camarilla": "organizations/duluth-camarilla",
+    "threads/kyra-hunt": "threads/kyra-hunt",
+    "threads/dark-mother": "threads/dark-mother",
+    "threads/maxwell": "threads/maxwell",
+    "threads/lasombra": "threads/lasombra",
+    "chronicle/2026-09-11": "chronicle/2026-09-11"
+  },
+  "semanticChanges": [
+    {
+      "recordId": "person:georgia",
+      "change": "Legacy membership clarified as association using the existing summary; no formal membership inferred."
+    },
+    {
+      "recordId": "person:nora",
+      "change": "Legacy membership clarified as association using the existing summary; no formal membership inferred."
+    },
+    {
+      "recordId": "place:rack",
+      "change": "Unified confirmed names; removed the network-only overview from current assertions.",
+      "originalOverview": "Duluth's connected skywalk and tunnel network after dark.",
+      "replacementOverview": "Canal Park is known to Kindred as The Rack."
+    },
+    {
+      "recordId": "organization:night-forum",
+      "change": "Added the confirmed one-way membership implication to Anarchs; Nora remains an associate, so no membership is inferred for her."
+    }
+  ],
+  "reviewIssues": [
+    {
+      "id": "review:rack-parent",
+      "recordId": "place:rack",
+      "displayMessage": "Containing district is unconfirmed.",
+      "message": "Primary geographic parent is unconfirmed. Downtown is retained as a legacy value, not a new assertion."
+    },
+    {
+      "id": "review:eldes-parent",
+      "recordId": "place:eldes-corner",
+      "message": "Whether West Duluth is an intermediate geographic parent remains unconfirmed; retain the established Duluth parent."
+    }
+  ]
+}
