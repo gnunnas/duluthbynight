@@ -4,7 +4,7 @@
 begin;
 create temporary table permission_check_users(storyteller_id uuid,player_id uuid);
 insert into permission_check_users
-select owner_user_id,'PASTE_TEST_PLAYER_AUTH_USER_UUID_HERE'::uuid from public.campaigns where id='duluth-by-night';
+select owner_user_id,'41a93c06-cc70-45fe-931c-2e29ff66b1f1'::uuid from public.campaigns where id='duluth-by-night';
 do $$declare st uuid;p uuid;begin
  select storyteller_id,player_id into st,p from permission_check_users;
  if st is null then raise exception 'Initialize Duluth by Night first';end if;
