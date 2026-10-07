@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b0d">
+<title>Duluth by Night</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#home" aria-label="Duluth by Night — Tonight"><span>DULUTH</span><b>BY NIGHT</b></a>
+  <div id="account" class="account"></div>
+  <button id="menuBtn" class="menu-btn" aria-label="Open navigation" aria-controls="nav" aria-expanded="false">☰</button>
+</header>
+<a class="skip-link" href="#app">Skip to content</a>
+<nav id="nav" class="nav" aria-label="Campaign">
+  <a href="#home">Tonight</a>
+  <a href="#people">People</a>
+  <a href="#places">Places</a>
+  <a href="#threads">Threads</a>
+  <a href="#chronicle">Chronicle</a>
+  <a href="#organizations">Organizations</a>
+  <a href="#clans">Clans</a>
+  <a href="#disciplines">Disciplines</a>
+  <a href="#search">Search</a>
+</nav>
+<main id="app" tabindex="-1"></main>
+<footer>THE LAKE REMEMBERS.</footer>
+<script src="supabase-config.js"></script>
+<script src="campaign-model.js"></script>
+<script src="supabase-data.js"></script>
+<script src="supabase-session.js"></script>
+</body>
+</html>

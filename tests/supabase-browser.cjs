@@ -28,7 +28,7 @@ const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
   });
   // SQL export rows acquire a revision from PostgreSQL on insert.
   for(const row of rows.content_items)row.revision=1;
-  await page.goto('http://127.0.0.1:8007');
+  await page.goto('http://127.0.0.1:8007/campaign.html');
   assert.equal(await page.locator('#signIn').count(),1);
   assert(!requested.some(x=>/\/(data|campaign-additions|discipline-data|watchtower-data|source-notes)\.js/.test(x)));
   await page.locator('[name=email]').fill('test@example.com');await page.locator('[name=password]').fill('test-password');await page.getByRole('button',{name:'Sign in',exact:true}).click();
@@ -38,7 +38,7 @@ const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
   assert.equal(await page.getByText('Weather',{exact:true}).count(),0);
   if(role==='player')assert(await page.getByText('No campaign records have been revealed to this account yet.').count());
   else{
-   await page.goto('http://127.0.0.1:8007/#people/alan-sovereign');
+   await page.goto('http://127.0.0.1:8007/campaign.html#people/alan-sovereign');
    await page.getByRole('heading',{name:'Alan Sovereign',exact:true}).waitFor();
    await page.getByRole('link',{name:'Heightened Senses',exact:true}).click();assert(await page.locator('dialog').isVisible());await page.keyboard.press('Escape');
    const form=page.locator('form[data-note-id]').first();await form.locator('..').locator('summary').click();await form.locator('textarea').fill('Shared note test');await form.getByRole('button').click();await page.getByText('Shared note test',{exact:true}).first().waitFor();
@@ -49,6 +49,6 @@ const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
   assert.deepEqual(errors,[]);await page.close();
  }
  const failed=await browser.newPage();await failed.route('https://xrkvbbmilgdubbwuffhu.supabase.co/**',route=>route.fulfill({status:400,contentType:'application/json',body:'{}'}));
- await failed.goto('http://127.0.0.1:8007');await failed.locator('[name=email]').fill('test@example.com');await failed.locator('[name=password]').fill('wrong-password');await failed.getByRole('button',{name:'Sign in',exact:true}).click();await failed.getByText('Sign-in failed. Check your email and password.').waitFor();assert.equal(await failed.locator('main .detail').count(),0);await failed.close();
+ await failed.goto('http://127.0.0.1:8007/campaign.html');await failed.locator('[name=email]').fill('test@example.com');await failed.locator('[name=password]').fill('wrong-password');await failed.getByRole('button',{name:'Sign in',exact:true}).click();await failed.getByText('Sign-in failed. Check your email and password.').waitFor();assert.equal(await failed.locator('main .detail').count(),0);await failed.close();
  await browser.close();console.log('PASS: password sign-in, RLS-row projection, empty player view, popup, note save, responsive layout, sign-out and no static-data requests.');
 })().catch(error=>{console.error(error);process.exit(1)});
