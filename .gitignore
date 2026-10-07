@@ -1,0 +1,7 @@
+# Local credentials and tooling state; never campaign artwork.
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+node_modules/
