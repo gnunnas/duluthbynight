@@ -83,3 +83,5 @@ The Watchtower has an expanded location example in `watchtower-data.js`: the pla
 Run the location checks with `node --test tests/watchtower.cjs` alongside the existing model and NPC tests.
 
 NPC portraits use optional attachment records with an image path and alt text. Alan’s uploaded portrait appears beside his heading; NPCs without art have no empty portrait box.
+
+**Chronicle → Imported notes** stores fixed text snapshots of previously imported Alan, discipline, and Watchtower content, separately from sessions. Future text/file imports should preserve the complete supplied original there. Every person and place has independent Player notes and Storyteller notes fields; both are currently public and read-only. See [source archive and author notes](docs/notes-and-source-archive.md). Run their checks with `node --test tests/notes.cjs`.

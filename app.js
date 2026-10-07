@@ -4,7 +4,7 @@ const nav = document.querySelector('#nav');
 const menu = document.querySelector('#menuBtn');
 const model = createCampaignModel(D);
 const collections = model.collections;
-const labels = { people: 'People', places: 'Places', threads: 'Active threads', organizations: 'Organizations', clans: 'Clans', schemes: 'Schemes', events: 'Events', chronicle: 'Chronicle', disciplines: 'Disciplines', powers: 'Abilities' };
+const labels = { people: 'People', places: 'Places', threads: 'Active threads', organizations: 'Organizations', clans: 'Clans', schemes: 'Schemes', events: 'Events', chronicle: 'Chronicle', disciplines: 'Disciplines', powers: 'Abilities', notes: 'Imported notes' };
 const areaKinds = new Set(['City', 'Community', 'District', 'Suburb', 'Territory']);
 let state = { route: 'home', id: null, filter: 'All', query: '' };
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -14,7 +14,7 @@ const url = (type, id) => `#${type}${id ? '/' + encodeURIComponent(id) : ''}`;
 function link(type, record) { return `<a href="${url(type, record.id)}">${escapeHTML(name(record))}</a>`; }
 function card(record, type) {
   if (!record) return '';
-  return `<a class="card" href="${url(type, record.id)}"><div class="meta">${escapeHTML(record.type || record.kind || record.date || labels[type])}${record.clan ? ' · ' + escapeHTML(by('clans', record.clan)?.name || 'Unknown') : ''}</div><h3>${escapeHTML(name(record))}</h3><p>${escapeHTML(record.summary || (['clans', 'organizations'].includes(type) ? 'View recorded connections.' : 'No summary recorded.'))}</p></a>`;
+  return `<a class="card" href="${url(type, record.id)}"><div class="meta">${escapeHTML(record.type || record.kind || record.date || labels[type])}${record.clan ? ' · ' + escapeHTML(by('clans', record.clan)?.name || 'Unknown') : ''}</div><h3>${escapeHTML(name(record))}</h3><p>${escapeHTML(record.summary || (type === 'notes' ? 'Read stored imported text.' : ['clans', 'organizations'].includes(type) ? 'View recorded connections.' : 'No summary recorded.'))}</p></a>`;
 }
 function section(title, records, type) {
   return records.length ? `<section class="related"><h2 class="section-title">${escapeHTML(title)}</h2><div class="grid two">${records.map(x => card(x, type)).join('')}</div></section>` : '';
@@ -78,6 +78,12 @@ function flexibleSections(record, mechanicOnly = false) {
   const items = model.itemsFor(record.recordId);
   return model.sectionsFor(record.recordId).map(section => {
     if (['facts','overview'].includes(section.templateKey)) return '';
+    if(['player-notes','storyteller-notes'].includes(section.templateKey)){
+      if(mechanicOnly)return '';
+      const entry=items.find(x=>x.sectionId===section.id);
+      return panel(section.heading,entry?.body ? `<p class="rules-text">${textWithLinks(entry.body,entry.links)}</p>` : `<p class="mechanic-notes">No ${section.templateKey==='player-notes'?'player':'storyteller'} notes recorded yet.</p>`,'author-notes');
+    }
+    if(section.templateKey==='source-text')return panel(section.heading,`<div class="source-text">${escapeHTML(items.find(x=>x.sectionId===section.id)?.body||'')}</div>`);
     const entries = items.filter(x => x.sectionId === section.id && x.fieldKey !== 'relationship.role' && (x.body || x.title || x.itemKind === 'mechanic'));
     if (!entries.length) return '';
     const isMechanic = entries.every(x => x.itemKind === 'mechanic');
@@ -161,6 +167,7 @@ function detail(type, id) {
       facts.push(['Domain', 'Recorded claim'], ['Claimant', escapeHTML(record.domain.claimant || 'Unknown')]);
     }
   }
+  if(type === 'notes')facts.push(['Archive type','Text snapshot of imported content'],['Visibility','Public']);
   if (type === 'chronicle') facts.push(['Session date', escapeHTML(record.date || 'Unknown')]);
   return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}${record.portrait ? `<div class="person-header"><img class="person-portrait" src="${escapeHTML(record.portrait.src)}" alt="${escapeHTML(record.portrait.alt)}" width="326" height="405" decoding="async"><div><h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}</div></div>` : `<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}`}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${['Ambition','Security coverage'].includes(label) || (index === facts.length - 1 && (facts.length - facts.filter(([key]) => ['Ambition','Security coverage'].includes(key)).length) % 2 === 1) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
 }
@@ -186,6 +193,8 @@ function home() {
 function listing(type) {
   if(type === 'disciplines')return `<h1>Disciplines</h1><p class="intro">Browse a discipline, then its abilities by level. NPC ratings and selected abilities link here for use during play.</p><div class="grid three">${collections.disciplines.map(record=>`<a class="card" href="${url(type,record.id)}"><h2>${escapeHTML(record.name)}</h2><p>${collections.powers.filter(x=>x.disciplineId===record.recordId).length} abilities recorded</p></a>`).join('')}</div>`;
   if (type === 'places') return `<h1>Places</h1><p class="intro">Choose a city or community, then explore its districts, suburbs, and individual locations. Locations with no recorded district remain directly under their city.</p>${section('Cities, communities & regions', collections.places.filter(x => !x.parent && areaKinds.has(x.kind)), 'places')}${section('Locations without recorded geography', collections.places.filter(x => !x.parent && !areaKinds.has(x.kind)), 'places')}`;
+  if(type === 'chronicle')return `<h1>Chronicle</h1>${section('Sessions',collections.chronicle,'chronicle')}<section class="related"><h2>Imported notes</h2><p class="intro">Read the stored text from imported notes. These notes are public for now.</p><a class="chip" href="#notes">Browse imported notes</a><div class="grid two">${collections.notes.map(x=>card(x,'notes')).join('')}</div></section>`;
+  if(type === 'notes')return `<h1>Imported notes</h1><p class="intro">Stored text snapshots of previously imported screenshot content. Future text or file imports can preserve the complete original here. All notes are currently public.</p><a class="back" href="#chronicle">← Chronicle</a><div class="grid two">${collections.notes.map(x=>card(x,'notes')).join('')}</div>`;
   let records = collections[type];
   if(type === 'people') records = [...records].sort((a,b)=>name(a).localeCompare(name(b),'en',{sensitivity:'base',numeric:true}));
   if (type === 'organizations' && state.category) records = records.filter(x => x.category === state.category);

@@ -1,6 +1,6 @@
 // Normalized public-data adapter. No authentication or private-data filtering is implied.
 (function (root) {
-  const routes = {person:'people',place:'places',clan:'clans',organization:'organizations',thread:'threads',session:'chronicle',scheme:'schemes',event:'events',discipline:'disciplines',power:'powers'};
+  const routes = {person:'people',place:'places',clan:'clans',organization:'organizations',thread:'threads',session:'chronicle',scheme:'schemes',event:'events',discipline:'disciplines',power:'powers',note:'notes'};
   function validateCampaign(data) {
     const errors = [];
     const arrayFields=['records','names','sections','items','relationshipTypes','relationships','domainClaims','membershipImplications','attachments','sources'];
