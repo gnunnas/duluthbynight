@@ -27,6 +27,7 @@ function adaptSupabase(rows,campaignId){
   for(const ref of rows[table+'_sources']||[]){const owner=owners.get(ref.owner_id);if(owner)(owner.sourceRefs||=[]).push({sourceId:ref.source_id,locator:ref.locator});}
  }
  data.personStatus=(rows.person_status||[]).map(convert);
+ data.campaignStatus=(rows.campaign_status||[]).map(convert).filter(x=>!x.archivedAt).sort((a,b)=>a.sortOrder-b.sortOrder||a.id.localeCompare(b.id));
  const recordIds=new Set(data.records.map(x=>x.id));
  const routeRecords=new Set(data.records.map(x=>({person:'people',place:'places',clan:'clans',organization:'organizations',thread:'threads',session:'chronicle',scheme:'schemes',event:'events',discipline:'disciplines',power:'powers',note:'notes'}[x.recordType])+'/'+x.routeKey));
  for(const alias of rows.route_aliases||[]){if(!alias.target_route.split('?')[0].includes('/')||routeRecords.has(alias.target_route.split('?')[0]))data.routeAliases[alias.old_route]=alias.target_route;}

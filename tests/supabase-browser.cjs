@@ -3,6 +3,7 @@ const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
 (async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
  const rows=exportDraft().tables;
+ rows.campaign_status=[{campaign_id:'duluth-by-night',id:'date',label:'Current night',value:'After Sept. 11',sort_order:0},{campaign_id:'duluth-by-night',id:'weather',label:'Weather',value:'',sort_order:1}];
  for(const role of ['storyteller','player','player-revealed']){
   const page=await browser.newPage({viewport:{width:375,height:850}});const errors=[],requested=[];let saves=0;page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requested.push(r.url()));
   await page.route('https://xrkvbbmilgdubbwuffhu.supabase.co/**',async route=>{
@@ -12,7 +13,8 @@ const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
    else{
     assert.equal(route.request().headers().authorization,'Bearer test-access');
     const table=url.pathname.split('/').pop();
-    if(table==='campaign_memberships')body=[{user_id:role,role:role==='storyteller'?'storyteller':'player',active:true}];
+    if(table==='campaign_status')body=rows.campaign_status;
+    else if(table==='campaign_memberships')body=[{user_id:role,role:role==='storyteller'?'storyteller':'player',active:true}];
     else if(table==='campaigns')body=[{owner_user_id:'storyteller'}];
     else if(role==='player')body=[];
     else if(role==='player-revealed')body=(rows[table]||[]).filter(row=>table==='content_items'?row.field_key!=='notes.storyteller':table==='sections'?row.template_key!=='storyteller-notes':true);
@@ -31,6 +33,9 @@ const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
   assert(!requested.some(x=>/\/(data|campaign-additions|discipline-data|watchtower-data|source-notes)\.js/.test(x)));
   await page.locator('[name=email]').fill('test@example.com');await page.locator('[name=password]').fill('test-password');await page.getByRole('button',{name:'Sign in',exact:true}).click();
   await page.getByRole('button',{name:'Sign out'}).waitFor();
+  await page.locator('.status').waitFor();
+  assert((await page.locator('.status').textContent()).includes('After Sept. 11'));
+  assert.equal(await page.getByText('Weather',{exact:true}).count(),0);
   if(role==='player')assert(await page.getByText('No campaign records have been revealed to this account yet.').count());
   else{
    await page.goto('http://127.0.0.1:8007/#people/alan-sovereign');
