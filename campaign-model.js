@@ -1,4 +1,4 @@
-// Normalized public-data adapter. No authentication or private-data filtering is implied.
+// Presentation adapter for static snapshots or server-authorized Supabase rows.
 (function (root) {
   const routes = {person:'people',place:'places',clan:'clans',organization:'organizations',thread:'threads',session:'chronicle',scheme:'schemes',event:'events',discipline:'disciplines',power:'powers',note:'notes'};
   function validateCampaign(data) {
@@ -9,7 +9,7 @@
     if (!data.campaignId) errors.push('Missing campaign boundary');
     const fail = message => errors.push(message);
     if (data.schemaVersion !== 2) fail('Unsupported schemaVersion');
-    if (data.publication !== 'public-static') fail('This adapter expects an approved public static dataset');
+    if (!['public-static','supabase-rls'].includes(data.publication)) fail('This adapter expects an approved public static dataset');
     const map = (rows, label) => {
       const result = new Map();
       for (const row of rows || []) { if (!row.id || result.has(row.id)) fail(`Duplicate/missing ${label} ID: ${row.id}`); result.set(row.id,row); }
@@ -61,9 +61,9 @@
     cycles([...items.values()].filter(x=>x.parentItemId).map(x=>[x.id,x.parentItemId]),'item nesting');
     for(const record of records.values())if(record.recordType==='power'){
       const parents=[...relationships.values()].filter(x=>x.fromRecordId===record.id&&x.relationshipType==='power_of');
-      if(parents.length!==1)fail('Ability needs exactly one discipline: '+record.id);
+      if(parents.length!==1 && !(data.publication==='supabase-rls' && parents.length===0))fail('Ability needs exactly one discipline: '+record.id);
       const level=[...items.values()].find(x=>x.recordId===record.id&&x.fieldKey==='power.level')?.value;
-      if(!Number.isInteger(level)||level<1||level>5)fail('Invalid ability level: '+record.id);
+      if(!(data.publication==='supabase-rls' && level===undefined) && (!Number.isInteger(level)||level<1||level>5))fail('Invalid ability level: '+record.id);
     }
     for(const entry of items.values())if(entry.fieldKey==='mechanics.discipline'){
       const discipline=entry.value?.referenceRecordId;
@@ -215,7 +215,8 @@
         route=targetPath+(params.size?'?'+params.toString():'');
       }
     }
-    const tonight={...data.viewConfig.tonight,place:rawById.get(data.viewConfig.tonight.place).routeKey,faces:data.viewConfig.tonight.faces.map(id=>rawById.get(id).routeKey)};
+    const config=data.viewConfig?.tonight;
+    const tonight=config?{...config,place:rawById.get(config.place)?.routeKey,faces:config.faces.map(id=>rawById.get(id)?.routeKey).filter(Boolean)}:null;
     return {collections,by,byId:id=>byId.get(id),routeFor:canonicalType,itemsFor:id=>data.items.filter(x=>x.recordId===id),sectionsFor:id=>data.sections.filter(x=>x.recordId===id).sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0)),related,searchText,resolveRoute,membershipConnections,personalRelationships,tonight};
   }
   root.createCampaignModel=createCampaignModel;root.validateCampaign=validateCampaign;

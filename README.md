@@ -4,7 +4,7 @@ Mobile-first campaign companion for the Duluth by Night Vampire: The Masquerade 
 
 ## Run locally
 
-The application is a dependency-free static website. From the repository root:
+The application is a dependency-free static website backed by Supabase Auth and Postgres. Sign in with a campaign Auth account. From the repository root:
 
 ```sh
 python3 -m http.server 8000 --bind 127.0.0.1
@@ -12,7 +12,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 Hash routes support direct record links and browser history without server rewrites. The manifest supplies install metadata; there is no service worker or offline guarantee.
 
-## Current architecture: Phase 1
+## Current architecture
 
 - `data.js`: normalized **public** campaign data (`schemaVersion: 2`). Records have globally unique IDs, stable route keys, contextual names, sections/items, typed relationships, claims, explicit membership implications, and provenance. IDs distinguish the Bliss organization from the Bliss location.
 - `campaign-model.js`: validation, relationship resolution, membership derivation, search, and an adapter for the existing views. Its projected fields are computed, not a second editable dataset.
@@ -23,7 +23,7 @@ Hash routes support direct record links and browser history without server rewri
 - `migration/phase-1-report.json`: complete ID/route map, counts, semantic changes, and unresolved geography.
 - `scripts/migrate-phase-1.cjs`: deterministic source-to-normalized migration and comparison check.
 
-The original Phase 1 migration adds only confirmed public names and safe facts. Alan Sovereign’s note was subsequently explicitly approved for publication and is imported in the separate additions file. The other supplied OneNote dossiers remain unimported. All data delivered by this static site is readable by visitors. There is no private-data permission system. Authentication, row-level security, and protected storage remain Phase 3 requirements.
+The original Phase 1 migration adds only confirmed public names and safe facts. Alan Sovereign’s note was subsequently explicitly approved for publication and is imported in the separate additions file. The other supplied OneNote dossiers remain unimported. These archived source files remain public; the production entry point now uses Supabase sign-in and RLS instead of loading them. Protected Storage delivery remains future work.
 
 ### Relationship rules
 
@@ -86,6 +86,6 @@ NPC portraits use optional attachment records with an image path and alt text. A
 
 **Chronicle → Imported notes** stores fixed text snapshots of previously imported Alan, discipline, and Watchtower content, separately from sessions. Future text/file imports should preserve the complete supplied original there. Every person and place has independent Player notes and Storyteller notes fields; both are currently public and read-only. See [source archive and author notes](docs/notes-and-source-archive.md). Run their checks with `node --test tests/notes.cjs`.
 
-The reviewed **Supabase initial schema** is packaged in `supabase/migrations/`, with [a chunked explanation](docs/supabase-schema-review.md) and [SQL Editor setup guide](docs/supabase-setup.md). It covers campaign roles, linked content, shared player notes, reveals, archives, permanent death, audit history, AI proposals, and protected media. It has not been applied to Supabase. Generate a read-only export with `node scripts/export-supabase-draft.cjs --out /tmp/campaign-draft.json`; validate the SQL locally with `bash scripts/test-supabase-draft.sh` (Docker required).
+The reviewed **Supabase initial schema** is packaged in `supabase/migrations/`, with [a chunked explanation](docs/supabase-schema-review.md) and [SQL Editor setup guide](docs/supabase-setup.md). It covers campaign roles, linked content, shared player notes, reveals, archives, permanent death, audit history, AI proposals, and protected media. The user has applied it to Supabase and reported successful permission checks. Generate a read-only export with `node scripts/export-supabase-draft.cjs --out /tmp/campaign-draft.json`; validate the SQL locally with `bash scripts/test-supabase-draft.sh` (Docker required).
 
-The SQL Editor setup flow installs the schema, verifies RLS, initializes a real Storyteller and separate test-player account, and runs a rollback-only permission check. It has not been run against the Supabase project, and the static site still loads its current JavaScript data.
+The SQL Editor setup flow and campaign import have been completed in the user’s project. The website now loads authorized Supabase rows after sign-in, without a bundled campaign-data fallback. See [website sign-in and verification](docs/supabase-website.md) for account setup, note editing, and remaining real-project checks.
