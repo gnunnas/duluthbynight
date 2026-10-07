@@ -22,6 +22,10 @@ function section(title, records, type) {
 function relations(type, record) {
   const titles = type === 'people' ? {clans:'Clan', organizations:'Organizations & affiliations'} : {people: type === 'clans' ? 'Recorded clan members' : type === 'organizations' ? 'Recorded members & associates' : 'Related people'};
   const displayedLinks = new Set();
+  for(const item of model.itemsFor(record.recordId)){
+    if(item.titleRecordId)displayedLinks.add(item.titleRecordId);
+    for(const reference of item.links||[])displayedLinks.add(reference.recordId);
+  }
   if (type === 'people') {
     if (record.clan) displayedLinks.add(by('clans', record.clan)?.recordId);
     for (const entry of [...record.memberships, ...record.affiliations]) displayedLinks.add(entry.organizationId);
@@ -94,7 +98,7 @@ function flexibleSections(record, mechanicOnly = false) {
       return `<li>${title}${context}${entry.body ? `<p>${textWithLinks(entry.body, entry.links)}</p>` : ''}${children.length ? `<ul>${children.map(renderEntry).join('')}</ul>` : ''}</li>`;
     }
     const content=section.displayStyle === 'directory'
-      ? `<div class="location-directory">${entries.filter(x=>!x.parentItemId).map(entry=>`<details><summary>${escapeHTML(entry.title)}</summary>${entry.body?`<p>${textWithLinks(entry.body,entry.links)}</p>`:''}<ul class="note-list">${entries.filter(x=>x.parentItemId===entry.id).map(renderEntry).join('')}</ul></details>`).join('')}</div>`
+      ? `<div class="location-directory">${entries.filter(x=>!x.parentItemId).map(entry=>entry.titleRecordId&&!entry.body&&!entries.some(x=>x.parentItemId===entry.id) ? `<a class="record-link" href="${url(model.routeFor(model.byId(entry.titleRecordId)),model.byId(entry.titleRecordId).id)}">${escapeHTML(entry.title)}<span aria-hidden="true">↗</span></a>` : `<details><summary>${entry.titleRecordId ? referenceLink(entry.titleRecordId,entry.title) : escapeHTML(entry.title)}</summary>${entry.body?`<p>${textWithLinks(entry.body,entry.links)}</p>`:''}<ul class="note-list">${entries.filter(x=>x.parentItemId===entry.id).map(renderEntry).join('')}</ul></details>`).join('')}</div>`
       : `<ul class="note-list">${entries.filter(x => !x.parentItemId).map(renderEntry).join('')}</ul>`;
     return panel(section.heading,content,section.displayStyle==='directory'?'directory-panel':'');
   }).join('');
@@ -138,7 +142,7 @@ function detail(type, id) {
     const clan = by('clans', record.clan);
     if (record.type) facts.push(['Nature / type', escapeHTML(record.type)]);
     if (clan || record.type) facts.push(['Clan', clan ? link('clans', clan) : record.type === 'Mortal' ? 'Not applicable' : 'Unknown']);
-    const fields = [['person.ambition','Ambition'],['person.humanity','Humanity'],['person.generation','Generation'],['person.bloodPotency','Blood Potency'],['person.health','Health'],['person.willpower','Willpower']];
+    const fields = [['person.ambition','Ambition'],['person.age','Age'],['person.humanity','Humanity'],['person.generation','Generation'],['person.bloodPotency','Blood Potency'],['person.health','Health'],['person.willpower','Willpower']];
     for (const [key,label] of fields) {
       const item = model.itemsFor(record.recordId).find(x => x.fieldKey === key);
       if (item) facts.push([label, textWithLinks(String(item.value), item.links)]);
@@ -158,7 +162,7 @@ function detail(type, id) {
     }
   }
   if (type === 'chronicle') facts.push(['Session date', escapeHTML(record.date || 'Unknown')]);
-  return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${['Ambition','Security coverage'].includes(label) || (index === facts.length - 1 && (facts.length - facts.filter(([key]) => ['Ambition','Security coverage'].includes(key)).length) % 2 === 1) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
+  return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}${record.portrait ? `<div class="person-header"><img class="person-portrait" src="${escapeHTML(record.portrait.src)}" alt="${escapeHTML(record.portrait.alt)}" width="326" height="405" decoding="async"><div><h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}</div></div>` : `<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}`}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${['Ambition','Security coverage'].includes(label) || (index === facts.length - 1 && (facts.length - facts.filter(([key]) => ['Ambition','Security coverage'].includes(key)).length) % 2 === 1) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
 }
 
 function disciplineDetail(type, record) {

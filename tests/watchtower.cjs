@@ -16,8 +16,27 @@ test('floor directory and personnel keep nested notes under the existing locatio
  assert.equal(items.filter(x=>x.sectionId===floors.id&&!x.parentItemId).length,13);
  const privateFloors=sections.find(x=>x.templateKey==='private-floors');assert.equal(items.filter(x=>x.sectionId===privateFloors.id&&!x.parentItemId).length,3);
  const roster=sections.find(x=>x.templateKey==='security-personnel');assert.equal(items.filter(x=>x.sectionId===roster.id&&!x.parentItemId).length,10);
- assert(items.some(x=>x.body?.includes('$960,000')));
+ assert(model.itemsFor('organization:watchtower-security').some(x=>x.body?.includes('$960,000')));
  assert(model.searchText('places',model.byId(id)).includes('caliburn trust'));
  assert(model.searchText('places',model.byId(id)).includes('wayne merrick'));
  assert(items.some(x=>x.links?.some(link=>link.recordId==='place:bliss')));
+});
+
+test('security staff have reusable person records, group roles and reciprocal Watchtower links',()=>{
+ const group=model.by('organizations','watchtower-security');assert.equal(group.kind,'Security team');
+ const members=model.related('organizations',group).people;assert.equal(members.length,10);
+ for(const person of members){
+  assert(model.membershipConnections(person.recordId).some(x=>x.organizationId===group.recordId));
+  assert(person.places.includes('watchtower'));
+  assert(model.itemsFor(person.recordId).some(x=>x.fieldKey==='person.age'));
+  assert(model.related('people',person).places.some(x=>x.recordId===id));
+ }
+ const marcus=model.by('people','marcus-keene');assert.equal(marcus.memberships[0].role,'Team lead candidate');
+ assert.equal(marcus.type,undefined);assert.equal(marcus.clan,undefined);
+ assert(model.searchText('people',model.by('people','holly-lasker')).includes('sniper overwatch'));
+ assert(model.related('places',model.byId(id)).organizations.some(x=>x.recordId===group.recordId));
+});
+test('portrait attaches to Alan independently of presentation',()=>{
+ const alan=model.by('people','alan-sovereign');assert.equal(alan.portrait.src,'assets/alan sovereign.png');
+ assert.equal(model.by('people','marcus-keene').portrait,undefined);
 });

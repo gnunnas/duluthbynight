@@ -157,4 +157,6 @@
     containment.sourceRefs=[{sourceId:'source:twig-location-corrections'}];
   }
   D.viewConfig.tonight.heroImage={src:'assets/duluth night.jpg',alt:'Duluth harbor and the illuminated Aerial Lift Bridge at night.'};
+  D.sources.push({id:'source:alan-portrait',sourceKind:'image',label:'User-uploaded Alan Sovereign portrait'});
+  D.attachments.push({id:'attachment:alan:portrait',recordId:A,attachmentKind:'portrait',src:'assets/alan sovereign.png',alt:'Portrait of Alan Sovereign wearing glasses.',sourceRefs:[{sourceId:'source:alan-portrait'}]});
 })(window.CAMPAIGN);
