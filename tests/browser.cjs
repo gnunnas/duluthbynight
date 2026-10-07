@@ -137,7 +137,7 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
  assert.equal(await page.locator('main a[href="#disciplines/dominate"]').count(),1);
  await page.locator('main a[href="#disciplines/dominate"]').click();
  await page.getByRole('heading',{name:'Dominate',exact:true}).waitFor();
- assert.equal(await page.locator('main a[href="#people/alan-sovereign"]').count(),1);
+ assert.equal(await page.locator('main a[href^="#people/"]').count(),0);
  await visit(baseURL+'/#disciplines/animalism');
  assert.equal(await page.locator('.npc-panel').count(),5);
  await page.locator('main a[href="#powers/animalism-sense-the-beast"]').click();
@@ -174,7 +174,7 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
   await page.waitForURL('**/#powers/auspex-heightened-senses');
   await page.locator('main h1').filter({hasText:'Heightened Senses'}).waitFor();
   assert.equal(await page.locator('dialog[open]').count(),0);
-  assert.equal(await page.locator('main a[href="#people/alan-sovereign"]').count(),1);
+  assert.equal(await page.locator('main a[href^="#people/"]').count(),0);
  }
  // Every pre-migration record route must still reach its retained identity.
  const migrationReport=require('../migration/phase-1-report.json');

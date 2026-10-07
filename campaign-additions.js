@@ -149,4 +149,12 @@
     'Whispers of the 2nd Inquisition fill him with dread, fearing his dealing with the Giovanni have betrayed him.',
     "Secretly visits his old business associate Marlon, who has been committed to a mental hospital since he believes the ghost of his long dead friend Alan is visiting him. They discuss the old days but also future plans."
   ].entries())entry(A,vampire,'vampire-'+index,note,{links:[{text:'Horatio Ballard',recordId:'person:horatio-ballard'},{text:'Marlon',recordId:'person:marlon-falcone'}]});
+  // Confirmed geography corrections; retain record IDs and all other connections.
+  D.sources.push({id:'source:twig-location-corrections',sourceKind:'user-confirmation',label:'Pink Slips and Blacklight are in Twig'});
+  for(const id of ['place:pink-slips','place:blacklight']){
+    const containment=D.relationships.find(x=>x.fromRecordId===id&&x.relationshipType==='contained_in');
+    containment.toRecordId='place:twig';
+    containment.sourceRefs=[{sourceId:'source:twig-location-corrections'}];
+  }
+  D.viewConfig.tonight.heroImage={src:'assets/duluth night.jpg',alt:'Duluth harbor and the illuminated Aerial Lift Bridge at night.'};
 })(window.CAMPAIGN);
