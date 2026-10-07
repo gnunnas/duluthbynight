@@ -9,19 +9,19 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
   // Fragment navigation finishes before hashchange renders; wait for the route state.
   await page.waitForFunction(() => {
    const raw = location.hash.slice(1) || 'home';
-   const hash = CAMPAIGN.legacyRoutes[raw] || raw;
+   const hash = model.resolveRoute(raw);
    if (raw !== hash) return false;
    if (hash === 'app') return !!document.querySelector('main h1');
    const [path, query = ''] = hash.split('?');
    const parts = path.split('/');
    let id; try { id = parts[1] ? decodeURIComponent(parts[1]) : null; } catch { id = '__invalid__'; }
-   return state.route === (parts.length > 2 ? '__invalid__' : parts[0]) && state.id === id && state.query === (new URLSearchParams(query).get('q') || '');
+   return state.route === (parts.length > 2 ? '__invalid__' : parts[0]) && state.id === id && state.query === (new URLSearchParams(query).get('q') || '') && state.category === (new URLSearchParams(query).get('category') || null);
   });
  }
 
  await visit(baseURL);
  const records=await page.evaluate(()=>Object.entries(createCampaignModel(CAMPAIGN).collections).flatMap(([type,items])=>items.map(x=>[type,x.id,x.name||x.title])));
- const routes=['home','people','places','threads','factions','groups','clans','chronicle','search',...records.map(([type,id])=>type+'/'+id)];
+ const routes=['home','people','places','threads','organizations','clans','chronicle','schemes','events','search',...records.map(([type,id])=>type+'/'+id)];
  for(const width of [375,1280]) {
   await page.setViewportSize({width,height:900});
   for(const route of routes){
@@ -29,12 +29,12 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
    assert.equal(await page.locator('main h1').count(),1,route);
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${width} ${route}`);
    for(const href of await page.locator('main a').evaluateAll(nodes=>nodes.map(x=>x.getAttribute('href')))){
-    const [type,id]=href.slice(1).split('/');assert(routes.includes(type+(id?'/'+id:'')),`broken ${href}`);
+    const [type,id]=href.slice(1).split('?')[0].split('/');assert(routes.includes(type+(id?'/'+id:'')),`broken ${href}`);
    }
   }
  }
  for(const [type,id,title] of records){await visit(baseURL + '/#'+type+'/'+id);assert.equal(await page.locator('main h1').innerText(),title)}
- for(const [from,to] of [['people/kyra','places/bliss'],['people/chains','people/spokes'],['people/portia','threads/dark-mother'],['threads/dark-mother','chronicle/2026-09-11'],['people/kyra','factions/duluth-camarilla'],['people/kyra','clans/toreador'],['people/chains','groups/spokes-crew'],['groups/bliss','places/bliss']]){
+ for(const [from,to] of [['people/kyra','places/bliss'],['people/chains','people/spokes'],['people/portia','threads/dark-mother'],['threads/dark-mother','chronicle/2026-09-11'],['people/kyra','organizations/duluth-camarilla'],['people/kyra','clans/toreador'],['people/chains','organizations/spokes-crew'],['organizations/bliss','places/bliss']]){
   await visit(baseURL + '/#'+from);await page.locator('main a[href="#'+to+'"]').first().click();await page.waitForURL('**/#'+to);await page.waitForFunction(expected => document.querySelector('main h1')?.textContent === expected, records.find(([type,id])=>type+'/'+id===to)[2]);await page.locator('main a[href="#'+from+'"]').first().waitFor();assert(await page.locator('main a[href="#'+from+'"]').count(),`missing reverse ${to} -> ${from}`);
  }
  await visit(baseURL + '/#places/duluth');
@@ -51,7 +51,15 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
  const locations = page.locator('section').filter({has:page.getByRole('heading',{name:'Individual locations'})});
  assert.equal(await geography.locator('a[href="#places/rack"]').count(),1);
  assert.equal(await locations.locator('a[href="#places/rack"]').count(),0);
- assert.equal(await locations.locator('a[href="#places/watchtower"]').count(),1);
+ assert.equal(await locations.locator('a[href="#places/watchtower"]').count(),0);
+ assert.equal(await locations.locator('a[href="#places/bliss"]').count(),0);
+ await visit(baseURL + '/#places/twig');
+ assert.equal(await page.locator('main a[href="#places/watchtower"]').count(),1);
+ assert.equal(await page.locator('main a[href="#places/bliss"]').count(),1);
+ for (const id of ['watchtower','bliss']) {
+  await visit(baseURL + '/#places/'+id);
+  assert.deepEqual(await page.locator('.crumbs a').allTextContents(),['Places','Twig']);
+ }
  await visit(baseURL + '/#places/watchtower');
  const facts = await page.locator('.facts').innerText();
  assert(facts.includes('Building') && facts.includes('Recorded claim') && facts.includes('Unknown'));
@@ -62,7 +70,7 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
  await visit(baseURL + '/#people/sydney');
  assert.match(await page.locator('.facts').innerText(), /Affiliation status\s+Independent/i);
  assert.equal(await page.locator('main a[href="#factions/independent"]').count(),0);
- for (const [legacy, current] of [['factions/spokes-crew','groups/spokes-crew'],['factions/night-forum','groups/night-forum'],['factions/bliss','groups/bliss'],['factions/independent','search?q=Independent']]) {
+ for (const [legacy, current] of [['factions/spokes-crew','organizations/spokes-crew'],['factions/night-forum','organizations/night-forum'],['factions/bliss','organizations/bliss'],['groups/spokes-crew','organizations/spokes-crew'],['groups/night-forum','organizations/night-forum'],['groups/bliss','organizations/bliss'],['factions/duluth-camarilla','organizations/duluth-camarilla'],['groups','organizations?category=group'],['factions','organizations?category=political'],['factions/independent','search?q=Independent']]) {
   await visit(baseURL + '/#'+legacy);assert.equal(new URL(page.url()).hash,'#'+current);
  }
  await visit(baseURL + '/#search?q=Toreador');
@@ -75,22 +83,39 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
  await page.setViewportSize({width:375,height:812});await visit(baseURL + '/#home');await page.getByRole('button',{name:'Open navigation'}).click();assert.equal(await page.locator('#menuBtn').getAttribute('aria-expanded'),'true');await page.locator('#nav a[href="#people"]').click();await page.waitForURL('**/#people');await page.waitForFunction(()=>document.querySelector('main h1')?.textContent==='People');assert.equal(await page.locator('#menuBtn').getAttribute('aria-expanded'),'false');await page.goBack();await page.waitForFunction(()=>document.querySelector('.hero')!==null);assert.equal(await page.locator('main h1').innerText(),'DULUTH\nBY NIGHT');
  await page.locator('.brand').click();await page.waitForFunction(()=>document.querySelector('.hero')!==null);
  await visit(baseURL+'/#app');assert.equal(await page.locator('.hero').count(),1);
- // Temporary browser-only fixtures validate unpopulated capabilities without adding lore.
- await page.evaluate(() => {
-  CAMPAIGN.groups.push({id:'test-parent',name:'Test parent'}, {id:'test-child',name:'Test child',parent:'test-parent'});
-  CAMPAIGN.people.push({id:'test-person',name:'Test person',type:'Mortal',memberships:[{group:'test-parent',role:'Test role'}, {group:'test-child',role:null}]});
-  location.hash = 'groups/test-parent';
+ await visit(baseURL+'/#organizations/night-forum');
+ assert.equal(await page.locator('[aria-label="Organization hierarchy"] a[href="#organizations/anarchs"]').count(),1);
+ assert.equal(await page.locator('main a[href="#people/nora"]').count(),1);
+ await visit(baseURL+'/#organizations/anarchs');
+ assert.equal(await page.locator('main a[href="#organizations/night-forum"]').count(),1);
+ assert.equal(await page.locator('main a[href="#people/nora"]').count(),0);
+ await visit(baseURL+'/#people/nora');
+ assert.match(await page.locator('.facts').innerText(),/Association/i);
+ assert.equal(await page.locator('main a[href="#organizations/anarchs"]').count(),0);
+ for(const query of ['Canal Park','The Rack']) {
+  await visit(baseURL+'/#search?q='+encodeURIComponent(query));
+  assert.equal(await page.locator('#searchResults a[href="#places/rack"]').count(),1);
+ }
+ await visit(baseURL+'/#places/rack');
+ assert.equal(await page.locator('main h1').innerText(),'Canal Park · The Rack');
+ assert.match(await page.locator('.facts').innerText(),/unconfirmed/i);
+ // Independent browser check of inheritance using test-only normalized records.
+ const inferred = await page.evaluate(() => {
+  const fixture=structuredClone(CAMPAIGN);
+  fixture.records.push({id:'person:test-member',recordType:'person',routeKey:'test-member',displayName:'Test-only member'});
+  fixture.relationships.push({id:'test:member',relationshipType:'member_of',fromRecordId:'person:test-member',toRecordId:'organization:night-forum',knowledgeState:'recorded'});
+  return createCampaignModel(fixture).membershipConnections('person:test-member');
  });
- await page.waitForFunction(()=>document.querySelector('main h1')?.textContent==='Test parent');
- assert.equal(await page.locator('main a[href="#groups/test-child"]').count(),1);
- await page.locator('main a[href="#groups/test-child"]').click();
- await page.waitForFunction(()=>document.querySelector('main h1')?.textContent==='Test child');
- assert.equal(await page.locator('[aria-label="Organization hierarchy"] a[href="#groups/test-parent"]').count(),1);
- await page.locator('main a[href="#people/test-person"]').click();
- await page.waitForFunction(()=>document.querySelector('main h1')?.textContent==='Test person');
- assert.match(await page.locator('.facts').innerText(), /Test role/i);
- assert.match(await page.locator('.facts').innerText(), /Clan\s+Not applicable/i);
- assert.equal(await page.locator('main a[href="#groups/test-child"]').count(),2);
- await page.reload(); // Discard the test-only records.
+ assert.equal(inferred.length,2);
+ assert.equal(inferred.find(x=>x.organizationId==='organization:anarchs').direct,false);
+ // Every pre-migration record route must still reach its retained identity.
+ const migrationReport=require('../migration/phase-1-report.json');
+ for(const [legacy,canonical] of Object.entries(migrationReport.routes)) {
+  await visit(baseURL+'/#'+legacy);
+  assert.equal(new URL(page.url()).hash,'#'+canonical);
+  const identity=await page.evaluate(()=>by(state.route,state.id)?.recordId);
+  const sourceKey=legacy.replace(/^chronicle\//,'sessions/');
+  assert.equal(identity,migrationReport.idMap[sourceKey]);
+ }
  assert.deepEqual(errors,[]);console.log(`PASS: ${routes.length} routes at mobile and desktop sizes; all record titles and rendered links; reciprocal links; hierarchy; search; invalid routes; mobile menu and browser back. No browser errors.`);await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

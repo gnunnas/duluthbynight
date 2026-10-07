@@ -1,58 +1,67 @@
 # Duluth by Night
 
-Campaign companion website for the Duluth by Night Vampire: The Masquerade chronicle.
+Mobile-first campaign companion for the Duluth by Night Vampire: The Masquerade chronicle. Preserve the approved prototype's Lake Superior / industrial Duluth / Vampire noir visual direction.
 
-This repository is the master codebase for the project. The approved V4 prototype establishes the visual direction and information architecture.
+## Run locally
 
-## Development
-
-This is a dependency-free static website. From the repository root, run:
+The application is a dependency-free static website. From the repository root:
 
 ```sh
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-Open the server in your local browser. Hash routes support direct record links and browser history without server rewrites.
+Hash routes support direct record links and browser history without server rewrites. The manifest supplies install metadata; there is no service worker or offline guarantee.
 
-- `data.js`: recorded campaign information and explicit relationships. Unknown fields remain absent. People, clans, groups, political affiliations, and personal relationships have separate records and stable IDs; no hierarchy is assumed.
-- `campaign-model.js`: DOM-independent data access, relationship resolution, and search indexing.
-- `app.js`: navigation and presentation.
-- `styles.css`: the existing Lake Superior / industrial noir visual system and responsive layouts.
-- `index.html` and `manifest.webmanifest`: application shell and install metadata. There is currently no service worker or offline guarantee.
+## Current architecture: Phase 1
 
-Places use `parent` as the canonical hierarchy. Geographic areas (including districts, suburbs, and territories) are displayed separately from individual locations; a site may remain directly under a city when its district is unknown. Legacy `children` arrays remain in the data for compatibility but are not used to determine containment.
+- `data.js`: normalized **public** campaign data (`schemaVersion: 2`). Records have globally unique IDs, stable route keys, contextual names, sections/items, typed relationships, claims, explicit membership implications, and provenance. IDs distinguish the Bliss organization from the Bliss location.
+- `campaign-model.js`: validation, relationship resolution, membership derivation, search, and an adapter for the existing views. Its projected fields are computed, not a second editable dataset.
+- `app.js`: navigation and presentation. Existing detail layouts remain; full flexible-section interfaces are Phase 2.
+- `styles.css` / `index.html`: existing visual system and application shell.
+- `migration/phase-1-source.js`: retained pre-migration public source. It is not loaded by the application.
+- `migration/phase-1-report.json`: complete ID/route map, counts, semantic changes, and unresolved geography.
+- `scripts/migrate-phase-1.cjs`: deterministic source-to-normalized migration and comparison check.
 
-Territory describes a geographic region. Domain describes a claim and is independent of place type or geographic level: a building, street, territory, or city may carry a `domain` object. `domain.claimant` records the claimant when known; null leaves it unknown. The Watchtower retains its existing domain designation while its physical type is Building. No new claimants or boundaries are inferred.
+Only names and safe facts confirmed in this conversation were added; the supplied private OneNote dossiers were not imported. All data delivered by this static site is readable by visitors. There is no private-data permission system. Authentication, row-level security, and protected storage remain Phase 3 requirements.
 
-People retain a recorded `type` (Kindred, Mortal, Ghoul, or Thin-Blood). No additional nature hierarchy or shared clan is inferred. `clan` references a clan ID when known. `memberships` is an array of `{group, role}` entries; `affiliations` is an array of `{faction, role}` entries. Both allow multiple connections and null/unknown roles. Missing arrays indicate unknown/unrecorded connections, not confirmed absence. `affiliationStatus: "Independent"` is a status rather than an organization.
+### Relationship rules
 
-Groups and political affiliations have separate collections. A group's `parent` can reference another group; political affiliation records can likewise reference a parent in their own collection. Only recorded parent relationships should be populated. Group parentage does not automatically grant membership in the parent group. Clan membership is independent of group membership and political affiliation.
+Geographic containment is stored once as `contained_in`, with children and breadcrumbs derived from it. Territories and individual sites remain distinct. Watchtower and Bliss are under Twig; Nopeming is under Eldes Corner. Canal Park/The Rack is one place with two contextual names and the original `rack` route key. Its current Downtown parent remains unconfirmed and flagged, rather than silently replaced.
 
-Personal relationships are separate `{id, from, to, kind, label}` records. Existing unspecified links use `kind: "association"` and `label: null`, so the UI does not imply friendship, lineage, or a specific role. More specific, directed relationships will need explicit labels for each direction before rendering them as sire/childe or similar roles. Summary references to people without records remain plain text.
+Organizations unify the old groups/factions collections. `organizations?category=group` and `organizations?category=political` preserve useful browse categories. Clan lineage is separate. A group's hierarchy does not imply membership inheritance on its own.
 
-Other relationship arrays contain IDs (`people`, `places`, `threads`, `groups`, `factions`, `sessions`). NPC place associations now use `places` arrays. Views derive reverse links rather than storing duplicate facts. The Bliss business-association group links to the separate Bliss location; neither membership nor association establishes ownership or domain. Session links reflect the existing session summary. Old mixed-faction bookmarks redirect through `legacyRoutes`.
+The explicit Night Forum → Anarchs rule applies to confirmed `member_of` connections only. Derived affiliation retains provenance and is not stored as a duplicate person membership. Nora's recorded association does not establish formal membership, so she is not silently added to the Anarch roster. Unknown roles remain null. Independent remains a status.
 
-Keep future database access behind `createCampaignModel` rather than embedding lore in templates. No database, editing interface, authentication, or private record storage is introduced by this structure.
+Claims remain separate from ownership and residence; the Watchtower's existing claim retains an unknown claimant. Relationship meanings are preserved as generic association when specificity is unknown. Source references and date qualifiers are retained; session references do not prove attendance.
 
-All data shipped to this static client is public. Do not add private Storyteller information here. Future private records require authenticated access and database permissions, including Supabase row-level security; hiding content in the UI would not protect it.
+Old person/place/clan/thread/chronicle links still work. Group/faction bookmarks redirect to organizations, including the earlier mixed-faction aliases. Search matches contextual names, facts, and associated records. Renaming a display label does not change its route key.
 
-### Validation
+## Validation
 
 ```sh
 node --check app.js
 node --check data.js
 node --check campaign-model.js
 node --test tests/model.cjs
+node scripts/migrate-phase-1.cjs --check
 ```
 
-Browser checks should cover all listing and record routes, reciprocal relationships, city/district/site grouping, breadcrumbs, search (including empty and unmatched queries), unknown URLs, browser back/forward, keyboard navigation, and narrow-screen overflow. Search is case-insensitive and searches recorded names, summaries, clans, affiliations, types, and session dates.
-
-The dependency-free model tests check reference integrity, unknown lineage, reciprocal relationships, Independent status, and multiple memberships/affiliations.
-
-The repeatable browser regression suite is `tests/browser.cjs`. With the server running and Playwright available in your development tooling, run:
+With the server running and Playwright available in development tooling:
 
 ```sh
 CHROMIUM_PATH=/usr/bin/chromium node tests/browser.cjs
 ```
 
-Omit `CHROMIUM_PATH` to use Playwright's installed Chromium. Set `CAMPAIGN_TEST_URL` to test a different server. The suite checks all current routes at mobile and desktop widths, record titles and link targets, representative reciprocal relationships, place hierarchy, search, malformed links, and mobile navigation/history.
+Omit `CHROMIUM_PATH` to use Playwright's installed Chromium. Set `CAMPAIGN_TEST_URL` for another server. Browser checks cover every canonical listing/record page at mobile and desktop widths, all pre-migration record bookmarks, reciprocal links, aliases, search, geography, inheritance, malformed URLs, menu behavior, and history.
+
+The model suite verifies retained source facts/references, unique identities, semantic corrections, hierarchy validation, one-way inheritance, unknown lineage, date-aware derivation, deduplicated provenance, directional relationships, and minimal/nested records.
+
+## Migration and future work
+
+Read the [Phase 1 migration report](docs/phase-1-migration-report.md) for outcomes and limitations, and the [field model and staged migration design](docs/campaign-field-model-and-migration.md) for the complete plan.
+
+The migration script defaults to **comparison only**; it does not refresh dependencies or run on startup. `--write` deliberately rebuilds `data.js` and the JSON report from the retained source plus documented transformations. Do not run it over new normalized authoring changes without intentionally reconciling those changes first. The baseline is an audit/rollback source, not a parallel live dataset.
+
+Data and adapter versions must be restored together during rollback. Restoring the old `data.js` alone is not compatible with the normalized adapter. Git retains the pre-migration application, and the source snapshot/report retain the complete data identity map.
+
+Phase 2 will render flexible sections, entries, formal offices, detail modules, and attachments. Phase 3 will add Supabase, authenticated editing, and real granular disclosure permissions. No database or private note import is part of Phase 1.
