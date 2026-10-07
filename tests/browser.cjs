@@ -51,7 +51,15 @@ const baseURL = process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000';
  const locations = page.locator('section').filter({has:page.getByRole('heading',{name:'Individual locations'})});
  assert.equal(await geography.locator('a[href="#places/rack"]').count(),1);
  assert.equal(await locations.locator('a[href="#places/rack"]').count(),0);
- assert.equal(await locations.locator('a[href="#places/watchtower"]').count(),1);
+ assert.equal(await locations.locator('a[href="#places/watchtower"]').count(),0);
+ assert.equal(await locations.locator('a[href="#places/bliss"]').count(),0);
+ await visit(baseURL + '/#places/twig');
+ assert.equal(await page.locator('main a[href="#places/watchtower"]').count(),1);
+ assert.equal(await page.locator('main a[href="#places/bliss"]').count(),1);
+ for (const id of ['watchtower','bliss']) {
+  await visit(baseURL + '/#places/'+id);
+  assert.deepEqual(await page.locator('.crumbs a').allTextContents(),['Places','Twig']);
+ }
  await visit(baseURL + '/#places/watchtower');
  const facts = await page.locator('.facts').innerText();
  assert(facts.includes('Building') && facts.includes('Recorded claim') && facts.includes('Unknown'));

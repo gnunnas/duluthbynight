@@ -56,3 +56,8 @@ CHROMIUM_PATH=/usr/bin/chromium node tests/browser.cjs
 ```
 
 Omit `CHROMIUM_PATH` to use Playwright's installed Chromium. Set `CAMPAIGN_TEST_URL` to test a different server. The suite checks all current routes at mobile and desktop widths, record titles and link targets, representative reciprocal relationships, place hierarchy, search, malformed links, and mobile navigation/history.
+
+
+## Proposed next model
+
+The [campaign field model and migration plan](docs/campaign-field-model-and-migration.md) is a design draft, not current application behavior. It covers flexible NPC/location records, unified organizations, typed relationships, explicit membership inheritance, future granular permissions, and a migration that preserves existing facts and URLs.
