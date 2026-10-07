@@ -1,6 +1,6 @@
 // Normalized public-data adapter. No authentication or private-data filtering is implied.
 (function (root) {
-  const routes = {person:'people',place:'places',clan:'clans',organization:'organizations',thread:'threads',session:'chronicle',scheme:'schemes',event:'events'};
+  const routes = {person:'people',place:'places',clan:'clans',organization:'organizations',thread:'threads',session:'chronicle',scheme:'schemes',event:'events',discipline:'disciplines',power:'powers'};
   function validateCampaign(data) {
     const errors = [];
     const arrayFields=['records','names','sections','items','relationshipTypes','relationships','domainClaims','membershipImplications','attachments','sources'];
@@ -50,10 +50,31 @@
     for(const kind of ['contained_in','subgroup_of'])cycles([...relationships.values()].filter(x=>x.relationshipType===kind).map(x=>[x.fromRecordId,x.toRecordId]),kind);
     for(const entry of items.values()) {
       if(!records.has(entry.recordId)||sections.get(entry.sectionId)?.recordId!==entry.recordId)fail('Invalid item owner/section: '+entry.id);
+      if(entry.titleRecordId && !records.has(entry.titleRecordId)) fail('Missing title reference: '+entry.id);
+      for(const link of entry.links||[])if(!records.has(link.recordId)||!link.text)fail('Invalid inline link: '+entry.id);
+      if(entry.itemKind==='mechanic' && (!Number.isFinite(entry.value?.rating)||entry.value.rating<0))fail('Invalid mechanic rating: '+entry.id);
+      if(entry.value?.referenceRecordId && !records.has(entry.value.referenceRecordId))fail('Missing mechanic reference: '+entry.id);
+      for(const ability of entry.value?.abilities||[])if(ability.recordId&&!records.has(ability.recordId))fail('Missing ability reference: '+entry.id);
       if(entry.parentItemId && items.get(entry.parentItemId)?.recordId!==entry.recordId)fail('Invalid parent item: '+entry.id);
       if(entry.subjectRef){const lookup={relationship:relationships,claim:claims,name:names};if(!lookup[entry.subjectRef.kind]?.has(entry.subjectRef.id))fail('Invalid item subject: '+entry.id);}
     }
     cycles([...items.values()].filter(x=>x.parentItemId).map(x=>[x.id,x.parentItemId]),'item nesting');
+    for(const record of records.values())if(record.recordType==='power'){
+      const parents=[...relationships.values()].filter(x=>x.fromRecordId===record.id&&x.relationshipType==='power_of');
+      if(parents.length!==1)fail('Ability needs exactly one discipline: '+record.id);
+      const level=[...items.values()].find(x=>x.recordId===record.id&&x.fieldKey==='power.level')?.value;
+      if(!Number.isInteger(level)||level<1||level>5)fail('Invalid ability level: '+record.id);
+    }
+    for(const entry of items.values())if(entry.fieldKey==='mechanics.discipline'){
+      const discipline=entry.value?.referenceRecordId;
+      if(discipline&&records.get(discipline)?.recordType!=='discipline')fail('Invalid discipline reference: '+entry.id);
+      for(const ability of entry.value?.abilities||[])if(ability.recordId&&records.has(ability.recordId)){
+        if(records.get(ability.recordId).recordType!=='power')fail('Invalid ability reference: '+entry.id);
+        if(!discipline||![...relationships.values()].some(x=>x.relationshipType==='power_of'&&x.fromRecordId===ability.recordId&&x.toRecordId===discipline))fail('Ability discipline mismatch: '+entry.id);
+        const level=[...items.values()].find(x=>x.recordId===ability.recordId&&x.fieldKey==='power.level')?.value;
+        if(level>entry.value.rating)fail('Ability exceeds discipline rating: '+entry.id);
+      }
+    }
     for(const claim of claims.values()) {
       if(records.get(claim.placeId)?.recordType!=='place')fail('Invalid claim place: '+claim.id);
       if(claim.claimantRecordId && !['person','organization'].includes(records.get(claim.claimantRecordId)?.recordType))fail('Invalid claimant: '+claim.id);
@@ -117,6 +138,9 @@
     const projected=data.records.map(raw=>{
       const record={id:raw.routeKey,recordId:raw.id,routeKey:raw.routeKey,recordType:raw.recordType,name:raw.displayName,summary:field(raw.id,'overview')?.body};
       record.type=value(raw.id,'person.nature');record.kind=value(raw.id,`${raw.recordType}.kind`);
+      record.level=value(raw.id,'power.level');
+      const discipline=direct(raw.id).find(x=>x.relationshipType==='power_of');
+      if(discipline)record.disciplineId=discipline.toRecordId;
       record.date=value(raw.id,'session.date')?.text;record.affiliationStatus=value(raw.id,'person.affiliationStatus');
       record.category=value(raw.id,'organization.browseCategory');
       const parent=direct(raw.id).find(x=>['contained_in','subgroup_of'].includes(x.relationshipType));
@@ -146,9 +170,14 @@
       const sets=Object.fromEntries(Object.keys(collections).map(x=>[x,new Set()]));
       const add=id=>{const target=byId.get(id);if(target&&id!==record.recordId)sets[canonicalType(target)].add(id);};
       for(const relation of data.relationships){
-        if(['contained_in','subgroup_of'].includes(relation.relationshipType))continue;
+        if(['contained_in','subgroup_of','power_of'].includes(relation.relationshipType))continue;
         if(relation.fromRecordId===record.recordId)add(relation.toRecordId);
         if(relation.toRecordId===record.recordId)add(relation.fromRecordId);
+      }
+      for(const item of data.items){
+        const refs=[item.value?.referenceRecordId,...(item.value?.abilities||[]).map(x=>x.recordId)].filter(Boolean);
+        if(item.recordId===record.recordId)for(const id of refs)add(id);
+        if(refs.includes(record.recordId))add(item.recordId);
       }
       if(record.recordType==='person')for(const connection of membershipConnections(record.recordId))add(connection.organizationId);
       if(record.recordType==='organization')for(const person of collections.people)if(membershipConnections(person.recordId).some(x=>x.organizationId===record.recordId))add(person.recordId);
@@ -164,7 +193,10 @@
     function searchText(type,record){
       const values=[record.name,record.type,record.kind,record.date,record.affiliationStatus];
       values.push(...data.names.filter(x=>x.recordId===record.recordId).map(x=>x.text));
-      for(const item of data.items.filter(x=>x.recordId===record.recordId))values.push(item.body,typeof item.value==='string'?item.value:null,item.title,item.qualifier);
+      for(const item of data.items.filter(x=>x.recordId===record.recordId)) {
+        values.push(item.body,typeof item.value==='string'?item.value:null,item.title,item.qualifier,...(item.value?.specialties||[]));
+        for(const ability of item.value?.abilities||[])values.push(ability.name,ability.notes,rawById.get(ability.recordId)?.displayName);
+      }
       for(const relation of direct(record.recordId))if(!['contained_in','subgroup_of'].includes(relation.relationshipType))values.push(rawById.get(relation.toRecordId)?.displayName);
       if(record.recordType==='person')for(const connection of membershipConnections(record.recordId))values.push(rawById.get(connection.organizationId)?.displayName);
       return values.filter(Boolean).join(' ').toLocaleLowerCase();
@@ -183,7 +215,7 @@
       }
     }
     const tonight={...data.viewConfig.tonight,place:rawById.get(data.viewConfig.tonight.place).routeKey,faces:data.viewConfig.tonight.faces.map(id=>rawById.get(id).routeKey)};
-    return {collections,by,byId:id=>byId.get(id),related,searchText,resolveRoute,membershipConnections,personalRelationships,tonight};
+    return {collections,by,byId:id=>byId.get(id),routeFor:canonicalType,itemsFor:id=>data.items.filter(x=>x.recordId===id),sectionsFor:id=>data.sections.filter(x=>x.recordId===id).sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0)),related,searchText,resolveRoute,membershipConnections,personalRelationships,tonight};
   }
   root.createCampaignModel=createCampaignModel;root.validateCampaign=validateCampaign;
   if(typeof module!=='undefined')module.exports={createCampaignModel,validateCampaign};
