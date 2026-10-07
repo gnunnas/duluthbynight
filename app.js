@@ -93,7 +93,10 @@ function flexibleSections(record, mechanicOnly = false) {
       const context = structural.length ? `<p class="connection-context">${structural.map(x => escapeHTML(x.label)).join(' · ')}</p>` : '';
       return `<li>${title}${context}${entry.body ? `<p>${textWithLinks(entry.body, entry.links)}</p>` : ''}${children.length ? `<ul>${children.map(renderEntry).join('')}</ul>` : ''}</li>`;
     }
-    return panel(section.heading, `<ul class="note-list">${entries.filter(x => !x.parentItemId).map(renderEntry).join('')}</ul>`);
+    const content=section.displayStyle === 'directory'
+      ? `<div class="location-directory">${entries.filter(x=>!x.parentItemId).map(entry=>`<details><summary>${escapeHTML(entry.title)}</summary>${entry.body?`<p>${textWithLinks(entry.body,entry.links)}</p>`:''}<ul class="note-list">${entries.filter(x=>x.parentItemId===entry.id).map(renderEntry).join('')}</ul></details>`).join('')}</div>`
+      : `<ul class="note-list">${entries.filter(x => !x.parentItemId).map(renderEntry).join('')}</ul>`;
+    return panel(section.heading,content,section.displayStyle==='directory'?'directory-panel':'');
   }).join('');
 }
 function personSections(record) {
@@ -144,6 +147,10 @@ function detail(type, id) {
   }
   if (type === 'organizations') facts.push(['Organization type', escapeHTML(record.kind || 'Unknown')], ['Parent organization', by('organizations', record.parent) ? link('organizations', by('organizations', record.parent)) : 'Unknown']);
   if (type === 'places') {
+    for(const [key,label] of [['place.havenFor','Haven for'],['place.floorCount','Floors'],['place.businessFloors','Business floors'],['place.parkingLevels','Parking levels'],['place.resourcesBonus','Resources'],['place.securityCoverage','Security coverage']]){
+      const item=model.itemsFor(record.recordId).find(x=>x.fieldKey===key);
+      if(item)facts.push([label,escapeHTML(item.value)]);
+    }
     facts.push(['Place type', escapeHTML(record.kind)]);
     if (record.reviewIssues?.some(x => x.displayMessage)) facts.push(['Geography', escapeHTML(record.reviewIssues.filter(x => x.displayMessage).map(x => x.displayMessage).join(' '))]);
     if (record.domain) {
@@ -151,7 +158,7 @@ function detail(type, id) {
     }
   }
   if (type === 'chronicle') facts.push(['Session date', escapeHTML(record.date || 'Unknown')]);
-  return `<article class="detail ${type === 'people' ? 'npc-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${label === 'Ambition' || (index === facts.length - 1 && (facts.length - facts.filter(([key]) => key === 'Ambition').length) % 2 === 1) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
+  return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${['Ambition','Security coverage'].includes(label) || (index === facts.length - 1 && (facts.length - facts.filter(([key]) => ['Ambition','Security coverage'].includes(key)).length) % 2 === 1) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
 }
 
 function disciplineDetail(type, record) {
