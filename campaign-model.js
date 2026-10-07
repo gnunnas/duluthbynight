@@ -137,6 +137,7 @@
     }
     const projected=data.records.map(raw=>{
       const record={id:raw.routeKey,recordId:raw.id,routeKey:raw.routeKey,recordType:raw.recordType,name:raw.displayName,summary:field(raw.id,'overview')?.body};
+      record.portrait=data.attachments.find(x=>x.recordId===raw.id&&x.attachmentKind==='portrait');
       record.type=value(raw.id,'person.nature');record.kind=value(raw.id,`${raw.recordType}.kind`);
       record.level=value(raw.id,'power.level');
       const discipline=direct(raw.id).find(x=>x.relationshipType==='power_of');

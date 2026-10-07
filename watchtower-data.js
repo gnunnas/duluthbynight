@@ -142,8 +142,48 @@
     ['Holly Lasker',28,'Private military contractor, worked surveillance in unstable zones.','Drone recon, sniper overwatch.','Olivia tracked her down via a tip from a friend.'],
     ['Jonas Speer',45,'Former U.S. Marshal, ran witness protection in the upper Midwest.','Discreet relocation, identity management.','Olivia crossed paths with him during a federal leak case — he “owes her one”.']
   ];
+  const groupId='organization:watchtower-security';
+  function record(id,recordType,routeKey,displayName){
+    D.records.push({id,recordType,routeKey,displayName});
+    D.names.push({id:'name:'+id+':primary',recordId:id,text:displayName,nameKind:'common',sourceRefs});
+  }
+  function ownSection(id,key,heading,sortOrder=0){
+    const sectionId='section:'+id+':'+key;
+    D.sections.push({id:sectionId,recordId:id,templateKey:key,heading,sortOrder});return sectionId;
+  }
+  function ownItem(id,sectionId,key,extra){D.items.push({id:'item:'+id+':'+key,recordId:id,sectionId,itemKind:'note',knowledgeState:'recorded',sourceRefs,...extra});}
+  function relation(key,type,fromRecordId,toRecordId){
+    const id='relationship:watchtower-security:'+key;
+    D.relationships.push({id,relationshipType:type,fromRecordId,toRecordId,knowledgeState:'recorded',sourceRefs});return id;
+  }
+  record(groupId,'organization','watchtower-security','Watchtower Security');
+  const groupFacts=ownSection(groupId,'facts','Recorded facts');
+  ownItem(groupId,groupFacts,'category',{itemKind:'fact',fieldKey:'organization.browseCategory',value:'group',valueType:'text'});
+  ownItem(groupId,groupFacts,'kind',{itemKind:'fact',fieldKey:'organization.kind',value:'Security team',valueType:'text'});
+  D.relationshipTypes.push({id:'protects',fromTypes:['organization'],toTypes:['place'],forwardLabel:'Protects',reverseLabel:'Protected by',symmetric:false});
+  relation('protects','protects',groupId,recordId);
+  // Operational details belong to the group, not to ten duplicate character dossiers.
+  const overviewSection=ownSection(groupId,'overview','Overview');
+  const overview=D.items.find(x=>x.id==='item:'+recordId+':security-overview');
+  ownItem(groupId,overviewSection,'overview',{fieldKey:'overview',body:overview.body});
+  overview.body='Watchtower Security protects the coterie’s haven. Open the team page for staffing, shifts, budget, and its members.';
+  overview.links=[{text:'Watchtower Security',recordId:groupId}];
+  for(const sectionId of [staffing,budget]){
+    D.sections.find(x=>x.id===sectionId).recordId=groupId;
+    for(const item of D.items.filter(x=>x.sectionId===sectionId))item.recordId=groupId;
+  }
+  const keys=['marcus-keene','diana-rojas','reggie-marshall','callie-jun','wayne-merrick','nina-halberg','cameron-wells','trevor-knight','holly-lasker','jonas-speer'];
   officers.forEach(([title,age,background,specialty,recruited],index)=>{
-    const parent=entry(personnel,'officer-'+index,null,{title});
-    list(personnel,'officer-'+index+'-note',['Age: '+age,'Background: '+background,'Specialty: '+specialty,'Recruited: '+recruited],parent);
+    const personId='person:'+keys[index],displayName=title.replace(' (Team Lead Candidate)','');
+    record(personId,'person',keys[index],displayName);
+    const candidate=title.includes('Team Lead Candidate'),role=candidate?'Team lead candidate':'Security officer';
+    const facts=ownSection(personId,'facts','Overview');
+    ownItem(personId,facts,'age',{itemKind:'fact',fieldKey:'person.age',value:age,valueType:'number'});
+    const profile=ownSection(personId,'background','Background & expertise',10);
+    for(const [key,heading,body] of [['background','Background',background],['specialty','Specialty',specialty],['recruited','Recruitment',recruited]])ownItem(personId,profile,key,{title:heading,body});
+    const membership=relation(keys[index]+':membership','member_of',personId,groupId);
+    ownItem(personId,facts,'membership-role',{itemKind:'fact',fieldKey:'relationship.role',value:role,valueType:'text',subjectRef:{kind:'relationship',id:membership}});
+    relation(keys[index]+':assignment','associated_with_place',personId,recordId);
+    entry(personnel,'officer-'+index,null,{title,titleRecordId:personId});
   });
 })(window.CAMPAIGN);
