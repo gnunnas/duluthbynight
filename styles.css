@@ -18,3 +18,22 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 .ability-close{display:block;margin:0 0 12px auto;min-height:44px;padding:8px 14px;background:var(--panel);border:1px solid var(--line);color:var(--ink);cursor:pointer}
 .ability-dialog .facts{grid-template-columns:1fr}.ability-open{overflow:hidden}
 @media(max-width:700px){.ability-dialog{padding:16px}.ability-dialog h1{font-size:30px}}
+
+/* Stack narrative boxes without the empty space imposed by shared grid rows. */
+@media(min-width:901px){
+  .npc-sections{display:block;column-count:2;column-gap:20px;margin-top:20px}
+  .npc-sections>.npc-panel{break-inside:avoid;display:inline-block;width:100%;margin:0 0 20px;vertical-align:top}
+  .disciplines-panel .mechanic-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+}
+@media(min-width:701px) and (max-width:900px){.npc-sections{grid-template-columns:1fr}}
+
+/* Campaign cover art, with the bridge kept visible in the mobile crop. */
+.hero{position:relative;isolation:isolate;overflow:hidden;box-shadow:none}
+.hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 43%;z-index:-2}
+.hero:has(.hero-image)::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,rgba(6,8,10,.94),rgba(6,8,10,.18) 75%)}
+.hero:has(.hero-image) .eyebrow{color:#e7979b;text-shadow:0 1px 5px #000}
+.hero:has(.hero-image) h1,.hero:has(.hero-image) p{text-shadow:0 2px 8px #000}
+@media(max-width:700px){.hero-image{object-position:30% 42%}}
+.hero-image{z-index:0}
+.hero:has(.hero-image)::before{z-index:1}
+.hero:has(.hero-image)>:not(.hero-image){position:relative;z-index:2}
