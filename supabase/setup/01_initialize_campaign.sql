@@ -5,7 +5,7 @@ begin;
 do $$
 declare
  storyteller_user_id uuid := 'fa79cb5f-aca6-4015-a6cf-7d7168028d7b';
- test_player_user_id uuid := null; -- Optional: replace null with 'PLAYER_AUTH_UUID'.
+ test_player_user_id uuid := '41a93c06-cc70-45fe-931c-2e29ff66b1f1'; -- Optional: replace null with 'PLAYER_AUTH_UUID'.
  existing_owner uuid;
 begin
  if not exists(select 1 from auth.users where id=storyteller_user_id) then raise exception 'Storyteller Auth user does not exist';end if;
