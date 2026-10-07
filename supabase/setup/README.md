@@ -7,3 +7,5 @@ Run the versioned schema migration first. Then:
 3. `02_check_permissions.sql` — edit the test-player UUID; creates temporary verification content and rolls it back after checking permissions.
 
 Read [the full setup guide](../../docs/supabase-setup.md) before applying files. These files contain no campaign data import. Do not run files in `tests/postgres` on a real project.
+
+Once these checks pass, see [the campaign import guide](../../docs/supabase-import.md) for the separately prepared data import. It is not applied automatically.

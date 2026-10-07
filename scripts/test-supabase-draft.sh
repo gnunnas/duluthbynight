@@ -29,4 +29,16 @@ sed -e "s/PASTE_STORYTELLER_AUTH_USER_UUID_HERE/00000000-0000-0000-0000-00000000
 sed -e "s/PASTE_STORYTELLER_AUTH_USER_UUID_HERE/00000000-0000-0000-0000-000000000001/g" -e "s/test_player_user_id uuid := null/test_player_user_id uuid := '00000000-0000-0000-0000-000000000002'/g" supabase/setup/01_initialize_campaign.sql | run_sql
 sed 's/PASTE_TEST_PLAYER_AUTH_USER_UUID_HERE/00000000-0000-0000-0000-000000000002/g' supabase/setup/02_check_permissions.sql | run_sql
 
+# Exercise the deployable campaign import and its refusal to overwrite existing data.
+node scripts/build-supabase-import.cjs --out "$fixture_sql"
+cmp "$fixture_sql" supabase/import/03_import_campaign.sql
+run_sql < "$fixture_sql"
+repeat_log=$(mktemp /tmp/duluth-repeat-import.XXXXXX.log)
+if run_sql < "$fixture_sql" > "$repeat_log" 2>&1;then
+ rm -f "$repeat_log";echo 'Repeat import unexpectedly succeeded';exit 1
+fi
+if ! rg -q 'Campaign already contains records' "$repeat_log";then
+ cat "$repeat_log";rm -f "$repeat_log";exit 1
+fi
+rm -f "$repeat_log"
 echo 'PASS: versioned SQL applies; current dataset imports; role, note, reveal, archive, audit, AI approval, asset and integrity checks pass.'
