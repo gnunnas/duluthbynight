@@ -21,7 +21,20 @@ function section(title, records, type) {
 }
 function relations(type, record) {
   const titles = type === 'people' ? {clans:'Clan', organizations:'Organizations & affiliations'} : {people: type === 'clans' ? 'Recorded clan members' : type === 'organizations' ? 'Recorded members & associates' : 'Related people'};
-  return Object.entries(model.related(type, record)).map(([key, records]) => section(titles[key] || `Related ${labels[key].toLowerCase()}`, records, key)).join('');
+  const summaryLinks = new Set();
+  if (type === 'people') {
+    if (record.clan) summaryLinks.add(by('clans', record.clan)?.recordId);
+    for (const entry of [...record.memberships, ...record.affiliations]) summaryLinks.add(entry.organizationId);
+    for (const id of record.places) summaryLinks.add(by('places', id)?.recordId);
+    for (const relationship of model.personalRelationships(record.recordId)) {
+      summaryLinks.add(by('people', relationship.from === record.id ? relationship.to : relationship.from)?.recordId);
+    }
+  }
+  return Object.entries(model.related(type, record)).map(([key, records]) => [key, records.filter(target => !summaryLinks.has(target.recordId))]).map(([key, records]) => {
+    if (!records.length) return '';
+    const title = titles[key] || `Related ${labels[key].toLowerCase()}`;
+    return `<section class="related"><h2 class="section-title">${escapeHTML(title)}</h2><ul class="record-links">${records.map(target => `<li><a class="record-link" href="${url(key, target.id)}">${escapeHTML(name(target))}<span aria-hidden="true">↗</span></a></li>`).join('')}</ul></section>`;
+  }).join('');
 }
 function membershipFacts(entries) {
   return entries?.length ? entries.map(entry => {
