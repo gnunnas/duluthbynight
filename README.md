@@ -77,3 +77,7 @@ Lists such as groups/associates, affiliations, places, touchstones, and relation
 The [Alan NPC layout notes](docs/alan-npc-layout.md) describe the public import, optional fields, and remaining reference-page work. The frozen migration check compares `data.js`; it deliberately does not overwrite `campaign-additions.js`.
 
 The **Disciplines** library groups reference abilities by level and provides individual rules pages. NPC discipline ratings and explicitly selected powers link to these pages, with global search. Reference data lives in `discipline-data.js`; see [the discipline field model](docs/discipline-library.md). Sense The Beast and Heightened Senses have supplied rules. Alan’s Heightened Senses link opens a popup that closes on outside click, Close, or Escape without leaving his page.
+
+The Watchtower has an expanded location example in `watchtower-data.js`: the player coterie’s haven, building and ownership notes, a nested floor directory, private-floor layout, security coverage, budget, and ten expandable personnel profiles. Directory entries are notes within the location, rather than invented standalone location/NPC records. The hand-drawn floorplan is described in text; no image asset was copied from the screenshot. The source timestamp remains editorial metadata. All imported content is part of the public static dataset.
+
+Run the location checks with `node --test tests/watchtower.cjs` alongside the existing model and NPC tests.
