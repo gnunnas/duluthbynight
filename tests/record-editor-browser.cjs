@@ -63,12 +63,21 @@ const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8010';
  await page.locator('[data-editor-search]').fill('');assert(await page.locator('[data-editor-record]:visible').count()>0);assert((await page.locator('[data-editor-record]:visible').evaluateAll(nodes=>nodes.map(n=>n.dataset.recordType))).every(type=>type==='place'));
  await page.locator('[data-editor-type]').selectOption('');assert.equal(await page.locator('[data-editor-record]:visible').count(),rows.records.length);
  for(const width of [375,1280]){await page.setViewportSize({width,height:850});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
- await page.locator('[data-editor-type]').selectOption('place');await page.locator('[data-editor-search]').fill('Watchtower');
- assert.equal(await page.locator('[data-editor-record]:visible').count(),1);
- await page.getByRole('button',{name:'Reveal all matching records'}).click();await page.locator('.reveal-dialog').waitFor();
+ await page.getByRole('button',{name:'Reveal all selected',exact:true}).click();await page.getByText('Select entries to reveal first.',{exact:true}).waitFor();assert.equal(await page.locator('.reveal-dialog[open]').count(),0);
+ const selected=rows.records.find(r=>r.record_type==='place'&&r.display_name==='The Watchtower');
+ await page.locator(`[data-overview-record="${selected.id}"]`).check();
+ await page.locator('[data-editor-type]').selectOption('person');
+ await page.getByRole('button',{name:'Reveal all selected',exact:true}).click();await page.locator('.reveal-dialog').waitFor();assert((await page.locator('.reveal-dialog').textContent()).includes('Selected records: The Watchtower'));await page.getByRole('button',{name:'Cancel',exact:true}).click();
+ await page.locator('[data-editor-type]').selectOption('place');await page.locator('[data-editor-search]').fill('');
+ const untouched=rows.records.find(r=>r.record_type==='place'&&r.id!==selected.id&&r.audience==='storyteller');assert(untouched);
+ const beforeUntouched=JSON.stringify(rows.content_items.filter(r=>r.record_id===untouched.id));
+
+ assert(await page.locator('[data-editor-record]:visible').count()>1);
+ await page.getByRole('button',{name:'Reveal all selected'}).click();await page.locator('.reveal-dialog').waitFor();
  assert((await page.locator('.reveal-dialog').textContent()).includes('Watchtower'));
  const beforeBulk=requests.length;await page.getByRole('button',{name:'Cancel',exact:true}).click();assert.equal(requests.length,beforeBulk);
- await page.getByRole('button',{name:'Reveal all matching records'}).click();await page.getByRole('button',{name:'Reveal these entries'}).click();await page.waitForFunction(()=>!document.querySelector('.reveal-dialog')?.open);
+ await page.getByRole('button',{name:'Reveal all selected'}).click();await page.getByRole('button',{name:'Reveal these entries'}).click();await page.waitForFunction(()=>!document.querySelector('.reveal-dialog')?.open);
+ assert.equal(JSON.stringify(rows.content_items.filter(r=>r.record_id===untouched.id)),beforeUntouched);
  const location=rows.records.find(r=>r.record_type==='place'&&r.display_name==='The Watchtower');assert(location);
  assert(rows.content_items.filter(r=>r.record_id===location.id&&r.field_key!=='notes.storyteller').every(r=>r.audience==='players'));
  assert.equal(rows.content_items.find(r=>r.record_id===location.id&&r.field_key==='notes.storyteller').audience,'storyteller');
