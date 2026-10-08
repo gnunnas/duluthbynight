@@ -61,7 +61,7 @@
   window.campaignSession.editRows=async changes=>{
    if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access is required.');
    const response=await fetch(config.url+'/rest/v1/rpc/edit_campaign_rows',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_changes:changes}),cache:'no-store'});
-   if(!response.ok){let detail;try{detail=await response.json();}catch{}throw Error(detail?.code==='40001'?'Another edit was saved first. Reload the latest version; your draft has not been saved.':detail?.code==='PGRST202'?'Apply the new Storyteller editing migration before saving.':'Could not save: '+(detail?.message||'check your connection and permissions.'));}
+   if(!response.ok){let detail;try{detail=await response.json();}catch{}const error=Error(['40001','PT409'].includes(detail?.code)?'Another edit was saved first. Reload the latest version; your draft has not been saved.':detail?.code==='PGRST202'?'Apply the new Storyteller editing migration before saving.':'Could not save: '+(detail?.message||'check your connection and permissions.'));error.code=detail?.code;throw error;}
    await response.json();
   };
   window.campaignSession.reloadCampaign=async()=>{

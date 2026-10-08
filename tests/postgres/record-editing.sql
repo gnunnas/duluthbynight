@@ -21,7 +21,7 @@ do $$begin
  begin
   perform public.edit_campaign_rows('duluth-by-night','[{"table":"records","id":"person:alan-sovereign","revision":2,"patch":{"display_name":"Must roll back"}},{"table":"content_items","id":"item:person:alan-sovereign:person.ambition","revision":1,"patch":{"body":"Stale"}}]');
   raise exception 'Stale edit accepted';
- exception when serialization_failure then null;end;
+ exception when sqlstate 'PT409' then null;end;
  if exists(select 1 from public.records where display_name='Must roll back') then raise exception 'Atomic rollback failed';end if;
  begin
   perform public.edit_campaign_rows('duluth-by-night','[{"table":"content_items","id":"item:person:alan-sovereign:storyteller-notes","revision":1,"patch":{"audience":"players"}}]');
