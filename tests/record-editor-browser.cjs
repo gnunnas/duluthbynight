@@ -63,6 +63,23 @@ const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8010';
  await page.locator('[data-editor-search]').fill('');assert(await page.locator('[data-editor-record]:visible').count()>0);assert((await page.locator('[data-editor-record]:visible').evaluateAll(nodes=>nodes.map(n=>n.dataset.recordType))).every(type=>type==='place'));
  await page.locator('[data-editor-type]').selectOption('');assert.equal(await page.locator('[data-editor-record]:visible').count(),rows.records.length);
  for(const width of [375,1280]){await page.setViewportSize({width,height:850});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
+ await page.locator('[data-editor-reveal]').selectOption('yes');assert.equal(await page.locator('[data-editor-record]:visible').count(),rows.records.filter(r=>!r.archived_at&&['players','public'].includes(r.audience)).length);
+ await page.locator('[data-editor-search]').fill('Alan Sovereign');await page.locator('[data-editor-type]').selectOption('person');assert.equal(await page.locator('[data-editor-record]:visible').count(),1);
+ await page.locator('[data-editor-reveal]').selectOption('no');assert.equal(await page.locator('[data-editor-record]:visible').count(),0);assert(await page.getByRole('checkbox',{name:'Select all shown',exact:true}).isDisabled());
+ await page.locator('[data-editor-search]').fill('');await page.locator('[data-editor-type]').selectOption('');assert.equal(await page.locator('[data-editor-record]:visible').count(),rows.records.filter(r=>r.archived_at||!['players','public'].includes(r.audience)).length);
+ await page.getByRole('checkbox',{name:'Select all shown',exact:true}).check();assert.equal(await page.locator('[data-overview-record]:checked').count(),await page.locator('[data-editor-record]:visible').count());await page.getByRole('checkbox',{name:'Select all shown',exact:true}).uncheck();
+ await page.locator('[data-editor-reveal]').selectOption('');
+ const requestCountBeforeSelection=requests.length;
+ await page.locator('[data-editor-type]').selectOption('power');const abilities=rows.records.filter(r=>r.record_type==='power');
+ await page.getByRole('checkbox',{name:'Select all shown',exact:true}).check();assert.equal(await page.locator('[data-overview-record]:checked').count(),abilities.length);
+ const oneAbility=page.locator(`[data-overview-record="${abilities[0].id}"]`);await oneAbility.uncheck();assert(await page.locator('[data-select-all-records]').evaluate(el=>el.indeterminate));
+ await page.getByRole('checkbox',{name:'Select all shown',exact:true}).check();
+ await page.locator('[data-editor-type]').selectOption('place');assert.equal(await page.locator('[data-overview-record]:checked').count(),abilities.length);
+ await page.getByRole('checkbox',{name:'Select all shown',exact:true}).check();await page.getByRole('checkbox',{name:'Select all shown',exact:true}).uncheck();assert.equal(await page.locator('[data-overview-record]:checked').count(),abilities.length);
+ await page.locator('[data-editor-type]').selectOption('power');await page.getByRole('checkbox',{name:'Select all shown',exact:true}).uncheck();assert.equal(await page.locator('[data-overview-record]:checked').count(),0);
+ await page.locator('[data-editor-search]').fill('No matching test record');assert(await page.getByRole('checkbox',{name:'Select all shown',exact:true}).isDisabled());
+ await page.locator('[data-editor-search]').fill('');await page.locator('[data-editor-type]').selectOption('');assert.equal(requests.length,requestCountBeforeSelection);
+
  await page.getByRole('button',{name:'Reveal all selected',exact:true}).click();await page.getByText('Select entries to reveal first.',{exact:true}).waitFor();assert.equal(await page.locator('.reveal-dialog[open]').count(),0);
  const selected=rows.records.find(r=>r.record_type==='place'&&r.display_name==='The Watchtower');
  await page.locator(`[data-overview-record="${selected.id}"]`).check();

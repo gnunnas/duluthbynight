@@ -4,9 +4,9 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
 (async()=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
  const rows=exportDraft().tables;
- rows.campaign_status=[{campaign_id:'duluth-by-night',id:'date',label:'Current night',value:'After Sept. 11',sort_order:0,audience:'players',revision:1},{campaign_id:'duluth-by-night',id:'weather',label:'Weather',value:'',sort_order:1,audience:'players',revision:1}];
+ rows.campaign_status=[{campaign_id:'duluth-by-night',id:'hero-tagline',label:'Hero tagline',value:'The lake is black. The harbor never sleeps. Every favor leaves a mark.',sort_order:-1,audience:'players',revision:1},{campaign_id:'duluth-by-night',id:'date',label:'Current night',value:'After Sept. 11',sort_order:0,audience:'players',revision:1},{campaign_id:'duluth-by-night',id:'weather',label:'Weather',value:'',sort_order:1,audience:'players',revision:1}];
  for(const role of ['storyteller','player','player-revealed']){
-  const page=await browser.newPage({viewport:{width:375,height:850}});const errors=[],requested=[];let saves=0,statusSaves=0;rows.campaign_status[1]={campaign_id:'duluth-by-night',id:'weather',label:'Weather',value:'',sort_order:1,audience:'players',revision:1};page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requested.push(r.url()));
+  const page=await browser.newPage({viewport:{width:375,height:850}});const errors=[],requested=[];let saves=0,statusSaves=0;rows.campaign_status[2]={campaign_id:'duluth-by-night',id:'weather',label:'Weather',value:'',sort_order:1,audience:'players',revision:1};page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requested.push(r.url()));
   await page.route('https://xrkvbbmilgdubbwuffhu.supabase.co/**',async route=>{
    const url=new URL(route.request().url());let body;
    if(url.pathname.startsWith('/auth/v1/token'))body={access_token:'test-access',refresh_token:'test-refresh',expires_in:3600,user:{id:role}};
@@ -43,11 +43,14 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
   assert.equal(await page.getByText('Weather',{exact:true}).count(),0);
   if(role==='storyteller'){
    await page.getByRole('button',{name:'Open navigation'}).click();await page.getByRole('link',{name:'Storyteller',exact:true}).click();await page.getByRole('heading',{name:'Storyteller tools',exact:true}).waitFor();
-   const weather=page.locator('form[data-status-id="weather"]');await weather.locator('[name=value]').fill('Test weather');await weather.getByRole('button',{name:'Save row'}).click();await weather.getByText('Saved. The Tonight strip is updated.').waitFor();
+   const weather=page.locator('form[data-status-id="weather"]');await weather.locator('[name=value]').fill('Test weather');await weather.getByRole('button',{name:'Save row'}).click();await weather.getByText('Saved. Tonight is updated.').waitFor();
    await weather.locator('[name=value]').fill('Stale weather draft');await weather.getByRole('button',{name:'Save row'}).click();await weather.getByText('This row changed or access was removed. Reload saved values and review the latest version before saving.').waitFor();assert.equal(await weather.locator('[name=value]').inputValue(),'Stale weather draft');
    await page.getByRole('button',{name:'Reload saved values'}).click();await page.getByText('Saved values reloaded.').waitFor();assert.equal(await page.locator('form[data-status-id="weather"] [name=value]').inputValue(),'Test weather');
    for(const width of [375,1280]){await page.setViewportSize({width,height:850});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
-   await page.getByRole('link',{name:'View Tonight'}).click();await page.getByText('Test weather',{exact:false}).waitFor();
+   const tagline=page.locator('form[data-status-id="hero-tagline"]');await tagline.locator('[name=value]').fill('Test session tagline');await tagline.getByRole('button',{name:'Save row'}).click();await tagline.getByText('Saved. Tonight is updated.').waitFor();
+   await page.getByRole('link',{name:'View Tonight'}).click();await page.getByText('Test weather',{exact:false}).waitFor();assert.equal(await page.locator('.hero-tagline').textContent(),'Test session tagline');assert(!(await page.locator('.status').textContent()).includes('Test session tagline'));
+   await page.goto(base+'/campaign.html#storyteller');await page.locator('form[data-status-id="hero-tagline"] [name=value]').fill('');await page.locator('form[data-status-id="hero-tagline"]').getByRole('button',{name:'Save row'}).click();await page.locator('form[data-status-id="hero-tagline"]').getByText('Saved. Tonight is updated.').waitFor();await page.getByRole('link',{name:'View Tonight'}).click();assert.equal(await page.locator('.hero-tagline').count(),0);
+
   }else{
    await page.getByRole('button',{name:'Open navigation'}).click();assert.equal(await page.getByRole('link',{name:'Storyteller',exact:true}).count(),0);await page.goto(base+'/campaign.html#storyteller');await page.getByRole('heading',{name:'Storyteller access required'}).waitFor();assert.equal(await page.locator('form[data-status-id]').count(),0);await page.goto(base+'/campaign.html#edit/person%3Aalan-sovereign');await page.getByRole('heading',{name:'Storyteller access required'}).waitFor();assert.equal(await page.locator('form[data-edit-table]').count(),0);await page.getByRole('link',{name:'Return to Tonight',exact:true}).click();
   }
