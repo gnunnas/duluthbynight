@@ -70,13 +70,28 @@
  function render(id){
   if(!root.campaignSession?.isStoryteller)return '<h1>Storyteller access required</h1><a href="#home">Return to Tonight</a>';
   const r=record(id);if(!r)return '<h1>Record not found</h1><a href="#storyteller">Storyteller tools</a>';
-  return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Protected Storyteller notes cannot be revealed.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row)).join('')}</section>`).join('')}`;
+  return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Reveal all shares saved details, excluding Storyteller notes and archived entries. Save any drafts first.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-share-all="${esc(id)}" type="button">Reveal all</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row)).join('')}</section>`).join('')}`;
  }
  function dashboard(){
   if(!root.campaignSession?.isStoryteller)return '';
   return `<section class="npc-panel"><h2>Campaign records &amp; reveals</h2><label>Find a record<input type="search" data-editor-search placeholder="Name or record type"></label><p>Select records to share their names and overview text. Place categories are included to preserve the geographic hierarchy. Other details stay private.</p><button class="chip" data-dashboard-share type="button">Review names + overviews</button><button class="chip" data-homepage-share type="button">Review homepage records</button><div class="editor-record-list">${choices().map(r=>`<div data-editor-record data-search="${esc((r.display_name+' '+r.record_type).toLowerCase())}"><label><input type="checkbox" data-overview-record="${esc(r.id)}"> ${esc(r.display_name)} <small>${esc(r.record_type)} · ${r.audience==='players'?'Revealed':'Hidden'}</small></label>${recordLink(r.id)}</div>`).join('')}</div></section>`;
  }
  function overviewTargets(id){return [{table:'records',id},...(rows().content_items||[]).filter(x=>x.record_id===id&&x.field_key==='overview'&&!x.archived_at).map(x=>({table:'content_items',id:x.id}))];}
+ function allTargets(id){
+  // A protected or archived ancestor also excludes its nested entries and attachments.
+  function itemEligible(itemId,seen=new Set()){
+   if(!itemId)return true;if(seen.has(itemId))return false;seen.add(itemId);
+   const item=get('content_items',itemId),section=item&&get('sections',item.section_id);
+   return !!item&&!!section&&!item.archived_at&&!section.archived_at&&item.field_key!=='notes.storyteller'&&section.template_key!=='storyteller-notes'&&itemEligible(item.parent_item_id,seen);
+  }
+  return Object.entries(ownedRows(id)).flatMap(([table,entries])=>entries.filter(row=>{
+   if(row.archived_at||!row.audience)return false;
+   if(table==='sections')return row.template_key!=='storyteller-notes';
+   if(table==='content_items')return itemEligible(row.id);
+   if(['item_references','selected_powers','attachments'].includes(table))return itemEligible(row.item_id);
+   return true;
+  }).map(row=>({table,id:key(row)})));
+ }
  function revealPlan(targets,edits=[]){
   const overrides=new Map(edits.filter(x=>!x.insert).map(x=>[x.table+':'+x.id,x.patch]));
   const plan=new Map(),visited=new Set();
@@ -106,15 +121,15 @@
   for(const target of targets)add(target.table,target.id);
   return [...plan.values()];
  }
- let dialog=null,pendingPlan=[];
+ let dialog=null,pendingPlan=[],pendingTargets=[],pendingEdits=[];
  function review(targets,edits=[]){
   if(!targets.length)throw Error('Select entries to reveal first.');
   const merged=new Map(revealPlan(targets,edits).map(p=>[p.table+':'+p.id,p]));
   for(const edit of edits){const token=edit.table+':'+edit.id,existing=merged.get(token);merged.set(token,existing?{...edit,patch:{...existing.patch,...edit.patch}}:edit);}
-  const plan=[...merged.values()];if(!plan.length)throw Error('These entries are already revealed.');pendingPlan=plan;
+  pendingTargets=targets;pendingEdits=edits;const plan=[...merged.values()];if(!plan.length)throw Error('These entries are already revealed.');pendingPlan=plan;
   dialog||=Object.assign(document.createElement('dialog'),{className:'reveal-dialog'});if(!dialog.isConnected)document.body.append(dialog);
-  dialog.innerHTML=`<h2>Reveal to all campaign players?</h2><p>This saves ${plan.length} entries, including the parent sections and linked record names required for access. Only the listed entries will change. Storyteller notes stay private.</p><ul>${plan.map(p=>`<li>${esc(tableLabels[p.table])}: ${esc(label(p.table,get(p.table,p.id)))}${p.table==='content_items'?`<details><summary>Field content</summary><pre>${esc(JSON.stringify(Object.fromEntries(Object.entries({...get(p.table,p.id),...p.patch}).filter(([k])=>['body','value','title','field_key','audience'].includes(k))),null,2))}</pre></details>`:''}</li>`).join('')}</ul><button type="button" class="chip" data-confirm-reveal>Reveal these entries</button> <button type="button" class="chip" data-cancel-reveal>Cancel</button><p role="status" aria-live="polite"></p>`;
-  dialog.showModal();dialog.querySelector('[data-confirm-reveal]').focus();
+  dialog.innerHTML=`<h2>Reveal to all campaign players?</h2><p>This saves ${plan.length} entries, including the parent sections and linked record names required for access. Only the listed entries will change. Storyteller notes stay private.</p><ul>${plan.map(p=>`<li>${esc(tableLabels[p.table])}: ${esc(label(p.table,get(p.table,p.id)))}${p.table==='content_items'?`<details><summary>Field content</summary><pre>${esc(JSON.stringify(Object.fromEntries(Object.entries({...get(p.table,p.id),...p.patch}).filter(([k])=>['body','value','title','field_key','audience'].includes(k))),null,2))}</pre></details>`:''}</li>`).join('')}</ul><button type="button" class="chip" data-confirm-reveal>Reveal these entries</button> <button type="button" class="chip" data-reload-reveal hidden>Reload and review again</button> <button type="button" class="chip" data-cancel-reveal>Cancel</button><p role="status" aria-live="polite"></p>`;
+  if(!dialog.open)dialog.showModal();dialog.querySelector('[data-confirm-reveal]').focus();
  }
  function resolveRecord(text){if(!text.trim())return null;const found=choices().find(r=>recordLabel(r)===text);if(!found)throw Error('Choose a campaign record from the search suggestions.');return found.id;}
  document.addEventListener('submit',async event=>{
@@ -148,12 +163,18 @@
   const target=event.target.closest('button');if(!target)return;
   try{
    if(target.hasAttribute('data-cancel-reveal')){dialog.close();return;}
+   if(target.hasAttribute('data-reload-reveal')){
+    target.disabled=true;await root.campaignSession.reloadCampaign();
+    if(pendingEdits.length){dialog.close();await root.refreshCampaignViews();const message=document.querySelector('#editorMessage');if(message)message.textContent='Reloaded. Review your field edits before saving again.';return;}
+    const targets=pendingTargets;if(!revealPlan(targets).length){dialog.close();await root.refreshCampaignViews();const message=document.querySelector('#editorMessage');if(message)message.textContent='These entries are already revealed.';return;}review(targets);return;
+   }
    if(target.hasAttribute('data-confirm-reveal')){
-    target.disabled=true;const message=dialog.querySelector('[role="status"]');message.textContent='Revealing…';let committed=false;
+    if(target.disabled)return;target.disabled=true;const message=dialog.querySelector('[role="status"]');message.textContent='Revealing…';let committed=false;
     try{await root.campaignSession.editRows(pendingPlan);committed=true;await root.refreshCampaignViews();dialog.close();}
-    catch(error){message.textContent=(committed?'Saved, but reload failed. ':'')+error.message;target.disabled=false;}return;
+    catch(error){message.textContent=(committed?'Saved, but reload failed. ':'')+error.message;const conflict=['40001','PT409'].includes(error.code);if(conflict&&!committed){dialog.querySelector('[data-reload-reveal]').hidden=pendingEdits.length>0;message.textContent=pendingEdits.length?'Nothing was saved. Cancel this review, copy any draft text you need, then reload saved entries and review your edits.':'Nothing in this batch was revealed. Some entries changed since this page loaded. Reload and review again before confirming.';}else if(!committed)target.disabled=false;message.tabIndex=-1;message.focus();}return;
    }
    if(target.hasAttribute('data-editor-reload')){target.disabled=true;await root.refreshCampaignViews();return;}
+   if(target.hasAttribute('data-share-all')){review(allTargets(target.dataset.shareAll));return;}
    if(target.hasAttribute('data-share-overview')){review(overviewTargets(target.dataset.shareOverview));return;}
    if(target.hasAttribute('data-review-share')){review([...document.querySelectorAll('[data-share-table]:checked')].map(x=>({table:x.dataset.shareTable,id:x.dataset.shareId})));return;}
    if(target.hasAttribute('data-dashboard-share')){review([...document.querySelectorAll('[data-overview-record]:checked')].flatMap(x=>overviewTargets(x.dataset.overviewRecord)));return;}
