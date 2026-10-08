@@ -74,10 +74,11 @@
  }
  function dashboard(){
   if(!root.campaignSession?.isStoryteller)return '';
-  return `<section class="npc-panel"><h2>Campaign records &amp; reveals</h2><label>Find a record<input type="search" data-editor-search placeholder="Name or record type"></label><p>Select records to share their names and overview text. Place categories are included to preserve the geographic hierarchy. Other details stay private.</p><button class="chip" data-dashboard-share type="button">Review names + overviews</button><button class="chip" data-homepage-share type="button">Review homepage records</button><div class="editor-record-list">${choices().map(r=>`<div data-editor-record data-search="${esc((r.display_name+' '+r.record_type).toLowerCase())}"><label><input type="checkbox" data-overview-record="${esc(r.id)}"> ${esc(r.display_name)} <small>${esc(r.record_type)} · ${r.audience==='players'?'Revealed':'Hidden'}</small></label>${recordLink(r.id)}</div>`).join('')}</div></section>`;
+  return `<section class="npc-panel"><h2>Campaign records &amp; reveals</h2><div class="editor-filters"><label>Find a record<input type="search" data-editor-search placeholder="Name or record type"></label><label>Record type<select data-editor-type><option value="">All types</option>${[...new Set(choices().map(r=>r.record_type))].sort().map(type=>`<option value="${esc(type)}">${esc(({person:"People",place:"Places",organization:"Organizations",clan:"Clans",thread:"Threads",session:"Chronicle sessions",scheme:"Schemes",event:"Events",discipline:"Disciplines",power:"Abilities",note:"Source notes"})[type]||type)}</option>`).join('')}</select></label></div><p>Select records to share their names and overview text. Place categories are included to preserve the geographic hierarchy. Other details stay private.</p><button class="chip" data-dashboard-share type="button">Review names + overviews</button><button class="chip" data-homepage-share type="button">Review homepage records</button><button class="chip" data-dashboard-all type="button">Reveal all matching records</button><p class="meta">Reveal all uses the records shown by your filters and shares their full saved details, except Storyteller notes and archived entries.</p><div class="editor-record-list">${choices().map(r=>`<div data-editor-record data-record-type="${esc(r.record_type)}" data-search="${esc((r.display_name+' '+r.record_type).toLowerCase())}"><label><input type="checkbox" data-overview-record="${esc(r.id)}"> ${esc(r.display_name)} <small>${esc(r.record_type)} · ${r.audience==='players'?'Revealed':'Hidden'}</small></label>${recordLink(r.id)}</div>`).join('')}</div></section>`;
  }
  function overviewTargets(id){return [{table:'records',id},...(rows().content_items||[]).filter(x=>x.record_id===id&&x.field_key==='overview'&&!x.archived_at).map(x=>({table:'content_items',id:x.id}))];}
  function allTargets(id){
+  if(record(id)?.archived_at)return [];
   // A protected or archived ancestor also excludes its nested entries and attachments.
   function itemEligible(itemId,seen=new Set()){
    if(!itemId)return true;if(seen.has(itemId))return false;seen.add(itemId);
@@ -128,7 +129,7 @@
   for(const edit of edits){const token=edit.table+':'+edit.id,existing=merged.get(token);merged.set(token,existing?{...edit,patch:{...existing.patch,...edit.patch}}:edit);}
   pendingTargets=targets;pendingEdits=edits;const plan=[...merged.values()];if(!plan.length)throw Error('These entries are already revealed.');pendingPlan=plan;
   dialog||=Object.assign(document.createElement('dialog'),{className:'reveal-dialog'});if(!dialog.isConnected)document.body.append(dialog);
-  dialog.innerHTML=`<h2>Reveal to all campaign players?</h2><p>This saves ${plan.length} entries, including the parent sections and linked record names required for access. Only the listed entries will change. Storyteller notes stay private.</p><ul>${plan.map(p=>`<li>${esc(tableLabels[p.table])}: ${esc(label(p.table,get(p.table,p.id)))}${p.table==='content_items'?`<details><summary>Field content</summary><pre>${esc(JSON.stringify(Object.fromEntries(Object.entries({...get(p.table,p.id),...p.patch}).filter(([k])=>['body','value','title','field_key','audience'].includes(k))),null,2))}</pre></details>`:''}</li>`).join('')}</ul><button type="button" class="chip" data-confirm-reveal>Reveal these entries</button> <button type="button" class="chip" data-reload-reveal hidden>Reload and review again</button> <button type="button" class="chip" data-cancel-reveal>Cancel</button><p role="status" aria-live="polite"></p>`;
+  dialog.innerHTML=`<h2>Reveal to all campaign players?</h2>${targets.some(x=>x.table==='records')?`<p>Selected records: ${targets.filter(x=>x.table==='records').map(x=>esc(record(x.id)?.display_name||x.id)).join(', ')}</p>`:''}<p>This saves ${plan.length} entries, including the parent sections and linked record names required for access. Only the listed entries will change. Storyteller notes stay private.</p><ul>${plan.map(p=>`<li>${esc(tableLabels[p.table])}: ${esc(label(p.table,get(p.table,p.id)))}${p.table==='content_items'?`<details><summary>Field content</summary><pre>${esc(JSON.stringify(Object.fromEntries(Object.entries({...get(p.table,p.id),...p.patch}).filter(([k])=>['body','value','title','field_key','audience'].includes(k))),null,2))}</pre></details>`:''}</li>`).join('')}</ul><button type="button" class="chip" data-confirm-reveal>Reveal these entries</button> <button type="button" class="chip" data-reload-reveal hidden>Reload and review again</button> <button type="button" class="chip" data-cancel-reveal>Cancel</button><p role="status" aria-live="polite"></p>`;
   if(!dialog.open)dialog.showModal();dialog.querySelector('[data-confirm-reveal]').focus();
  }
  function resolveRecord(text){if(!text.trim())return null;const found=choices().find(r=>recordLabel(r)===text);if(!found)throw Error('Choose a campaign record from the search suggestions.');return found.id;}
@@ -158,7 +159,12 @@
    await root.campaignSession.editRows(changes);committed=true;await root.refreshCampaignViews();const savedMessage=document.querySelector('#editorMessage');if(savedMessage)savedMessage.textContent='Saved. Entries reloaded from the database.';
   }catch(error){message.textContent=(committed?'Saved, but could not reload. Reload saved entries before editing again. ':'')+error.message;}finally{button.disabled=false;}
  });
- document.addEventListener('input',event=>{if(!event.target.matches('[data-editor-search]'))return;const q=event.target.value.toLowerCase();for(const node of document.querySelectorAll('[data-editor-record]'))node.hidden=!node.dataset.search.includes(q);});
+ function filterRecords(){
+  const q=document.querySelector('[data-editor-search]')?.value.toLowerCase()||'',type=document.querySelector('[data-editor-type]')?.value||'';
+  for(const node of document.querySelectorAll('[data-editor-record]'))node.hidden=!node.dataset.search.includes(q)||!!type&&node.dataset.recordType!==type;
+ }
+ document.addEventListener('input',event=>{if(event.target.matches('[data-editor-search]'))filterRecords();});
+ document.addEventListener('change',event=>{if(event.target.matches('[data-editor-type]'))filterRecords();});
  document.addEventListener('click',async event=>{
   const target=event.target.closest('button');if(!target)return;
   try{
@@ -178,6 +184,7 @@
    if(target.hasAttribute('data-share-overview')){review(overviewTargets(target.dataset.shareOverview));return;}
    if(target.hasAttribute('data-review-share')){review([...document.querySelectorAll('[data-share-table]:checked')].map(x=>({table:x.dataset.shareTable,id:x.dataset.shareId})));return;}
    if(target.hasAttribute('data-dashboard-share')){review([...document.querySelectorAll('[data-overview-record]:checked')].flatMap(x=>overviewTargets(x.dataset.overviewRecord)));return;}
+   if(target.hasAttribute('data-dashboard-all')){review([...document.querySelectorAll('[data-editor-record]')].filter(node=>!node.hidden).flatMap(node=>allTargets(node.querySelector('[data-overview-record]').dataset.overviewRecord)));return;}
    if(target.hasAttribute('data-homepage-share'))review(choices().filter(r=>['thread','session'].includes(r.record_type)&&!r.archived_at).flatMap(r=>overviewTargets(r.id)));
   }catch(error){target.disabled=false;const message=document.querySelector('#editorMessage');if(message)message.textContent=error.message;else{let p=document.querySelector('#recordEditorMessage');if(!p){p=document.createElement('p');p.id='recordEditorMessage';p.setAttribute('role','status');target.after(p);}p.textContent=error.message;}}
  });

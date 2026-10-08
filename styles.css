@@ -63,3 +63,5 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 @media(min-width:800px){.editor-row form{grid-template-columns:repeat(2,minmax(0,1fr))}.editor-row form>fieldset,.editor-row form>[role=status]{grid-column:1/-1}}
 .editor-advanced{grid-column:1/-1;border-top:1px solid #39444a;padding-top:.75rem}.editor-advanced[open]{display:grid;gap:1rem}.editor-advanced summary{margin-bottom:.75rem}
 .reveal-dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:.9rem;border-left:2px solid #526571;padding-left:.75rem}
+.editor-filters{display:grid;gap:1rem;margin-bottom:1rem}.editor-filters label{display:grid;gap:.35rem;min-width:0}.editor-filters select{box-sizing:border-box;width:100%;min-width:0;background:#090e11;color:#eee;border:1px solid #39444a;padding:.65rem;font:inherit}
+@media(min-width:700px){.editor-filters{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}}
