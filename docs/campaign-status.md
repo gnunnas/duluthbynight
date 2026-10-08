@@ -26,4 +26,4 @@ These session-prep rows deliberately use `audience = players`: active campaign p
 
 After saving, reload the website and sign in again to fetch the new values. The main page does not poll for live changes. The site editor updates existing active rows. Adding new rows or restoring archived rows still uses Table Editor. No additional SQL migration is needed for the editing screen.
 
-Permanent flavor text and artwork stay in presentation code. The recap and Faces to remember are separate features and are not changed here.
+**Hero tagline** is the text over the homepage image. Apply migration `20261007000700_tonight_hero_tagline.sql` once to add its editable row, then edit it alongside the Tonight details. It renders over the hero image, not as a status-strip box. Leave its value blank to hide it. Its player visibility and editing permissions use the existing status-table RLS and audit history. The migration preserves the existing line and does not overwrite an already configured tagline. Artwork stays in presentation code. The recap and Faces to remember are separate features and are not changed here.

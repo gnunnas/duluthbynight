@@ -1,7 +1,7 @@
 -- Local mock accounts created by the setup test runner; never run on Supabase.
 begin;
 do $$begin
- if (select count(*) from public.campaign_status where campaign_id='duluth-by-night')<>5 or not exists(select 1 from public.campaign_status where id='weather' and value='') then raise exception 'Starter status rows differ';end if;
+ if (select count(*) from public.campaign_status where campaign_id='duluth-by-night')<>6 or not exists(select 1 from public.campaign_status where id='weather' and value='') then raise exception 'Starter status rows differ';end if;
 end $$;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
 set local role authenticated;
