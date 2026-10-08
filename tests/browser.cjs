@@ -8,7 +8,7 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
  await page.route(baseURL,async route=>{
   const response=await route.fetch();let html=await response.text();
   const start=html.indexOf('<script src="supabase-config.js">');
-  html=html.slice(0,start)+['data.js','campaign-additions.js','discipline-data.js','watchtower-data.js','source-notes.js','campaign-model.js','app.js'].map(file=>'<script src="'+file+'"></script>').join('')+'</body></html>';
+  html=html.slice(0,start)+['data.js','campaign-additions.js','discipline-data.js','watchtower-data.js','source-notes.js','campaign-model.js','coterie.js','app.js'].map(file=>'<script src="'+file+'"></script>').join('')+'</body></html>';
   await route.fulfill({response,body:html});
  });
  async function visit(targetURL) {
@@ -28,7 +28,7 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
 
  await visit(baseURL);
  const records=await page.evaluate(()=>Object.entries(createCampaignModel(CAMPAIGN).collections).flatMap(([type,items])=>items.map(x=>[type,x.id,x.name||x.title])));
- const routes=['home','people','places','threads','organizations','clans','chronicle','schemes','events','disciplines','powers','notes','search',...records.map(([type,id])=>type+'/'+id)];
+ const routes=['home','people','places','threads','organizations','clans','chronicle','coterie','schemes','events','disciplines','powers','notes','search',...records.map(([type,id])=>type+'/'+id)];
  for(const width of [375,1280]) {
   await page.setViewportSize({width,height:900});
   for(const route of routes){
