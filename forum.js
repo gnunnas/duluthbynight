@@ -24,7 +24,7 @@
  function render(focus=false){
   const raw=location.hash.slice(1)||'forum';
   // Preserve existing campaign bookmarks. All new forum routes use their own prefix.
-  if(/^(home|storyteller|edit|people|places|threads|chronicle|organizations|clans|disciplines|powers|notes|search|groups|factions|schemes|events)([/?]|$)/.test(raw)){location.replace('campaign.html#'+raw);return;}
+  if(/^(home|coterie|storyteller|edit|people|places|threads|chronicle|organizations|clans|disciplines|powers|notes|search|groups|factions|schemes|events)([/?]|$)/.test(raw)){location.replace('campaign.html#'+raw);return;}
   if(raw==='forum-main'){if(!main.children.length)main.innerHTML=index();main.focus();return;}
   let parts;try{parts=raw.split('/').map(decodeURIComponent);}catch{parts=[];}
   const [,type='',id]=parts;let html,title='Forum Index';

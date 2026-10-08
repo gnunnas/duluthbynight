@@ -4,7 +4,7 @@ const nav = document.querySelector('#nav');
 const menu = document.querySelector('#menuBtn');
 let model = createCampaignModel(D);
 let collections = model.collections;
-const labels = { storyteller:'Storyteller tools', people: 'People', places: 'Places', threads: 'Active threads', organizations: 'Organizations', clans: 'Clans', schemes: 'Schemes', events: 'Events', chronicle: 'Chronicle', disciplines: 'Disciplines', powers: 'Abilities', notes: 'Imported notes' };
+const labels = { coterie:'Coterie', storyteller:'Storyteller tools', people: 'People', places: 'Places', threads: 'Active threads', organizations: 'Organizations', clans: 'Clans', schemes: 'Schemes', events: 'Events', chronicle: 'Chronicle', disciplines: 'Disciplines', powers: 'Abilities', notes: 'Imported notes' };
 const areaKinds = new Set(['City', 'Community', 'District', 'Suburb', 'Territory']);
 let state = { route: 'home', id: null, filter: 'All', query: '' };
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -144,6 +144,7 @@ function placeChildren(record) {
 function detail(type, id) {
   const record = by(type, id);
   if (!record) return missing();
+  if(record.recordId === 'organization:player-coterie')return Coterie.render(D,model);
   if(type === 'disciplines' || type === 'powers')return disciplineDetail(type,record)+(window.campaignSession?.isStoryteller?CampaignEditor.recordLink(record.recordId):'');
   const facts = [];
   if (type === 'people') {
@@ -177,7 +178,7 @@ function detail(type, id) {
   function finishCompactRun(){if(compactRun.length%2)wideFacts.add(compactRun.at(-1));compactRun=[];}
   facts.forEach(([label],index)=>{if(['Ambition','Security coverage'].includes(label)){finishCompactRun();wideFacts.add(index);}else compactRun.push(index);});
   finishCompactRun();
-  return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}${record.portrait ? `<div class="person-header"><img class="person-portrait" src="${escapeHTML(record.portrait.src)}" alt="${escapeHTML(record.portrait.alt)}" width="326" height="405" decoding="async"><div><h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}</div></div>` : `<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}`}${window.campaignSession?.isStoryteller?CampaignEditor.recordLink(record.recordId):''}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${wideFacts.has(index) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
+  return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type==='threads'?'chronicle':type}">← ${type==='threads'?'Chronicle':labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}${record.portrait ? `<div class="person-header"><img class="person-portrait" src="${escapeHTML(record.portrait.src)}" alt="${escapeHTML(record.portrait.alt)}" width="326" height="405" decoding="async"><div><h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}</div></div>` : `<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}`}${window.campaignSession?.isStoryteller?CampaignEditor.recordLink(record.recordId):''}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${wideFacts.has(index) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
 }
 
 function disciplineDetail(type, record) {
@@ -208,8 +209,8 @@ function home() {
 function listing(type) {
   if(type === 'disciplines')return `<h1>Disciplines</h1><p class="intro">Browse a discipline, then its abilities by level. NPC ratings and selected abilities link here for use during play.</p><div class="grid three">${collections.disciplines.map(record=>`<a class="card" href="${url(type,record.id)}"><h2>${escapeHTML(record.name)}</h2><p>${collections.powers.filter(x=>x.disciplineId===record.recordId).length} abilities recorded</p></a>`).join('')}</div>`;
   if (type === 'places') return `<h1>Places</h1><p class="intro">Choose a city or community, then explore its districts, suburbs, and individual locations. Locations with no recorded district remain directly under their city.</p>${section('Cities, communities & regions', collections.places.filter(x => !x.parent && areaKinds.has(x.kind)), 'places')}${section('Locations without recorded geography', collections.places.filter(x => !x.parent && !areaKinds.has(x.kind)), 'places')}`;
-  if(type === 'chronicle')return `<h1>Chronicle</h1>${section('Sessions',collections.chronicle,'chronicle')}<section class="related"><h2>Imported notes</h2><p class="intro">Read the stored text from imported notes. These notes are public for now.</p><a class="chip" href="#notes">Browse imported notes</a><div class="grid two">${collections.notes.map(x=>card(x,'notes')).join('')}</div></section>`;
-  if(type === 'notes')return `<h1>Imported notes</h1><p class="intro">Stored text snapshots of previously imported screenshot content. Future text or file imports can preserve the complete original here. All notes are currently public.</p><a class="back" href="#chronicle">← Chronicle</a><div class="grid two">${collections.notes.map(x=>card(x,'notes')).join('')}</div>`;
+  if(type === 'chronicle')return `<h1>Chronicle</h1>${section('Sessions',collections.chronicle,'chronicle')}${section('Active threads',collections.threads,'threads')}<section class="related"><h2>Imported notes</h2><p class="intro">Read the stored text from imported notes. Only notes available to your account are shown.</p><a class="chip" href="#notes">Browse imported notes</a><div class="grid two">${collections.notes.map(x=>card(x,'notes')).join('')}</div></section>`;
+  if(type === 'notes')return `<h1>Imported notes</h1><p class="intro">Stored text snapshots of previously imported screenshot content. Future text or file imports can preserve the complete original here. Only notes available to your account are shown.</p><a class="back" href="#chronicle">← Chronicle</a><div class="grid two">${collections.notes.map(x=>card(x,'notes')).join('')}</div>`;
   let records = collections[type];
   if(type === 'people') records = [...records].sort((a,b)=>name(a).localeCompare(name(b),'en',{sensitivity:'base',numeric:true}));
   if (type === 'organizations' && state.category) records = records.filter(x => x.category === state.category);
@@ -239,11 +240,11 @@ function render() {
   if(D.publication==='supabase-rls'&&!window.campaignAccess)return;
   if(abilityDialog.open)abilityDialog.close();
   for (const item of nav.querySelectorAll('a')) {
-    const active = item.getAttribute('href').split('?')[0] === '#' + state.route;
+    const active = item.getAttribute('href').split('?')[0] === '#' + (state.route==='threads'?'chronicle':state.route);
     item.classList.toggle('active', active);
     if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
   }
-  app.innerHTML = state.route==='edit' ? CampaignEditor.render(state.id) : state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : state.route === 'storyteller' ? storytellerTools() : collections[state.route] ? listing(state.route) : missing();
+  app.innerHTML = state.route==='coterie'&&!state.id ? Coterie.render(D,model) : state.route==='edit' ? CampaignEditor.render(state.id) : state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : state.route === 'storyteller' ? storytellerTools() : collections[state.route] ? listing(state.route) : missing();
   document.title = `${state.route==='edit' ? 'Edit campaign record' : state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
 }
 function boot(focus = false) {

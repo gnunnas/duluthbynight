@@ -64,6 +64,12 @@
    if(!response.ok){let detail;try{detail=await response.json();}catch{}const error=Error(['40001','PT409'].includes(detail?.code)?'Another edit was saved first. Reload the latest version; your draft has not been saved.':detail?.code==='PGRST202'?'Apply the new Storyteller editing migration before saving.':'Could not save: '+(detail?.message||'check your connection and permissions.'));error.code=detail?.code;throw error;}
    await response.json();
   };
+  window.campaignSession.saveCoterie=async(kind,id,revision,payload)=>{
+   if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access required.');
+   const response=await fetch(config.url+'/rest/v1/rpc/save_coterie_entry',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_kind:kind,p_id:id||null,p_revision:revision,p_payload:payload}),cache:'no-store'});
+   if(!response.ok){let detail;try{detail=await response.json();}catch{}throw Error(detail?.code==='PT409'?'Another edit was saved first. Your draft is retained; copy it before reloading.':detail?.code==='PGRST202'?'Apply the Coterie migration before saving.':detail?.message||'Could not save this coterie entry.');}
+   return response.json();
+  };
   window.campaignSession.reloadCampaign=async()=>{
    const fresh=Object.fromEntries(await Promise.all(tables.map(async table=>[table,await read(table)])));
    Object.assign(rows,fresh);return adaptSupabase(rows,config.campaignId);

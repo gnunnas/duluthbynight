@@ -99,3 +99,5 @@ The public root now opens the fictional Verumdetenebris forum. Its footer's **Mo
 Storytellers can now edit existing campaign fields, add text references, and review granular or bulk player reveals. See [record editing and reveal setup](docs/storyteller-record-editing.md), including the required migration 003.
 
 See the [current priorities and long-term roadmap](docs/roadmap.md). Storyteller usability comes first; player-character ownership/editing and embedded AI authoring are deferred.
+
+The **Coterie** tab tracks character links, the haven, boons, multiple resources, and large shared Player notes. Threads are now under Chronicle. See [Coterie setup and permissions](docs/coterie.md), including migration 008 and the one-time setup button.
