@@ -1,14 +1,14 @@
-const D = window.CAMPAIGN;
+let D = window.CAMPAIGN;
 const app = document.querySelector('#app');
 const nav = document.querySelector('#nav');
 const menu = document.querySelector('#menuBtn');
-const model = createCampaignModel(D);
-const collections = model.collections;
-const labels = { people: 'People', places: 'Places', threads: 'Active threads', organizations: 'Organizations', clans: 'Clans', schemes: 'Schemes', events: 'Events', chronicle: 'Chronicle', disciplines: 'Disciplines', powers: 'Abilities', notes: 'Imported notes' };
+let model = createCampaignModel(D);
+let collections = model.collections;
+const labels = { storyteller:'Storyteller tools', people: 'People', places: 'Places', threads: 'Active threads', organizations: 'Organizations', clans: 'Clans', schemes: 'Schemes', events: 'Events', chronicle: 'Chronicle', disciplines: 'Disciplines', powers: 'Abilities', notes: 'Imported notes' };
 const areaKinds = new Set(['City', 'Community', 'District', 'Suburb', 'Territory']);
 let state = { route: 'home', id: null, filter: 'All', query: '' };
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const by = model.by;
+let by = model.by;
 const name = record => record.name || record.title;
 const url = (type, id) => `#${type}${id ? '/' + encodeURIComponent(id) : ''}`;
 function link(type, record) { return `<a href="${url(type, record.id)}">${escapeHTML(name(record))}</a>`; }
@@ -144,7 +144,7 @@ function placeChildren(record) {
 function detail(type, id) {
   const record = by(type, id);
   if (!record) return missing();
-  if(type === 'disciplines' || type === 'powers')return disciplineDetail(type,record);
+  if(type === 'disciplines' || type === 'powers')return disciplineDetail(type,record)+(window.campaignSession?.isStoryteller?CampaignEditor.recordLink(record.recordId):'');
   const facts = [];
   if (type === 'people') {
     const status=D.personStatus?.find(x=>x.personRecordId===record.recordId);
@@ -173,7 +173,11 @@ function detail(type, id) {
   }
   if(type === 'notes')facts.push(['Archive type','Text snapshot of imported content'],['Visibility',D.publication==='supabase-rls'?escapeHTML(D.records.find(x=>x.id===record.recordId)?.audience||'Unknown'):'Public']);
   if (type === 'chronicle') facts.push(['Session date', escapeHTML(record.date || 'Unknown')]);
-  return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}${record.portrait ? `<div class="person-header"><img class="person-portrait" src="${escapeHTML(record.portrait.src)}" alt="${escapeHTML(record.portrait.alt)}" width="326" height="405" decoding="async"><div><h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}</div></div>` : `<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}`}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${['Ambition','Security coverage'].includes(label) || (index === facts.length - 1 && (facts.length - facts.filter(([key]) => ['Ambition','Security coverage'].includes(key)).length) % 2 === 1) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
+  const wideFacts=new Set();let compactRun=[];
+  function finishCompactRun(){if(compactRun.length%2)wideFacts.add(compactRun.at(-1));compactRun=[];}
+  facts.forEach(([label],index)=>{if(['Ambition','Security coverage'].includes(label)){finishCompactRun();wideFacts.add(index);}else compactRun.push(index);});
+  finishCompactRun();
+  return `<article class="detail ${type === 'people' ? 'npc-detail' : type === 'places' ? 'location-detail' : ''}"><a class="back" href="#${type}">← ${labels[type]}</a>${type === 'places' ? breadcrumbs(record) : `<div class="crumbs">${escapeHTML(labels[type])}</div>`}${record.portrait ? `<div class="person-header"><img class="person-portrait" src="${escapeHTML(record.portrait.src)}" alt="${escapeHTML(record.portrait.alt)}" width="326" height="405" decoding="async"><div><h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}</div></div>` : `<h1>${escapeHTML(name(record))}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}`}${window.campaignSession?.isStoryteller?CampaignEditor.recordLink(record.recordId):''}${facts.length ? `<dl class="facts">${facts.map(([label, value], index) => `<div class="${wideFacts.has(index) ? 'fact-wide' : ''}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}${type === 'people' ? personSections(record) : type === 'places' ? `<div class="location-sections">${flexibleSections(record)}</div>` : flexibleSections(record)}${type === 'places' ? placeChildren(record) : ''}${type === 'organizations' ? organizationHierarchy(type, record) : ''}${relations(type, record)}</article>`;
 }
 
 function disciplineDetail(type, record) {
@@ -221,6 +225,11 @@ function searchResults() {
   return `<p role="status">${count} ${count === 1 ? 'record' : 'records'} found.</p>${count ? matches.map(([type, records]) => section(labels[type], records, type)).join('') : '<p class="empty">No records match. Try another name or keyword.</p>'}`;
 }
 function search() { return `<h1>Campaign search</h1><form id="searchForm" role="search"><label for="campaignSearch">Search all campaign records</label><div class="search-row"><input id="campaignSearch" name="q" type="search" value="${escapeHTML(state.query)}" placeholder="Name, place, or keyword…" autocomplete="off"><button class="chip" type="submit">Search</button></div></form><div id="searchResults">${searchResults()}</div>`; }
+function storytellerTools(){
+ if(!window.campaignSession?.isStoryteller)return '<h1>Storyteller access required</h1><p>This editing screen is available to campaign Storytellers.</p><a href="#home">Return to Tonight</a>';
+ const rows=(D.campaignStatus||[]).filter(x=>!x.archivedAt);
+ return `<h1>Storyteller tools</h1>${CampaignEditor.dashboard()}<p class="intro">Update the Tonight strip before play. Save each row separately. Blank values stay hidden.</p><p><a href="#home">View Tonight</a> · <button class="chip" type="button" data-reload-status>Reload saved values</button></p><p id="statusReloadMessage" role="status" aria-live="polite"></p>${rows.length?`<div class="status-editor">${rows.map(row=>`<form class="npc-panel status-row-form" data-status-id="${escapeHTML(row.id)}" data-revision="${escapeHTML(row.revision)}"><h2>${escapeHTML(row.label)}</h2><label>Label<input name="label" required value="${escapeHTML(row.label)}"></label><label>Value<input name="value" value="${escapeHTML(row.value)}" placeholder="Leave blank to hide"></label><div class="status-row-options"><label>Display order<input name="sortOrder" type="number" step="1" required value="${escapeHTML(row.sortOrder)}"></label><label>Who can see it?<select name="audience"><option value="players" ${row.audience==='players'?'selected':''}>All campaign players</option><option value="storyteller" ${row.audience==='storyteller'?'selected':''}>Storytellers only</option>${row.audience==='public'?'<option value="public" selected>All campaign members (existing public audience)</option>':''}</select></label></div><button type="submit" class="chip">Save row</button><p role="status" aria-live="polite"></p></form>`).join('')}</div>`:'<p class="empty">No status rows are available. Check that the campaign_status migration has been applied and its starter rows exist.</p>'}`;
+}
 function missing() { return '<h1>Record not found</h1><p class="empty">This campaign link does not match a recorded page.</p><a href="#home">Return to Tonight</a> · <a href="#search">Search the campaign</a>'; }
 function closeMenu() { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); menu.setAttribute('aria-label', 'Open navigation'); }
 function render() {
@@ -231,8 +240,8 @@ function render() {
     item.classList.toggle('active', active);
     if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
   }
-  app.innerHTML = state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : collections[state.route] ? listing(state.route) : missing();
-  document.title = `${state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
+  app.innerHTML = state.route==='edit' ? CampaignEditor.render(state.id) : state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : state.route === 'storyteller' ? storytellerTools() : collections[state.route] ? listing(state.route) : missing();
+  document.title = `${state.route==='edit' ? 'Edit campaign record' : state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
 }
 function boot(focus = false) {
   let hash = location.hash.slice(1) || 'home';
@@ -292,3 +301,25 @@ app.addEventListener('submit',async event=>{
  try{const saved=await window.campaignSession.saveNote(entry.id,form.elements.body.value,entry.revision);entry.body=saved.body;entry.revision=saved.revision;render();}
  catch(error){status.textContent=error.message;button.disabled=false;}
 });
+
+function statusRowFromDatabase(row){return {id:row.id,label:row.label,value:row.value,sortOrder:row.sort_order,audience:row.audience,revision:row.revision,archivedAt:row.archived_at};}
+app.addEventListener('submit',async event=>{
+ const form=event.target.closest('form[data-status-id]');if(!form)return;
+ event.preventDefault();const button=form.querySelector('button'),message=form.querySelector('[role="status"]');if(button.disabled)return;
+ const label=form.elements.label.value.trim(),sortOrder=Number(form.elements.sortOrder.value);
+ if(!label||!Number.isSafeInteger(sortOrder)||sortOrder < -2147483648||sortOrder>2147483647){message.textContent='Enter a label and a valid whole-number display order.';return;}
+ button.disabled=true;message.textContent='Saving…';
+ try{
+  const saved=await window.campaignSession.saveStatus(form.dataset.statusId,{label,value:form.elements.value.value,sortOrder,audience:form.elements.audience.value},Number(form.dataset.revision));
+  const entry=D.campaignStatus.find(x=>x.id===saved.id);Object.assign(entry,statusRowFromDatabase(saved));D.campaignStatus.sort((a,b)=>a.sortOrder-b.sortOrder||a.id.localeCompare(b.id));
+  form.dataset.revision=saved.revision;form.elements.label.value=saved.label;form.querySelector('h2').textContent=saved.label;message.textContent='Saved. The Tonight strip is updated.';
+ }catch(error){message.textContent=error.message;}finally{button.disabled=false;}
+});
+app.addEventListener('click',async event=>{
+ const button=event.target.closest('[data-reload-status]');if(!button)return;
+ const message=document.querySelector('#statusReloadMessage');button.disabled=true;message.textContent='Loading saved values…';
+ try{const rows=await window.campaignSession.reloadStatus();D.campaignStatus=rows.map(statusRowFromDatabase).filter(x=>!x.archivedAt).sort((a,b)=>a.sortOrder-b.sortOrder||a.id.localeCompare(b.id));if(state.route==='storyteller'){render();document.querySelector('#statusReloadMessage').textContent='Saved values reloaded.';}}
+ catch(error){message.textContent=error.message;}finally{button.disabled=false;}
+});
+
+window.refreshCampaignViews=async()=>{const fresh=await window.campaignSession.reloadCampaign();const nextModel=createCampaignModel(fresh);D=fresh;window.CAMPAIGN=fresh;model=nextModel;collections=model.collections;by=model.by;render();};

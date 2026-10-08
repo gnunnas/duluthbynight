@@ -90,8 +90,10 @@ The reviewed **Supabase initial schema** is packaged in `supabase/migrations/`, 
 
 The SQL Editor setup flow and campaign import have been completed in the user’s project. The website now loads authorized Supabase rows after sign-in, without a bundled campaign-data fallback. See [website sign-in and verification](docs/supabase-website.md) for account setup, note editing, and remaining real-project checks.
 
-The homepage's date/status strip uses the small `campaign_status` table. See [Tonight status strip setup and editing](docs/campaign-status.md) for the new migration and pre-session updates through Supabase Table Editor.
+The homepage's date/status strip uses the small `campaign_status` table. See [Tonight status strip setup and editing](docs/campaign-status.md) for the migration and pre-session updates through the Storyteller screen or Supabase Table Editor.
 
 ## Verumdetenebris entrance
 
 The public root now opens the fictional Verumdetenebris forum. Its footer's **Moderator Control Panel** opens `campaign.html`, the existing Supabase campaign login. The forum deliberately retains a fixed desktop layout on phones; the campaign companion remains mobile-first. See [forum structure and authored content](docs/verumdetenebris.md). No Supabase migration is needed for the forum.
+
+Storytellers can now edit existing campaign fields, add text references, and review granular or bulk player reveals. See [record editing and reveal setup](docs/storyteller-record-editing.md), including the required migration 003.
