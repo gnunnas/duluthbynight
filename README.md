@@ -101,3 +101,5 @@ Storytellers can now edit existing campaign fields, add text references, and rev
 See the [current priorities and long-term roadmap](docs/roadmap.md). Storyteller usability comes first; player-character ownership/editing and embedded AI authoring are deferred.
 
 The **Coterie** tab tracks character links, the haven, boons, multiple resources, and large shared Player notes. Threads are now under Chronicle. See [Coterie setup and permissions](docs/coterie.md), including migration 008 and the one-time setup button.
+
+New person death-status rows default to **For Real Dead? → No** after migration `20261008000900_person_death_default.sql`. Existing death statuses remain as recorded. See the [NPC import rules](docs/roadmap.md) for identity reuse and classification clarification requirements.
