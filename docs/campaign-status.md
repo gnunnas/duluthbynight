@@ -14,12 +14,16 @@ The website tolerates this table being absent while you deploy the change. Witho
 
 ## Update before play
 
-Open **Table Editor → campaign_status**, filter `campaign_id` to `duluth-by-night`, then edit the `value` cells. `Current night` is the fictional in-game date/time, so it is free text rather than your computer's current date. Weather is authored campaign weather, not an automatic live forecast.
+Sign in to the campaign as Storyteller and open **Storyteller** in the navigation. Edit each row’s label, value, display order, or visibility, then click **Save row**. The new values appear immediately when you return to Tonight in that tab. Other signed-in tabs need to reload and sign in again to fetch them.
+
+Each save checks the revision you loaded. If another edit won, your draft stays in the form and the save reports a conflict. **Reload saved values** replaces the editor’s current drafts with the latest database rows. Player accounts have no editor access; Supabase RLS enforces that restriction.
+
+Alternatively, open **Table Editor → campaign_status**, filter `campaign_id` to `duluth-by-night`, then edit the `value` cells. `Current night` is the fictional in-game date/time, so it is free text rather than your computer's current date. Weather is authored campaign weather, not an automatic live forecast.
 
 You can also change `label` or `sort_order`. Add more rows for other short details with the same campaign ID and a unique ID such as `mood`. Lower sort orders display first. Leave a value empty to hide its slot. The existing responsive strip wraps for additional rows.
 
 These session-prep rows deliberately use `audience = players`: active campaign players and Storytellers can read them. Use `storyteller` for a hidden row. Storytellers alone can insert/update through authenticated API access; players and anonymous visitors cannot change them. Changes are recorded in `change_events`. Table Editor uses administrative access, as with your other setup tasks.
 
-After saving, reload the website and sign in again to fetch the new values. The main page does not poll for live changes. This change adds no Storyteller editing form to the website; Table Editor is the initial editing interface.
+After saving, reload the website and sign in again to fetch the new values. The main page does not poll for live changes. The site editor updates existing active rows. Adding new rows or restoring archived rows still uses Table Editor. No additional SQL migration is needed for the editing screen.
 
 Permanent flavor text and artwork stay in presentation code. The recap and Faces to remember are separate features and are not changed here.

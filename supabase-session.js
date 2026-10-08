@@ -23,6 +23,8 @@
  function lock(message){
   clearInterval(refreshTimer);session=null;window.campaignAccess=false;window.CAMPAIGN=null;
   document.querySelector('.ability-dialog')?.remove();
+  document.querySelector('.reveal-dialog')?.remove();
+  if(window.campaignSession)window.campaignSession.isStoryteller=false;
   app.replaceChildren();const heading=document.createElement('h1');heading.textContent='Session ended';
   const text=document.createElement('p');text.textContent=message;
   const button=document.createElement('button');button.textContent='Sign in again';button.onclick=()=>location.reload();app.append(heading,text,button);
@@ -52,8 +54,34 @@
    const response=await fetch(config.url+'/rest/v1/content_items?'+query,{method:'PATCH',headers:{...headers(),Prefer:'return=representation'},body:JSON.stringify(window.campaignSession.isStoryteller?{body,knowledge_state:body?'recorded':'unrecorded',origin:'human',approved_proposal_id:null}:{body}),cache:'no-store'});
    if(!response.ok)throw Error('Could not save. Check your connection and editing permissions.');
    const saved=await response.json();if(saved.length!==1)throw Error('This note changed or access was removed. Reload and review the latest version before saving.');
+   const stored=rows.content_items.find(x=>x.id===id);if(stored)Object.assign(stored,saved[0]);
    return saved[0];
   }};
+  window.campaignSession.editorRows=()=>rows;
+  window.campaignSession.editRows=async changes=>{
+   if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access is required.');
+   const response=await fetch(config.url+'/rest/v1/rpc/edit_campaign_rows',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_changes:changes}),cache:'no-store'});
+   if(!response.ok){let detail;try{detail=await response.json();}catch{}throw Error(detail?.code==='40001'?'Another edit was saved first. Reload the latest version; your draft has not been saved.':detail?.code==='PGRST202'?'Apply the new Storyteller editing migration before saving.':'Could not save: '+(detail?.message||'check your connection and permissions.'));}
+   await response.json();
+  };
+  window.campaignSession.reloadCampaign=async()=>{
+   const fresh=Object.fromEntries(await Promise.all(tables.map(async table=>[table,await read(table)])));
+   Object.assign(rows,fresh);return adaptSupabase(rows,config.campaignId);
+  };
+  window.campaignSession.saveStatus=async(id,changes,revision)=>{
+   if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access is required.');
+   const query=new URLSearchParams({campaign_id:'eq.'+config.campaignId,id:'eq.'+id,revision:'eq.'+revision,select:'*'});
+   const response=await fetch(config.url+'/rest/v1/campaign_status?'+query,{method:'PATCH',headers:{...headers(),Prefer:'return=representation'},body:JSON.stringify({label:changes.label,value:changes.value,sort_order:changes.sortOrder,audience:changes.audience,origin:'human'}),cache:'no-store'});
+   if(!response.ok)throw Error('Could not save this row. Check your connection and Storyteller permissions.');
+   const saved=await response.json();if(saved.length!==1)throw Error('This row changed or access was removed. Reload saved values and review the latest version before saving.');
+   const stored=rows.campaign_status.find(x=>x.id===id);if(stored)Object.assign(stored,saved[0]);
+   return saved[0];
+  };
+  window.campaignSession.reloadStatus=async()=>{
+   if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access is required.');
+   return read('campaign_status');
+  };
+  if(window.campaignSession.isStoryteller){const tools=document.createElement('a');tools.href='#storyteller';tools.textContent='Storyteller';document.querySelector('#nav').append(tools);}
   document.querySelector('#nav').hidden=false;
   await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='app.js';script.onload=resolve;script.onerror=()=>reject(Error('Could not start the website. Reload to try again.'));document.body.append(script);});
   refreshTimer=setInterval(async()=>{
