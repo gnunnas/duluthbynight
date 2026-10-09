@@ -12,6 +12,18 @@ Make the site functional for the campaign's Storyteller first: reliable record e
 - New people default to **For Real Dead? → No**, unless the user/source explicitly supplies another death status. Existing death statuses are retained when filling out a record.
 - New NPC content remains Storyteller-only unless the user explicitly requests sharing. Keep private import artifacts outside the published website checkout.
 
+## Planned: easy record summaries
+
+- Add a clearly labeled Summary field for each campaign entry in Storyteller editing, including entries that do not yet have an overview field.
+- Use the saved summary on record cards and detail pages so entries can replace “No summary recorded” with a useful introduction.
+- Preserve summary reveal permissions and edit history; do not generate or reveal summaries automatically.
+
+## Planned: membership role editing
+
+- Add a simple Role field beside each person’s organization membership in Storyteller tools, such as Leader for An Tran’s Circle of Mercy membership.
+- Allow adding, editing and clearing a role without SQL, including memberships that do not yet have a role entry.
+- Reuse the existing relationship.role storage, audit history and reveal permissions. Keep the role attached to the specific membership connection.
+
 ## Planned: NPC discipline ability picker
 
 - After ability descriptions are imported, add a Storyteller dropdown and Add ability button beneath each NPC discipline, similar to the Coterie entry controls.
