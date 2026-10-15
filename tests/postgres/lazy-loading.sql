@@ -10,6 +10,16 @@ insert into public.content_items(campaign_id,id,record_id,section_id,field_key,b
  ('duluth-by-night','item:loading-secret','person:loading-shared','section:loading-shared','notes.storyteller','SecretUnsearchableToken','storyteller'),
  ('duluth-by-night','item:loading-detail','person:loading-shared','section:loading-shared',null,'VisibleDeepSearchToken','players'),
  ('duluth-by-night','item:loading-archive','note:loading-archive','section:loading-archive','source.text',repeat('HugeArchiveSentinel ',200000),'storyteller');
+-- History metadata must be available without loading all thread/session details.
+insert into public.records(campaign_id,id,record_type,route_key,display_name,audience) values
+ ('duluth-by-night','thread:history-test','thread','history-test','Completed test','players'),
+ ('duluth-by-night','session:history-test','session','history-test','Dated session test','players');
+insert into public.sections(campaign_id,id,record_id,heading,audience) values
+ ('duluth-by-night','section:history-thread','thread:history-test','Summary','players'),
+ ('duluth-by-night','section:history-session','session:history-test','Summary','players');
+insert into public.content_items(campaign_id,id,record_id,section_id,field_key,value,audience) values
+ ('duluth-by-night','item:history-status','thread:history-test','section:history-thread','thread.status','"completed"','players'),
+ ('duluth-by-night','item:history-date','session:history-test','section:history-session','session.inWorldDate','{"text":"June 1998","calendar":"in_world","precision":"month"}','players');
 begin;set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
 do $$ declare catalog jsonb;detail jsonb;full_data jsonb;begin
@@ -27,6 +37,9 @@ end $$;rollback;
 begin;set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',true);
 do $$ declare data jsonb;begin
+ if not exists(select 1 from jsonb_array_elements(public.load_campaign_page('duluth-by-night','catalog')->'content_items') i where i->>'id'='item:history-status' and i->>'value'='completed') then raise exception 'History status missing from player catalog';end if;
+ if not exists(select 1 from jsonb_array_elements(public.load_campaign_page('duluth-by-night','catalog')->'content_items') i where i->>'id'='item:history-date') then raise exception 'In-world date missing from player catalog';end if;
+ if not exists(select 1 from public.records where id='thread:history-test') then raise exception 'Completed thread not readable by player';end if;
  if public.load_campaign_page('duluth-by-night','catalog')->'review_issues'<>'[]'::jsonb then raise exception 'Player can read Storyteller review issues';end if;
  data:=public.load_campaign_page('duluth-by-night','detail','person:loading-shared');
  if data::text not like '%VisibleDeepSearchToken%' or data::text like '%SecretUnsearchableToken%' then raise exception 'Detail visibility leak';end if;

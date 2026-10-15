@@ -8,6 +8,10 @@ Make the site functional for the campaign's Storyteller first: reliable record e
 
 Catalog-first login, on-demand character/ability/source details, tab-local caching, and permission-filtered server search are implemented. Storyteller editing deliberately loads the complete authorized dataset for accurate reveal planning. See [loading architecture and rollout status](campaign-loading.md) before modifying these paths. Migration 010 was reported applied by the user on 2026-10-15; the user subsequently reported live login improving from about 20 seconds to 3 seconds, with initial character details taking under a second. These are user-reported timings.
 
+## Implemented: readable Chronicle history
+
+Completed threads remain readable without database archiving. Chronicle links to completed threads and prior session recaps; session pages distinguish play dates from in-world dates. See [Chronicle history](chronicle-history.md) and migration 011.
+
 ## NPC import rules
 
 - Check live records and aliases before each import. Reuse existing identities and fill out placeholders rather than creating duplicate people.
