@@ -73,3 +73,7 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 /* A small blood-red brush mark leaves the character name fully readable. */
 .death-mark{display:inline-block;width:1em;height:1.25em;margin-right:.4em;vertical-align:-.25em;pointer-events:none;flex-shrink:0}
 .death-mark svg{display:block;width:100%;height:100%;fill:#ca343d;stroke:#821b25;stroke-width:.6;filter:drop-shadow(0 1px 1px #470c16)}
+
+/* Detail-page death cross: translucent paint over the name, without changing text contrast. */
+.dead-person-name{position:relative;display:inline-block;max-width:100%;overflow-wrap:anywhere}
+.death-name-cross{position:absolute;inset:0;width:100%;height:100%;fill:#df4b55;opacity:.38;pointer-events:none;user-select:none}
