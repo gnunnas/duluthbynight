@@ -14,7 +14,7 @@ const url = (type, id) => `#${type}${id ? '/' + encodeURIComponent(id) : ''}`;
 function link(type, record) { return `<a href="${url(type, record.id)}">${escapeHTML(name(record))}</a>`; }
 function card(record, type) {
   if (!record) return '';
-  return `<a class="card" href="${url(type, record.id)}"><div class="meta">${escapeHTML(record.type || record.kind || record.date || labels[type])}${record.clan ? ' · ' + escapeHTML(by('clans', record.clan)?.name || 'Unknown') : ''}</div><h3>${escapeHTML(name(record))}</h3><p>${escapeHTML(record.summary || (type === 'notes' ? 'Read stored imported text.' : ['clans', 'organizations'].includes(type) ? 'View recorded connections.' : 'No summary recorded.'))}</p></a>`;
+  return `<a class="card" href="${url(type, record.id)}"><div class="meta">${escapeHTML(record.type || record.kind || record.date || labels[type])}${record.clan ? ' · ' + escapeHTML(by('clans', record.clan)?.name || 'Unknown') : ''}</div><h3>${escapeHTML(name(record))}</h3>${type === 'people' && !record.summary ? '' : `<p>${escapeHTML(record.summary || (type === 'notes' ? 'Read stored imported text.' : ['clans', 'organizations'].includes(type) ? 'View recorded connections.' : 'No summary recorded.'))}</p>`}</a>`;
 }
 function section(title, records, type) {
   return records.length ? `<section class="related"><h2 class="section-title">${escapeHTML(title)}</h2><div class="grid two">${records.map(x => card(x, type)).join('')}</div></section>` : '';
