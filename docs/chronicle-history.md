@@ -25,6 +25,8 @@ The catalog contains these small fields so list/history navigation needs no edit
 
 ## Recap updates
 
+Session sections with template key `recap` display prose without bullet markers and preserve saved line breaks and blank lines. Edit the stored text to change paragraph breaks; no database migration is needed for this formatting.
+
 Review the live database and existing identities before proposing changes. Ask one actual clarification question at a time. Distinguish an assigned task from a completed one, observed actions from ability ratings, and a goal from established ownership. Do not update the boon ledger unless requested.
 
 Private original text, user corrections, live snapshots, session import SQL, and previews belong outside the website checkout. Publish only the approved edited recap in Supabase, preserving withheld passages in a Storyteller-only source record. Keep newly shared NPC facts separate from their existing private sections.
