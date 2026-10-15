@@ -14,7 +14,7 @@ const url = (type, id) => `#${type}${id ? '/' + encodeURIComponent(id) : ''}`;
 function link(type, record) { return `<a href="${url(type, record.id)}">${escapeHTML(name(record))}</a>`; }
 function card(record, type) {
   if (!record) return '';
-  return `<a class="card" href="${url(type, record.id)}"><div class="meta">${escapeHTML(record.type || record.kind || record.date || labels[type])}${record.clan ? ' · ' + escapeHTML(by('clans', record.clan)?.name || 'Unknown') : ''}</div><h3>${escapeHTML(name(record))}</h3>${type === 'people' && !record.summary ? '' : `<p>${escapeHTML(record.summary || (type === 'notes' ? 'Read stored imported text.' : ['clans', 'organizations'].includes(type) ? 'View recorded connections.' : 'No summary recorded.'))}</p>`}</a>`;
+  return `<a class="card" href="${url(type, record.id)}"><div class="meta">${escapeHTML(record.type || record.kind || record.date || (type==='threads'?(record.status==='completed'?'Completed thread':'Active thread'):labels[type]))}${record.clan ? ' · ' + escapeHTML(by('clans', record.clan)?.name || 'Unknown') : ''}</div><h3>${escapeHTML(name(record))}</h3>${type === 'people' && !record.summary ? '' : `<p>${escapeHTML(record.summary || (type === 'notes' ? 'Read stored imported text.' : ['clans', 'organizations'].includes(type) ? 'View recorded connections.' : 'No summary recorded.'))}</p>`}</a>`;
 }
 function section(title, records, type) {
   return records.length ? `<section class="related"><h2 class="section-title">${escapeHTML(title)}</h2><div class="grid two">${records.map(x => card(x, type)).join('')}</div></section>` : '';
@@ -42,7 +42,7 @@ function relations(type, record) {
   }
   return Object.entries(model.related(type, record)).map(([key, records]) => [key, records.filter(target => !displayedLinks.has(target.recordId))]).map(([key, records]) => {
     if (!records.length) return '';
-    const title = titles[key] || `Related ${labels[key].toLowerCase()}`;
+    const title = titles[key] || (key==='threads'?'Related threads':`Related ${labels[key].toLowerCase()}`);
     return `<section class="related"><h2 class="section-title">${escapeHTML(title)}</h2><ul class="record-links">${records.map(target => `<li><a class="record-link" href="${url(key, target.id)}">${escapeHTML(name(target))}<span aria-hidden="true">↗</span></a></li>`).join('')}</ul></section>`;
   }).join('');
 }
@@ -173,7 +173,8 @@ function detail(type, id) {
     }
   }
   if(type === 'notes')facts.push(['Archive type','Text snapshot of imported content'],['Visibility',D.publication==='supabase-rls'?escapeHTML(D.records.find(x=>x.id===record.recordId)?.audience||'Unknown'):'Public']);
-  if (type === 'chronicle') facts.push(['Session date', escapeHTML(record.date || 'Unknown')]);
+  if (type === 'chronicle'){facts.push(['Session date',escapeHTML(record.date||'Unknown')]);if(record.inWorldDate)facts.push(['In-world date',escapeHTML(record.inWorldDate)]);}
+  if(type==='threads')facts.push(['Status',record.status==='completed'?'Completed':'Active']);
   const wideFacts=new Set();let compactRun=[];
   function finishCompactRun(){if(compactRun.length%2)wideFacts.add(compactRun.at(-1));compactRun=[];}
   facts.forEach(([label],index)=>{if(['Ambition','Security coverage'].includes(label)){finishCompactRun();wideFacts.add(index);}else compactRun.push(index);});
@@ -205,13 +206,20 @@ function home() {
   const heroTagline=tagline.trim()?`<p class="hero-tagline">${escapeHTML(tagline)}</p>`:'';
   const statusRows=(D.campaignStatus||[]).filter(x=>x.id!=='hero-tagline'&&x.value.trim());
   const statusStrip=statusRows.length?`<section class="status" aria-label="Tonight’s campaign status">${statusRows.map(x=>`<div><small>${escapeHTML(x.label)}</small>${escapeHTML(x.value)}</div>`).join('')}</section>`:'';
-  if(!tonight)return `<section class="hero"><img class="hero-image" src="assets/duluth night.jpg" alt="Duluth harbor at night" fetchpriority="high"><h1>DULUTH<br>BY NIGHT</h1>${heroTagline}</section>${statusStrip}${!D.records.length?'<p>No campaign records have been revealed to this account yet.</p>':''}${section('Active threads',collections.threads,'threads')}${section('Latest chronicle',collections.chronicle.slice(0,1),'chronicle')}`;
-  return `<section class="hero">${tonight.heroImage ? `<img class="hero-image" src="${escapeHTML(tonight.heroImage.src)}" alt="${escapeHTML(tonight.heroImage.alt)}" fetchpriority="high" decoding="async">` : ''}<h1>DULUTH<br>BY NIGHT</h1>${heroTagline}</section><section class="status">${tonight.status.map(([label, value]) => `<div><small>${escapeHTML(label)}</small>${escapeHTML(value)}</div>`).join('')}</section><h2 class="section-title">Tonight in Duluth</h2><section class="card recap"><div class="eyebrow">WHERE WE LEFT OFF // ${escapeHTML(collections.chronicle[0].date)}</div><h2>${link('places', by('places', tonight.place))}</h2><p>${escapeHTML(tonight.summary)}</p><p>${escapeHTML(tonight.followup)}</p><div class="badges">${['portia', 'spokes'].map(id => link('people', by('people', id))).join(' ')} ${['chantry', 'bliss'].map(id => link('places', by('places', id))).join(' ')}</div></section>${section('Active threads', collections.threads, 'threads')}${section('Latest chronicle', collections.chronicle.slice(0, 1), 'chronicle')}${section('Faces to remember', tonight.faces.map(id => by('people', id)), 'people')}`;
+  if(!tonight)return `<section class="hero"><img class="hero-image" src="assets/duluth night.jpg" alt="Duluth harbor at night" fetchpriority="high"><h1>DULUTH<br>BY NIGHT</h1>${heroTagline}</section>${statusStrip}${!D.records.length?'<p>No campaign records have been revealed to this account yet.</p>':''}${section('Active threads',collections.threads.filter(x=>x.status!=='completed'),'threads')}${section('Latest chronicle',collections.chronicle.slice(0,1),'chronicle')}`;
+  return `<section class="hero">${tonight.heroImage ? `<img class="hero-image" src="${escapeHTML(tonight.heroImage.src)}" alt="${escapeHTML(tonight.heroImage.alt)}" fetchpriority="high" decoding="async">` : ''}<h1>DULUTH<br>BY NIGHT</h1>${heroTagline}</section><section class="status">${tonight.status.map(([label, value]) => `<div><small>${escapeHTML(label)}</small>${escapeHTML(value)}</div>`).join('')}</section><h2 class="section-title">Tonight in Duluth</h2><section class="card recap"><div class="eyebrow">WHERE WE LEFT OFF // ${escapeHTML(collections.chronicle[0].date)}</div><h2>${link('places', by('places', tonight.place))}</h2><p>${escapeHTML(tonight.summary)}</p><p>${escapeHTML(tonight.followup)}</p><div class="badges">${['portia', 'spokes'].map(id => link('people', by('people', id))).join(' ')} ${['chantry', 'bliss'].map(id => link('places', by('places', id))).join(' ')}</div></section>${section('Active threads', collections.threads.filter(x=>x.status!=='completed'), 'threads')}${section('Latest chronicle', collections.chronicle.slice(0, 1), 'chronicle')}${section('Faces to remember', tonight.faces.map(id => by('people', id)), 'people')}`;
 }
 function listing(type) {
   if(type === 'disciplines')return `<h1>Disciplines</h1><p class="intro">Browse a discipline, then its abilities by level. NPC ratings and selected abilities link here for use during play.</p><div class="grid three">${collections.disciplines.map(record=>`<a class="card" href="${url(type,record.id)}"><h2>${escapeHTML(record.name)}</h2><p>${collections.powers.filter(x=>x.disciplineId===record.recordId).length} abilities recorded</p></a>`).join('')}</div>`;
   if (type === 'places') return `<h1>Places</h1><p class="intro">Choose a city or community, then explore its districts, suburbs, and individual locations. Locations with no recorded district remain directly under their city.</p>${section('Cities, communities & regions', collections.places.filter(x => !x.parent && areaKinds.has(x.kind)), 'places')}${section('Locations without recorded geography', collections.places.filter(x => !x.parent && !areaKinds.has(x.kind)), 'places')}`;
-  if(type === 'chronicle')return `<h1>Chronicle</h1>${section('Sessions',collections.chronicle,'chronicle')}${section('Active threads',collections.threads,'threads')}`;
+  if(type==='chronicle'){
+    if(state.view==='past')return `<h1>Past session recaps</h1><a class="back" href="#chronicle">← Chronicle</a>${section('Sessions',collections.chronicle.slice(1),'chronicle')||'<p class="empty">No earlier session recaps recorded.</p>'}`;
+    return `<h1>Chronicle</h1>${section('Latest session',collections.chronicle.slice(0,1),'chronicle')}<p><a href="#chronicle?view=past">Past session recaps (${Math.max(0,collections.chronicle.length-1)})</a> · <a href="#threads?view=completed">Completed threads (${collections.threads.filter(x=>x.status==='completed').length})</a></p>${section('Active threads',collections.threads.filter(x=>x.status!=='completed'),'threads')}`;
+  }
+  if(type==='threads'){
+    const completed=state.view==='completed',records=collections.threads.filter(x=>(x.status==='completed')===completed);
+    return `<h1>${completed?'Completed threads':'Active threads'}</h1><a class="back" href="#chronicle">← Chronicle</a><p><a href="#threads${completed?'':'?view=completed'}">${completed?'View active threads':'View completed threads'}</a></p><div class="grid two">${records.map(x=>card(x,'threads')).join('')||`<p class="empty">No ${completed?'completed':'active'} threads recorded.</p>`}</div>`;
+  }
   if(type === 'notes')return `<h1>Imported notes</h1><p class="intro">Stored text snapshots of previously imported screenshot content. Future text or file imports can preserve the complete original here. Only notes available to your account are shown.</p><a class="back" href="#chronicle">← Chronicle</a><div class="grid two">${collections.notes.map(x=>card(x,'notes')).join('')}</div>`;
   let records = collections[type];
   if(type === 'people') records = [...records].sort((a,b)=>name(a).localeCompare(name(b),'en',{sensitivity:'base',numeric:true}));
@@ -230,7 +238,7 @@ function searchResults() {
   if(state.searchError)return `<p role="alert">${escapeHTML(state.searchError)}</p>`;
   const matches = Object.entries(collections).map(([type, records]) => [type, records.filter(record => state.searchMatches ? (state.searchMatches.includes(record.recordId)||model.searchText(type, record).includes(query)) : model.searchText(type, record).includes(query))]);
   const count = matches.reduce((sum, [, records]) => sum + records.length, 0);
-  return `<p role="status">${count} ${count === 1 ? 'record' : 'records'} found.</p>${count ? matches.map(([type, records]) => section(labels[type], records, type)).join('') : '<p class="empty">No records match. Try another name or keyword.</p>'}`;
+  return `<p role="status">${count} ${count === 1 ? 'record' : 'records'} found.</p>${count ? matches.map(([type, records]) => section(type==='threads'?'Threads':labels[type], records, type)).join('') : '<p class="empty">No records match. Try another name or keyword.</p>'}`;
 }
 function search() { return `<h1>Campaign search</h1><form id="searchForm" role="search"><label for="campaignSearch">Search all campaign records</label><div class="search-row"><input id="campaignSearch" name="q" type="search" value="${escapeHTML(state.query)}" placeholder="Name, place, or keyword…" autocomplete="off"><button class="chip" type="submit">Search</button></div></form><div id="searchResults">${searchResults()}</div>`; }
 function storytellerTools(){
@@ -268,7 +276,7 @@ function render() {
   }
   app.innerHTML = state.route==='coterie'&&!state.id ? Coterie.render(D,model) : state.route==='edit' ? CampaignEditor.render(state.id) : state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : state.route === 'storyteller' ? storytellerTools() : collections[state.route] ? listing(state.route) : missing();
   markDeadCharacterLinks();
-  document.title = `${state.route==='edit' ? 'Edit campaign record' : state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
+  document.title = `${state.route==='edit' ? 'Edit campaign record' : !state.id&&state.route==='threads'&&state.view==='completed'?'Completed threads':!state.id&&state.route==='chronicle'&&state.view==='past'?'Past session recaps':state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
 }
 let navigationVersion=0;
 function applyCampaign(fresh){const next=createCampaignModel(fresh);D=fresh;window.CAMPAIGN=fresh;model=next;collections=next.collections;by=next.by;}
@@ -282,7 +290,7 @@ async function boot(focus = false) {
   const parts = path.split('/');
   let id;
   try { id = parts[1] ? decodeURIComponent(parts[1]) : null; } catch { id = '__invalid__'; }
-  state = { ...state, route: parts.length > 2 ? '__invalid__' : parts[0], id, query: new URLSearchParams(query).get('q') || '', category: new URLSearchParams(query).get('category') || null };
+  state = { ...state, route: parts.length > 2 ? '__invalid__' : parts[0], id, query: new URLSearchParams(query).get('q') || '', category: new URLSearchParams(query).get('category') || null, view:new URLSearchParams(query).get('view')||null };
   closeMenu();
   if(window.campaignSession?.ensureRoute){
     app.innerHTML='<p role="status">Loading…</p>';

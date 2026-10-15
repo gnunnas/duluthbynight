@@ -1,7 +1,7 @@
 // API fixtures mirror page boundaries; PostgreSQL tests verify real RLS separately.
 function pageBundle(rows,scope,id){
  if(scope==='editor')return rows;
- const fields=new Set(['overview','person.nature','place.kind','organization.kind','organization.browseCategory','session.date']);
+ const fields=new Set(['overview','person.nature','place.kind','organization.kind','organization.browseCategory','session.date','session.inWorldDate','thread.status']);
  const items=(rows.content_items||[]).filter(r=>scope==='catalog'?!r.parent_item_id&&fields.has(r.field_key):r.record_id===id),itemIds=new Set(items.map(r=>r.id)),sections=new Set(items.map(r=>r.section_id)),out={};
  for(const [table,list]of Object.entries(rows)){
   if(scope==='catalog'){

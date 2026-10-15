@@ -14,6 +14,8 @@ The branch was pushed. GitHub API access returned `Forbidden` during automatic P
 
 The migration adds read-only `SECURITY INVOKER` page/search functions and indexes. Existing row-level permissions remain authoritative. It changes no campaign entries, revelations, or account roles. Missing migration errors explicitly identify migration 010 rather than silently loading everything.
 
+For readable completed threads and separate in-world dates, apply [migration 011 and the history update](chronicle-history.md) too. Its additional catalog fields do not load full recaps.
+
 ## What loads
 
 - **Sign-in:** access checks in parallel, then one catalog request with record names, aliases, overview/type/date fields, portraits, relationships, geography, ability parent/level definitions, death status, authorized review warnings, and Tonight status. Lists and links use this catalog.

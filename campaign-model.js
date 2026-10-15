@@ -142,7 +142,9 @@
       record.level=value(raw.id,'power.level');
       const discipline=direct(raw.id).find(x=>x.relationshipType==='power_of');
       if(discipline)record.disciplineId=discipline.toRecordId;
-      record.date=value(raw.id,'session.date')?.text;record.affiliationStatus=value(raw.id,'person.affiliationStatus');
+      record.sessionDate=value(raw.id,'session.date');record.date=record.sessionDate?.text;record.inWorldDate=value(raw.id,'session.inWorldDate')?.text;
+      if(raw.recordType==='thread')record.status=value(raw.id,'thread.status')==='completed'?'completed':'active';
+      record.affiliationStatus=value(raw.id,'person.affiliationStatus');
       record.category=value(raw.id,'organization.browseCategory');
       const parent=direct(raw.id).find(x=>['contained_in','subgroup_of'].includes(x.relationshipType));
       if(parent)record.parent=rawById.get(parent.toRecordId).routeKey;
@@ -165,6 +167,7 @@
     });
     const byId=new Map(projected.map(x=>[x.recordId,x]));
     const collections=Object.fromEntries(Object.entries(routes).map(([type,route])=>[route,projected.filter(x=>x.recordType===type)]));
+    collections.chronicle.sort((a,b)=>(b.sessionDate?.iso||'').localeCompare(a.sessionDate?.iso||''));
     const by=(type,id)=>collections[type]?.find(x=>x.id===id||x.recordId===id);
     const canonicalType=record=>routes[record.recordType];
     function related(type,record){
