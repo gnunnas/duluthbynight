@@ -1,3 +1,4 @@
+const {pageBundle,searchRecords}=require('./helpers/page-bundles.cjs');
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
 const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8010';
@@ -16,6 +17,8 @@ const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8010';
   if(table==='token')body={access_token:'test',refresh_token:'test',expires_in:3600,user:{id:'st'}};
   else if(table==='campaign_memberships')body=[{user_id:'st',role:'storyteller',active:true}];
   else if(table==='campaigns')body=[{owner_user_id:'st'}];
+   else if(table==='load_campaign_page'){const p=route.request().postDataJSON();body=pageBundle(rows,p.p_scope,p.p_record);}
+   else if(table==='search_campaign_records')body=searchRecords(rows,route.request().postDataJSON().p_query);
   else if(table==='edit_campaign_rows'){
    const changes=req.postDataJSON().p_changes;requests.push(changes);
    if(conflict){status=409;body={code:conflictCode};conflict=false;}

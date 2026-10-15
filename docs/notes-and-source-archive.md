@@ -1,6 +1,6 @@
 # Source archive and author notes
 
-Chronicle lists imported-note records separately from sessions. The dedicated routes are `#notes` and `#notes/{slug}`. This avoids pretending an editorial note is an in-world event or a session date.
+Chronicle omits imported-note records. The archives remain separate from sessions and can be opened through record links or their own routes. The dedicated routes are `#notes` and `#notes/{slug}`. This avoids pretending an editorial note is an in-world event or a session date.
 
 `source-notes.js` stores three fixed text snapshots of content already imported from screenshots: Alan, the discipline reference notes, and the Watchtower. These snapshots preserve the imported text, including nested entries and numeric mechanics; they are not original screenshot files or verbatim notebook exports. They were captured from the existing authored dataset and should not be regenerated when individual records change. Future text/file imports should store the complete supplied original directly, including content not yet promoted to structured fields.
 
@@ -15,6 +15,6 @@ Each person and place also has two independent note items:
 
 Both fields currently start with an empty body and an unrecorded knowledge state. Empty note sections are intentionally visible as authoring placeholders. They are separate from the source archive and from structured lore fields. Adding text to one does not replace the other.
 
-All content is public in the current static site, including Storyteller notes. The labels do not implement authorization. Editing controls, per-user authorship and timestamps, revision handling, authenticated roles, row-level database permissions, and private storage belong to the database phase. No local-only editor or fake private view is introduced.
+The retained static snapshots are public historical artifacts. The production companion uses Supabase Auth, row-level permissions, and revision-aware note editing; Storyteller notes and unrevealed source text are protected there. New private imports belong only in Supabase, never in public snapshot files. Source text is excluded from the initial catalog and fetched on demand; Storyteller editing deliberately loads the complete authorized dataset. See [authenticated website behavior](supabase-website.md) and [campaign loading](campaign-loading.md).
 
 Future migration should preserve source-note text verbatim and use stable record IDs for note owners and source-document links. Original uploaded files can later be retained as attachments to source-note records in addition to readable text.

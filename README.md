@@ -2,6 +2,8 @@
 
 Mobile-first campaign companion for the Duluth by Night Vampire: The Masquerade chronicle. Preserve the approved prototype's Lake Superior / industrial Duluth / Vampire noir visual direction.
 
+For future work, start with [agent handoff notes](AGENTS.md), the [current roadmap](docs/roadmap.md), and [campaign loading and rollout status](docs/campaign-loading.md).
+
 ## Run locally
 
 The application is a dependency-free static website backed by Supabase Auth and Postgres. Sign in with a campaign Auth account. From the repository root:
@@ -10,22 +12,24 @@ The application is a dependency-free static website backed by Supabase Auth and 
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-When releasing campaign JavaScript or style changes, update the matching `v` release value on `styles.css` and `supabase-session.js` in `campaign.html`. The session loader carries that version to `app.js` after sign-in so a previously cached app script cannot hide the update.
+When releasing campaign JavaScript or style changes, update the matching `v` release value on `styles.css`, `campaign-loader.js`, and `supabase-session.js` in `campaign.html`. The session loader carries that version to `app.js` after sign-in so a previously cached app script cannot hide the update.
 
 Hash routes support direct record links and browser history without server rewrites. The manifest supplies install metadata; there is no service worker or offline guarantee.
 
 ## Current architecture
 
+Production entry points are the public forum (`index.html`) and authenticated companion (`campaign.html`). `supabase-session.js` handles login and writes, `campaign-loader.js` caches catalog/detail/editor bundles, and `supabase-data.js` adapts RLS-authorized database rows. See [authenticated website behavior](docs/supabase-website.md) for current operation. The public snapshot/migration files below are retained for historical validation and are not loaded by the production companion.
+
 - `data.js`: normalized **public** campaign data (`schemaVersion: 2`). Records have globally unique IDs, stable route keys, contextual names, sections/items, typed relationships, claims, explicit membership implications, and provenance. IDs distinguish the Bliss organization from the Bliss location.
 - `campaign-model.js`: validation, relationship resolution, membership derivation, search, and an adapter for the existing views. Its projected fields are computed, not a second editable dataset.
 - `campaign-additions.js`: authored public additions loaded after the reproducible Phase 1 baseline. Contains Alan Sovereign’s explicitly approved note and minimal linked records.
 - `app.js`: navigation, presentation, and populated NPC sections. The detailed NPC layout is an incremental Phase 2 addition; remaining modules are still future work.
-- `styles.css` / `index.html`: existing visual system and application shell.
+- `styles.css` / `campaign.html`: campaign visual system and authenticated application shell. `index.html` is the public fictional forum.
 - `migration/phase-1-source.js`: retained pre-migration public source. It is not loaded by the application.
 - `migration/phase-1-report.json`: complete ID/route map, counts, semantic changes, and unresolved geography.
 - `scripts/migrate-phase-1.cjs`: deterministic source-to-normalized migration and comparison check.
 
-The original Phase 1 migration adds only confirmed public names and safe facts. Alan Sovereign’s note was subsequently explicitly approved for publication and is imported in the separate additions file. The other supplied OneNote dossiers remain unimported. These archived source files remain public; the production entry point now uses Supabase sign-in and RLS instead of loading them. Protected Storage delivery remains future work.
+The original Phase 1 migration adds only confirmed public names and safe facts. Alan Sovereign’s note was subsequently explicitly approved for publication and is imported in the separate additions file. Additional private NPC dossiers are authored in Supabase; the public snapshots do not represent the current live campaign. These archived source files remain public; the production entry point now uses Supabase sign-in and RLS instead of loading them. Protected Storage delivery remains future work.
 
 ### Relationship rules
 
@@ -86,7 +90,7 @@ Run the location checks with `node --test tests/watchtower.cjs` alongside the ex
 
 NPC portraits use optional attachment records with an image path and alt text. Alan’s uploaded portrait appears beside his heading; NPCs without art have no empty portrait box.
 
-**Chronicle → Imported notes** stores fixed text snapshots of previously imported Alan, discipline, and Watchtower content, separately from sessions. Future text/file imports should preserve the complete supplied original there. Every person and place has independent Player notes and Storyteller notes fields; both are currently public and read-only. See [source archive and author notes](docs/notes-and-source-archive.md). Run their checks with `node --test tests/notes.cjs`.
+**Imported-note records** (separate from the Chronicle listing) store fixed text snapshots of previously imported Alan, discipline, and Watchtower content, separately from sessions. Future text/file imports should preserve the complete supplied original there. Every person and place has independent Player notes and Storyteller notes fields; both are currently public and read-only. See [source archive and author notes](docs/notes-and-source-archive.md). Run their checks with `node --test tests/notes.cjs`.
 
 The reviewed **Supabase initial schema** is packaged in `supabase/migrations/`, with [a chunked explanation](docs/supabase-schema-review.md) and [SQL Editor setup guide](docs/supabase-setup.md). It covers campaign roles, linked content, shared player notes, reveals, archives, permanent death, audit history, AI proposals, and protected media. The user has applied it to Supabase and reported successful permission checks. Generate a read-only export with `node scripts/export-supabase-draft.cjs --out /tmp/campaign-draft.json`; validate the SQL locally with `bash scripts/test-supabase-draft.sh` (Docker required).
 
@@ -105,3 +109,5 @@ See the [current priorities and long-term roadmap](docs/roadmap.md). Storyteller
 The **Coterie** tab tracks character links, the haven, boons, multiple resources, and large shared Player notes. Threads are now under Chronicle. See [Coterie setup and permissions](docs/coterie.md), including migration 008 and the one-time setup button.
 
 New person death-status rows default to **For Real Dead? → No** after migration `20261008000900_person_death_default.sql`. Existing death statuses remain as recorded. See the [NPC import rules](docs/roadmap.md) for identity reuse and classification clarification requirements.
+
+Campaign browsing now uses a small initial catalog, on-demand record/ability/source loads, session memory caching, and permission-filtered server search. **Apply migration 010 before deploying this version.** See [loading behavior, deployment order, and verification](docs/campaign-loading.md). Storyteller editing still loads the complete authorized dataset when opened for accurate bulk reveals.

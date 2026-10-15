@@ -1,3 +1,4 @@
+const {pageBundle,searchRecords}=require('./helpers/page-bundles.cjs');
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
 const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$/,'');
@@ -14,7 +15,10 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
    else{
     assert.equal(route.request().headers().authorization,'Bearer test-access');
     const table=url.pathname.split('/').pop();
-    if(table==='campaign_status')body=rows.campaign_status;
+    const visible=Object.fromEntries(Object.entries(rows).map(([t,list])=>[t,role==='player'?(t==='campaign_status'?list:[]):list.filter(r=>role!=='player-revealed'||(r.field_key!=='notes.storyteller'&&r.template_key!=='storyteller-notes'))]));
+    if(table==='load_campaign_page'){const p=route.request().postDataJSON();body=pageBundle(visible,p.p_scope,p.p_record);}
+    else if(table==='search_campaign_records')body=searchRecords(visible,route.request().postDataJSON().p_query);
+    else if(table==='campaign_status')body=rows.campaign_status;
     else if(table==='campaign_memberships')body=[{user_id:role,role:role==='storyteller'?'storyteller':'player',active:true}];
     else if(table==='campaigns')body=[{owner_user_id:'storyteller'}];
     else if(role==='player')body=[];

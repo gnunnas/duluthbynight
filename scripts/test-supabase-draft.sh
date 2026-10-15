@@ -51,5 +51,6 @@ run_sql < tests/postgres/record-editing.sql
 run_sql < tests/postgres/function-search-path.sql
 run_sql < tests/postgres/bulk-reveal.sql
 run_sql < tests/postgres/coterie.sql
+run_sql < tests/postgres/lazy-loading.sql
 
 echo 'PASS: versioned SQL applies; current dataset imports; role, note, reveal, archive, audit, AI approval, asset and integrity checks pass.'

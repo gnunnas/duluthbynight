@@ -4,8 +4,7 @@
  const config=window.SUPABASE_CONFIG,app=document.querySelector('#app');
  // Carry the HTML release version through the script loaded after signing in.
  const appVersion=new URL(document.currentScript.src).searchParams.get('v');
- const tables=['campaign_status','records','record_names','sections','content_items','relationship_types','relationships','domain_claims','membership_implications','attachments','sources','item_references','selected_powers','power_definitions','route_aliases','review_issues','person_status',...['record_names','content_items','relationships','domain_claims','membership_implications','attachments','power_definitions'].map(x=>x+'_sources')];
- let session=null,refreshTimer=null;
+ let session=null,refreshTimer=null,loader=null;
  const headers=()=>({apikey:config.publishableKey,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'});
  async function auth(path,body,token){
   const response=await fetch(config.url+'/auth/v1/'+path,{method:'POST',headers:{apikey:config.publishableKey,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});
@@ -23,7 +22,7 @@
   }
  }
  function lock(message){
-  clearInterval(refreshTimer);session=null;window.campaignAccess=false;window.CAMPAIGN=null;
+  clearInterval(refreshTimer);loader?.clear();session=null;window.campaignAccess=false;window.CAMPAIGN=null;
   document.querySelector('.ability-dialog')?.remove();
   document.querySelector('.reveal-dialog')?.remove();
   if(window.campaignSession)window.campaignSession.isStoryteller=false;
@@ -33,15 +32,22 @@
   document.querySelector('#nav').hidden=true;
  }
  async function load(){
-  const memberships=await read('campaign_memberships');
+  const [memberships,response]=await Promise.all([
+   read('campaign_memberships'),
+   fetch(config.url+'/rest/v1/campaigns?'+new URLSearchParams({select:'owner_user_id',id:'eq.'+config.campaignId}),{headers:headers(),cache:'no-store'})
+  ]);
   const own=memberships.find(x=>x.user_id===session.user.id&&x.active);
   // Owners have Storyteller access even if there is no membership row.
-  const response=await fetch(config.url+'/rest/v1/campaigns?'+new URLSearchParams({select:'owner_user_id',id:'eq.'+config.campaignId}),{headers:headers(),cache:'no-store'});
   if(!response.ok)throw Error('Could not check campaign access.');
   const campaigns=await response.json();const owner=campaigns.some(x=>x.owner_user_id===session.user.id);
   if(!own&&!owner)throw Error('This account does not have active access to this campaign. Ask your Storyteller to add it.');
-  const rows=Object.fromEntries(await Promise.all(tables.map(async table=>[table,await read(table)])));
-  window.CAMPAIGN=adaptSupabase(rows,config.campaignId);
+  loader=createCampaignLoader(async(name,payload)=>{
+   const response=await fetch(config.url+'/rest/v1/rpc/'+name,{method:'POST',headers:headers(),body:JSON.stringify(payload),cache:'no-store'});
+   if(!response.ok){let detail;try{detail=await response.json();}catch{}throw Error(detail?.code==='PGRST202'?'Apply migration 010 (campaign lazy loading) in Supabase before using this website.':'Could not load this campaign page. Check your connection and access.');}
+   return response.json();
+  },config.campaignId);
+  window.CAMPAIGN=await loader.catalog();
+  const rows=loader.rows;
   createCampaignModel(window.CAMPAIGN); // Validate the projection before showing any records.
   const account=document.querySelector('#account');account.replaceChildren();
   const role=document.createElement('span');role.textContent=owner||own.role==='storyteller'?'Storyteller':'Player';
@@ -72,10 +78,16 @@
    if(!response.ok){let detail;try{detail=await response.json();}catch{}throw Error(detail?.code==='PT409'?'Another edit was saved first. Your draft is retained; copy it before reloading.':detail?.code==='PGRST202'?'Apply the Coterie migration before saving.':detail?.message||'Could not save this coterie entry.');}
    return response.json();
   };
-  window.campaignSession.reloadCampaign=async()=>{
-   const fresh=Object.fromEntries(await Promise.all(tables.map(async table=>[table,await read(table)])));
-   Object.assign(rows,fresh);return adaptSupabase(rows,config.campaignId);
+  window.campaignSession.ensureRoute=(route,id)=>!window.campaignSession.isStoryteller&&(route==='edit'||route==='storyteller')?Promise.resolve(loader.project()):loader.ensure(route,id);
+  window.campaignSession.loadRecord=async id=>{
+   await loader.record(id);let fresh=loader.project();
+   // A record added in another tab can be referenced by this detail after login.
+   // Refresh catalog dependencies, then restore the requested popup's full detail.
+   if(validateCampaign(fresh).length){await loader.reload();await loader.record(id);fresh=loader.project();}
+   return fresh;
   };
+  window.campaignSession.searchRecords=query=>loader.search(query);
+  window.campaignSession.reloadCampaign=()=>loader.reload();
   window.campaignSession.saveStatus=async(id,changes,revision)=>{
    if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access is required.');
    const query=new URLSearchParams({campaign_id:'eq.'+config.campaignId,id:'eq.'+id,revision:'eq.'+revision,select:'*'});

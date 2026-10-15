@@ -1,6 +1,6 @@
 # Authenticated campaign website
 
-`index.html` now loads the browser-safe project settings, model, database adapter, and sign-in controller. It does not load `data.js` or the other static campaign data scripts. There is no fallback to those files when Supabase is unavailable.
+`campaign.html` loads the browser-safe project settings, model, database adapter, page loader, and sign-in controller. `index.html` is the public fictional forum. It does not load `data.js` or the other static campaign data scripts. There is no fallback to those files when Supabase is unavailable.
 
 The project URL and publishable key in `supabase-config.js` are intended for browser use. Never replace the publishable key with a secret/service-role key.
 
@@ -12,7 +12,9 @@ Tokens stay in memory. Reloading or opening another tab requires signing in agai
 
 Shared Player notes have an **Edit notes** control for players and Storytellers. Storyteller notes have this control for Storytellers. Saving updates only the intended note row using its current revision. If a newer edit exists, the save fails with instructions to reload and review the latest text. RLS and database triggers enforce permissions regardless of what controls are displayed.
 
-The layout, record routes, discipline popup, search, geography, and bidirectional links use the same presentation model. The homepage preserves the supplied harbor image and lists accessible threads/sessions. The old hardcoded recap and status are omitted until authored homepage content has permission-aware database storage; they are not copied from the public data into the authenticated view.
+The layout, record routes, discipline popup, search, geography, and bidirectional links use the same presentation model. Login loads a small catalog; record sections, ability rules, Coterie entries, and source archives load on demand and stay in memory for the signed-in tab. Search queries authorized content on the server. Storyteller tools load the complete authorized editor bundle for accurate bulk reveals. See [loading behavior, migration 010, and current rollout status](campaign-loading.md).
+
+The homepage preserves the supplied harbor image, reads authored status from `campaign_status`, and lists accessible threads/sessions. Threads are under Chronicle; imported notes are omitted from that listing. Source archives remain separate note records and load when opened through their routes or record links. The old hardcoded recap is not copied from the public dataset into the authenticated view.
 
 Artwork still uses legacy GitHub-hosted paths. Protected Supabase Storage delivery and upload are not implemented in this change. Old published campaign JavaScript, SQL import snapshots, images, and Git history remain accessible according to repository/hosting access. Do not place new private material in those files; write it only to Supabase with the intended audience policies.
 
@@ -31,7 +33,7 @@ Do not share account passwords or token values in chat. Report errors and the st
 ## Development checks
 
 ```sh
-node --test tests/model.cjs tests/npc.cjs tests/watchtower.cjs tests/notes.cjs tests/supabase-adapter.cjs
+node --test tests/campaign-loader.cjs tests/model.cjs tests/npc.cjs tests/watchtower.cjs tests/notes.cjs tests/supabase-adapter.cjs
 node tests/supabase-browser.cjs
 ```
 
