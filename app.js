@@ -224,7 +224,9 @@ function listing(type) {
 function searchResults() {
   const query = state.query.trim().toLocaleLowerCase();
   if (!query) return '<p class="empty">Search names, summaries, clans, and affiliations across the campaign.</p>';
-  const matches = Object.entries(collections).map(([type, records]) => [type, records.filter(record => model.searchText(type, record).includes(query))]);
+  if(state.searching)return '<p role="status">Searching…</p>';
+  if(state.searchError)return `<p role="alert">${escapeHTML(state.searchError)}</p>`;
+  const matches = Object.entries(collections).map(([type, records]) => [type, records.filter(record => state.searchMatches ? (state.searchMatches.includes(record.recordId)||model.searchText(type, record).includes(query)) : model.searchText(type, record).includes(query))]);
   const count = matches.reduce((sum, [, records]) => sum + records.length, 0);
   return `<p role="status">${count} ${count === 1 ? 'record' : 'records'} found.</p>${count ? matches.map(([type, records]) => section(labels[type], records, type)).join('') : '<p class="empty">No records match. Try another name or keyword.</p>'}`;
 }
@@ -266,7 +268,10 @@ function render() {
   markDeadCharacterLinks();
   document.title = `${state.route==='edit' ? 'Edit campaign record' : state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
 }
-function boot(focus = false) {
+let navigationVersion=0;
+function applyCampaign(fresh){const next=createCampaignModel(fresh);D=fresh;window.CAMPAIGN=fresh;model=next;collections=next.collections;by=next.by;}
+async function boot(focus = false) {
+  const version=++navigationVersion;
   let hash = location.hash.slice(1) || 'home';
   const canonical = model.resolveRoute(hash);
   if (canonical !== hash) { hash = canonical; history.replaceState(null, '', '#' + hash); }
@@ -276,7 +281,19 @@ function boot(focus = false) {
   let id;
   try { id = parts[1] ? decodeURIComponent(parts[1]) : null; } catch { id = '__invalid__'; }
   state = { ...state, route: parts.length > 2 ? '__invalid__' : parts[0], id, query: new URLSearchParams(query).get('q') || '', category: new URLSearchParams(query).get('category') || null };
-  closeMenu(); render();
+  closeMenu();
+  if(window.campaignSession?.ensureRoute){
+    app.innerHTML='<p role="status">Loading…</p>';
+    try{
+      let fresh=await window.campaignSession.ensureRoute(state.route,state.id);
+      if(version!==navigationVersion||!window.campaignAccess)return;
+      if(validateCampaign(fresh).length)fresh=await window.campaignSession.reloadCampaign();
+      if(version!==navigationVersion||!window.campaignAccess)return;
+      applyCampaign(fresh);
+    }catch(error){if(version===navigationVersion&&window.campaignAccess)app.innerHTML=`<h1>Could not load this page</h1><p role="alert">${escapeHTML(error.message)}</p><button class="chip" data-retry-page>Try again</button>`;return;}
+  }
+  state.searchMatches=null;state.searching=false;state.searchError='';render();
+  if(state.route==='search'&&state.query)runSearch(0);
   if (focus) { app.focus({ preventScroll: true }); window.scrollTo(0, 0); }
 }
 const abilityDialog=document.createElement('dialog');
@@ -285,6 +302,7 @@ abilityDialog.setAttribute('aria-label','Ability reference');
 document.body.append(abilityDialog);
 let abilityTrigger=null;
 abilityDialog.addEventListener('close',()=>{
+  abilityLoadVersion++;
   document.body.classList.remove('ability-open');
   if(abilityTrigger?.isConnected)abilityTrigger.focus({preventScroll:true});
 });
@@ -292,28 +310,45 @@ abilityDialog.addEventListener('click',event=>{
   const box=abilityDialog.getBoundingClientRect();
   if(event.target.closest('[data-close-ability]') || (event.target===abilityDialog && (event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)))abilityDialog.close();
 });
-app.addEventListener('click',event=>{
+let abilityLoadVersion=0;
+app.addEventListener('click',async event=>{
+  if(event.target.closest('[data-retry-page]')){boot();return;}
   const trigger=event.target.closest('[data-ability-popup]');
   if(!trigger||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.button!==0)return;
   const power=model.byId(trigger.dataset.abilityPopup);
   if(!power||power.recordType!=='power')return;
   event.preventDefault();abilityTrigger=trigger;
-  abilityDialog.innerHTML=`<button class="ability-close" data-close-ability aria-label="Close ability reference" autofocus>Close ×</button>${disciplineDetail('powers',power)}<p><a href="${url('powers',power.id)}">Open full ability page</a></p>`;
+  const version=++abilityLoadVersion;
+  if(window.campaignSession?.loadRecord){
+    abilityDialog.innerHTML='<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="status">Loading ability…</p>';
+    abilityDialog.removeAttribute('aria-labelledby');abilityDialog.showModal();document.body.classList.add('ability-open');
+    try{const fresh=await window.campaignSession.loadRecord(power.recordId);if(!abilityDialog.open||version!==abilityLoadVersion||!window.campaignAccess)return;applyCampaign(fresh);}
+    catch(error){if(abilityDialog.open&&version===abilityLoadVersion)abilityDialog.innerHTML=`<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="alert">${escapeHTML(error.message)}</p>`;return;}
+  }
+  const currentPower=model.byId(power.recordId);
+  if(!currentPower){abilityDialog.innerHTML='<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="alert">This ability is no longer available to this account.</p>';return;}
+  abilityDialog.innerHTML=`<button class="ability-close" data-close-ability aria-label="Close ability reference" autofocus>Close ×</button>${disciplineDetail('powers',currentPower)}<p><a href="${url('powers',power.id)}">Open full ability page</a></p>`;
   abilityDialog.querySelector('h1').id='ability-dialog-title';
   abilityDialog.setAttribute('aria-labelledby','ability-dialog-title');
-  abilityDialog.showModal();abilityDialog.scrollTop=0;
+  if(!abilityDialog.open)abilityDialog.showModal();abilityDialog.scrollTop=0;
   document.body.classList.add('ability-open');
 });
 menu.addEventListener('click', () => { const open = nav.classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); menu.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation'); });
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !abilityDialog.open) { closeMenu(); menu.focus(); } });
 document.addEventListener('click', event => { const filter = event.target.closest('[data-filter]'); if (filter) { state.filter = filter.dataset.filter; render(); app.querySelector(`[data-filter="${state.filter}"]`)?.focus(); } });
-app.addEventListener('input', event => {
-  if (event.target.id !== 'campaignSearch') return;
-  state.query = event.target.value;
-  history.replaceState(null, '', '#search' + (state.query ? '?q=' + encodeURIComponent(state.query) : ''));
-  document.querySelector('#searchResults').innerHTML = searchResults(); markDeadCharacterLinks(document.querySelector('#searchResults'));
-});
-app.addEventListener('submit', event => { if (event.target.id === 'searchForm') { event.preventDefault(); document.querySelector('#searchResults').innerHTML = searchResults(); markDeadCharacterLinks(document.querySelector('#searchResults')); } });
+let searchVersion=0,searchTimer;
+function runSearch(delay=250){
+  clearTimeout(searchTimer);const version=++searchVersion,query=state.query.trim();
+  if(!window.campaignSession?.searchRecords||!query){state.searching=false;state.searchMatches=null;updateSearch();return;}
+  state.searching=true;state.searchError='';updateSearch();
+  searchTimer=setTimeout(async()=>{
+    try{const ids=await window.campaignSession.searchRecords(query);if(version!==searchVersion||state.route!=='search')return;state.searchMatches=ids;state.searching=false;updateSearch();}
+    catch(error){if(version!==searchVersion||state.route!=='search')return;state.searching=false;state.searchError=error.message;updateSearch();}
+  },delay);
+}
+function updateSearch(){const results=document.querySelector('#searchResults');if(results){results.innerHTML=searchResults();markDeadCharacterLinks(results);}}
+app.addEventListener('input',event=>{if(event.target.id!=='campaignSearch')return;state.query=event.target.value;history.replaceState(null,'','#search'+(state.query?'?q='+encodeURIComponent(state.query):''));runSearch();});
+app.addEventListener('submit',event=>{if(event.target.id==='searchForm'){event.preventDefault();runSearch(0);}});
 window.addEventListener('hashchange', () => boot(true));
 boot();
 
@@ -345,4 +380,4 @@ app.addEventListener('click',async event=>{
  catch(error){message.textContent=error.message;}finally{button.disabled=false;}
 });
 
-window.refreshCampaignViews=async()=>{const fresh=await window.campaignSession.reloadCampaign();const nextModel=createCampaignModel(fresh);D=fresh;window.CAMPAIGN=fresh;model=nextModel;collections=model.collections;by=model.by;render();};
+window.refreshCampaignViews=async()=>{const fresh=await window.campaignSession.reloadCampaign();applyCampaign(fresh);render();};

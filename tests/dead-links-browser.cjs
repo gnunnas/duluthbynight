@@ -1,3 +1,4 @@
+const {pageBundle,searchRecords}=require('./helpers/page-bundles.cjs');
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
 const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$/,'');
@@ -18,6 +19,8 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
    if(url.pathname.startsWith('/auth/v1/token'))body={access_token:'fixture',refresh_token:'fixture',expires_in:3600,user:{id:'storyteller'}};
    else if(table==='campaign_memberships')body=[{user_id:'storyteller',role:'storyteller',active:true}];
    else if(table==='campaigns')body=[{owner_user_id:'storyteller'}];
+   else if(table==='load_campaign_page'){const p=route.request().postDataJSON();body=pageBundle(rows,p.p_scope,p.p_record);}
+   else if(table==='search_campaign_records')body=searchRecords(rows,route.request().postDataJSON().p_query);
    else body=(rows[table]||[]).slice(Number(url.searchParams.get('offset')||0),Number(url.searchParams.get('offset')||0)+500);
    await route.fulfill({contentType:'application/json',body:JSON.stringify(body)});
   });
@@ -28,7 +31,7 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
   const dead=page.locator('a.card[href="#people/test-death-yes"]');assert.equal(await dead.locator('.death-mark').count(),1);assert((await dead.textContent()).includes('Test character yes'));assert.equal(await dead.getAttribute('aria-description'),'Permanently dead');
   assert(await dead.evaluate(anchor=>{const heading=anchor.querySelector('h3'),range=document.createRange();range.selectNodeContents(heading.lastChild);return heading.querySelector('.death-mark').getBoundingClientRect().right<=range.getBoundingClientRect().left+1}),'X must not cover the name');
   for(const status of ['no','unknown'])assert.equal(await page.locator('a[href="#people/test-death-'+status+'"] .death-mark').count(),0);
-  await page.goto(base+'/campaign.html#search');await page.locator('#campaignSearch').fill('Test character yes');assert.equal(await page.locator('#searchResults .death-mark').count(),1);
+  await page.goto(base+'/campaign.html#search');await page.locator('#campaignSearch').fill('Test character yes');await page.locator('#searchResults .death-mark').waitFor();
   await page.evaluate(()=>{D.personStatus=D.personStatus.filter(status=>status.personRecordId!=='person:test-death-yes');render()});assert.equal(await page.locator('#searchResults .death-mark').count(),0,'Unavailable death status must not be disclosed');
   assert.deepEqual(errors,[]);console.log('PASS: versioned login bypasses stale app; readable death marks, search, No/Unknown and hidden-status behavior.');
  }finally{await browser.close();}

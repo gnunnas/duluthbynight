@@ -105,3 +105,5 @@ See the [current priorities and long-term roadmap](docs/roadmap.md). Storyteller
 The **Coterie** tab tracks character links, the haven, boons, multiple resources, and large shared Player notes. Threads are now under Chronicle. See [Coterie setup and permissions](docs/coterie.md), including migration 008 and the one-time setup button.
 
 New person death-status rows default to **For Real Dead? → No** after migration `20261008000900_person_death_default.sql`. Existing death statuses remain as recorded. See the [NPC import rules](docs/roadmap.md) for identity reuse and classification clarification requirements.
+
+Campaign browsing now uses a small initial catalog, on-demand record/ability/source loads, session memory caching, and permission-filtered server search. **Apply migration 010 before deploying this version.** See [loading behavior, deployment order, and verification](docs/campaign-loading.md). Storyteller editing still loads the complete authorized dataset when opened for accurate bulk reveals.

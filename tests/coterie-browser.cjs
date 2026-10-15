@@ -1,3 +1,4 @@
+const {pageBundle,searchRecords}=require('./helpers/page-bundles.cjs');
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
 const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8018';
@@ -22,6 +23,8 @@ const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8018';
    if(url.pathname.startsWith('/auth/v1/token'))body={access_token:'test',refresh_token:'refresh',expires_in:3600,user:{id:role}};
    else if(table==='campaign_memberships')body=[{user_id:role,role,active:true}];
    else if(table==='campaigns')body=[{owner_user_id:'storyteller'}];
+   else if(table==='load_campaign_page'){const p=route.request().postDataJSON();body=pageBundle(Object.fromEntries(Object.entries(rows).map(([t,list])=>[t,list.filter(r=>role==='storyteller'||(r.field_key!=='notes.storyteller'&&r.template_key!=='storyteller-notes'))])),p.p_scope,p.p_record);}
+   else if(table==='search_campaign_records')body=searchRecords(Object.fromEntries(Object.entries(rows).map(([t,list])=>[t,list.filter(r=>role==='storyteller'||(r.field_key!=='notes.storyteller'&&r.template_key!=='storyteller-notes'))])),route.request().postDataJSON().p_query);
    else if(table==='save_coterie_entry'){
     assert.equal(role,'storyteller');const p=req.postDataJSON(),payload=p.p_payload;assert.equal(p.p_kind,'resource');
     item('coterie.resource3','resources',{field_key:'coterie.resource',title:payload.title,body:payload.body,value:{quantity:payload.quantity}});body={id:'test:coterie.resource3'};
