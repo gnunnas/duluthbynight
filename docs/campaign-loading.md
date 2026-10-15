@@ -4,7 +4,7 @@
 
 The user reported running migration 010 successfully. The implementation and independent code review are complete on branch `lazy-load-campaign-pages` (implementation commit `d4db862`). Both review findings were fixed: ability popups now recover from newly added reference targets missing from cached metadata, and authorized Geography review warnings are retained in the catalog.
 
-The branch was pushed. GitHub API access returned `Forbidden` during automatic PR creation, so a PR-creation link was provided instead. No merge, deployment, or live login timing was confirmed at this handoff. Check current remote/PR/deployment state before continuing; the dated status may have changed. The migration installation is user-reported, not independently verified against the live database.
+The branch was pushed. GitHub API access returned `Forbidden` during automatic PR creation, so a PR-creation link was provided instead. Subsequently, the user reported the live website loading in about 3 seconds (previously about 20), with first-time character loads under a second. This is user-reported behavior, not an independent timing measurement; the PR/merge state was not checked. Check current remote/PR/deployment state before continuing; the dated status may have changed. The migration installation is user-reported, not independently verified against the live database.
 
 ## Deploy in this order
 

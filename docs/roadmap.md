@@ -6,7 +6,7 @@ Make the site functional for the campaign's Storyteller first: reliable record e
 
 ## Implemented: faster campaign loading
 
-Catalog-first login, on-demand character/ability/source details, tab-local caching, and permission-filtered server search are implemented. Storyteller editing deliberately loads the complete authorized dataset for accurate reveal planning. See [loading architecture and rollout status](campaign-loading.md) before modifying these paths. Migration 010 was reported applied by the user on 2026-10-15; live performance still needs verification after deployment.
+Catalog-first login, on-demand character/ability/source details, tab-local caching, and permission-filtered server search are implemented. Storyteller editing deliberately loads the complete authorized dataset for accurate reveal planning. See [loading architecture and rollout status](campaign-loading.md) before modifying these paths. Migration 010 was reported applied by the user on 2026-10-15; the user subsequently reported live login improving from about 20 seconds to 3 seconds, with initial character details taking under a second. These are user-reported timings.
 
 ## NPC import rules
 

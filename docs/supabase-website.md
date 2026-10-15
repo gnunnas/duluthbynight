@@ -16,6 +16,8 @@ The layout, record routes, discipline popup, search, geography, and bidirectiona
 
 The homepage preserves the supplied harbor image, reads authored status from `campaign_status`, and lists accessible threads/sessions. Threads are under Chronicle; imported notes are omitted from that listing. Source archives remain separate note records and load when opened through their routes or record links. The old hardcoded recap is not copied from the public dataset into the authenticated view.
 
+When an authorized **For Real Dead?** status is Yes, People links have a blood-red marker and the person’s detail-page name has a translucent red X across it. No, Unknown, or unavailable statuses receive no mark. The name remains readable and selectable; this is a display change, with no new database fields or migration.
+
 Artwork still uses legacy GitHub-hosted paths. Protected Supabase Storage delivery and upload are not implemented in this change. Old published campaign JavaScript, SQL import snapshots, images, and Git history remain accessible according to repository/hosting access. Do not place new private material in those files; write it only to Supabase with the intended audience policies.
 
 ## Verify against your actual project

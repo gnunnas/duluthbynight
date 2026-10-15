@@ -33,6 +33,21 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
   for(const status of ['no','unknown'])assert.equal(await page.locator('a[href="#people/test-death-'+status+'"] .death-mark').count(),0);
   await page.goto(base+'/campaign.html#search');await page.locator('#campaignSearch').fill('Test character yes');await page.locator('#searchResults .death-mark').waitFor();
   await page.evaluate(()=>{D.personStatus=D.personStatus.filter(status=>status.personRecordId!=='person:test-death-yes');render()});assert.equal(await page.locator('#searchResults .death-mark').count(),0,'Unavailable death status must not be disclosed');
-  assert.deepEqual(errors,[]);console.log('PASS: versioned login bypasses stale app; readable death marks, search, No/Unknown and hidden-status behavior.');
+  for(const status of ['yes','no','unknown']){
+   await page.evaluate(s=>location.hash='#people/test-death-'+s,status);await page.getByRole('heading',{name:'Test character '+status,exact:true}).waitFor();
+   // Restore the authorized Yes fixture after the hidden-status search assertion.
+   if(status==='yes')await page.evaluate(()=>refreshCampaignViews());
+   const cross=page.locator('.npc-detail h1 .death-name-cross');assert.equal(await cross.count(),status==='yes'?1:0);
+   if(status==='yes'){
+    assert.equal(await page.locator('.npc-detail h1').getAttribute('aria-description'),'Permanently dead');
+    assert(await cross.evaluate(svg=>{const paint=getComputedStyle(svg),box=svg.getBoundingClientRect(),name=svg.parentElement.getBoundingClientRect();return Number(paint.opacity)>0&&Number(paint.opacity)<.5&&paint.pointerEvents==='none'&&Math.abs(box.width-name.width)<1&&Math.abs(box.height-name.height)<1;}),'Paint should cross the name lightly without blocking selection');
+    await page.screenshot({path:'/tmp/dead-name-desktop.png'});
+    rows.attachments.push({...rows.attachments.find(r=>r.attachment_kind==='portrait'),id:'portrait:test-death-yes',record_id:'person:test-death-yes'});
+    await page.evaluate(()=>refreshCampaignViews());await page.setViewportSize({width:375,height:850});await page.locator('.person-header .death-name-cross').waitFor();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.screenshot({path:'/tmp/dead-name-mobile.png'});
+    await page.evaluate(()=>{D.personStatus=D.personStatus.filter(s=>s.personRecordId!=='person:test-death-yes');render()});assert.equal(await page.locator('.death-name-cross').count(),0,'Hidden status must not decorate the heading');
+   }
+  }
+  assert.deepEqual(errors,[]);console.log('PASS: versioned login bypasses stale app; readable link markers and translucent detail crosses, portrait/mobile layouts, search, No/Unknown and hidden-status behavior.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1)});
