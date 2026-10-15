@@ -1,5 +1,11 @@
 # Campaign loading
 
+## Current rollout status (2026-10-15)
+
+The user reported running migration 010 successfully. The implementation and independent code review are complete on branch `lazy-load-campaign-pages` (implementation commit `d4db862`). Both review findings were fixed: ability popups now recover from newly added reference targets missing from cached metadata, and authorized Geography review warnings are retained in the catalog.
+
+The branch was pushed. GitHub API access returned `Forbidden` during automatic PR creation, so a PR-creation link was provided instead. No merge, deployment, or live login timing was confirmed at this handoff. Check current remote/PR/deployment state before continuing; the dated status may have changed. The migration installation is user-reported, not independently verified against the live database.
+
 ## Deploy in this order
 
 1. In Supabase → SQL Editor, run the **entire** [migration 010](../supabase/migrations/20261015001000_campaign_lazy_loading.sql), from `begin;` through `commit;`. Existing migrations 001–009 must already be installed. No campaign reimport is needed.

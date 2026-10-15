@@ -4,6 +4,10 @@
 
 Make the site functional for the campaign's Storyteller first: reliable record editing, linking, searching, notes and reveal controls. Player-character ownership and broader player editing are deferred; do not expand those permissions as part of routine Storyteller improvements.
 
+## Implemented: faster campaign loading
+
+Catalog-first login, on-demand character/ability/source details, tab-local caching, and permission-filtered server search are implemented. Storyteller editing deliberately loads the complete authorized dataset for accurate reveal planning. See [loading architecture and rollout status](campaign-loading.md) before modifying these paths. Migration 010 was reported applied by the user on 2026-10-15; live performance still needs verification after deployment.
+
 ## NPC import rules
 
 - Check live records and aliases before each import. Reuse existing identities and fill out placeholders rather than creating duplicate people.
