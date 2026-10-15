@@ -11,6 +11,8 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 /* Reference rules remain readable during play on narrow screens. */
 .power-detail .facts { grid-template-columns:1fr; }
 .rules-text { white-space:pre-wrap; overflow-wrap:anywhere; }
+.session-recap .note-list{list-style:none;padding-left:0}
+.session-recap .note-list p{white-space:pre-line}
 .record-links li > .mechanic-notes { margin:0 0 1rem; }
 @media(min-width:700px){.power-detail .facts { grid-template-columns:1fr 2fr 1fr; }}
 .ability-dialog{width:min(800px,calc(100% - 28px));max-height:calc(100dvh - 40px);padding:22px;background:var(--bg);color:var(--ink);border:1px solid #604047;overflow:auto;overscroll-behavior:contain;box-shadow:0 20px 80px #0008}

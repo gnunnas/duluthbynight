@@ -108,7 +108,7 @@ function flexibleSections(record, mechanicOnly = false) {
     const content=section.displayStyle === 'directory'
       ? `<div class="location-directory">${entries.filter(x=>!x.parentItemId).map(entry=>entry.titleRecordId&&!entry.body&&!entries.some(x=>x.parentItemId===entry.id) ? `<a class="record-link" href="${url(model.routeFor(model.byId(entry.titleRecordId)),model.byId(entry.titleRecordId).id)}">${escapeHTML(entry.title)}<span aria-hidden="true">↗</span></a>` : `<details><summary>${entry.titleRecordId ? referenceLink(entry.titleRecordId,entry.title) : escapeHTML(entry.title)}</summary>${entry.body?`<p>${textWithLinks(entry.body,entry.links)}</p>`:''}<ul class="note-list">${entries.filter(x=>x.parentItemId===entry.id).map(renderEntry).join('')}</ul></details>`).join('')}</div>`
       : `<ul class="note-list">${entries.filter(x => !x.parentItemId).map(renderEntry).join('')}</ul>`;
-    return panel(section.heading,content,section.displayStyle==='directory'?'directory-panel':'');
+    return panel(section.heading,content,section.displayStyle==='directory'?'directory-panel':record.recordType==='session'&&section.templateKey==='recap'?'session-recap':'');
   }).join('');
 }
 function personSections(record) {
