@@ -69,3 +69,7 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 @media(min-width:900px){.editor-filters{grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr))}}
 .coterie-page{max-width:100%}.coterie-grid{display:grid;gap:1rem}.coterie-page>.npc-panel{margin-top:1rem}.coterie-grid>.npc-panel{margin:0}.coterie-entry{padding:1rem 0;border-top:1px solid var(--line);min-width:0}.coterie-entry h3{overflow-wrap:anywhere}.coterie-editor{margin:1rem 0}.coterie-editor summary{cursor:pointer}.coterie-page form{display:grid;gap:1rem;margin-top:1rem}.coterie-page label{display:grid;gap:.35rem;min-width:0}.coterie-page input,.coterie-page select,.coterie-page textarea{width:100%;min-width:0;padding:.75rem;background:var(--bg);color:var(--ink);border:1px solid #435059;font:inherit}.coterie-page textarea{resize:vertical}.coterie-notes textarea{min-height:22rem}.coterie-page form>button{justify-self:start}.coterie-page p,.coterie-page li{overflow-wrap:anywhere}
 @media(min-width:800px){.coterie-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* A small blood-red brush mark leaves the character name fully readable. */
+.death-mark{display:inline-block;width:1em;height:1.25em;margin-right:.4em;vertical-align:-.25em;pointer-events:none;flex-shrink:0}
+.death-mark svg{display:block;width:100%;height:100%;fill:#ca343d;stroke:#821b25;stroke-width:.6;filter:drop-shadow(0 1px 1px #470c16)}

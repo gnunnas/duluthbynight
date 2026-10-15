@@ -236,6 +236,24 @@ function storytellerTools(){
 }
 function missing() { return '<h1>Record not found</h1><p class="empty">This campaign link does not match a recorded page.</p><a href="#home">Return to Tonight</a> · <a href="#search">Search the campaign</a>'; }
 function closeMenu() { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); menu.setAttribute('aria-label', 'Open navigation'); }
+// Use only death statuses available to the current account; hidden statuses add no marker.
+function markDeadCharacterLinks(root = app) {
+  const dead = new Set((D.personStatus || []).filter(status => status.permanentlyDead === 'yes').map(status => status.personRecordId));
+  for (const anchor of root.querySelectorAll('a[href^="#people/"]')) {
+    const path = anchor.getAttribute('href').slice(1).split('?')[0].split('/');
+    let person;
+    try { person = by('people', decodeURIComponent(path[1])); } catch { continue; }
+    if (!person || !dead.has(person.recordId)) continue;
+    if (anchor.querySelector('.death-mark')) continue;
+    const marker = document.createElement('span');
+    marker.className = 'death-mark';
+    marker.setAttribute('aria-hidden', 'true');
+    marker.title = 'For Real Dead? Yes';
+    marker.innerHTML = '<svg viewBox="0 0 24 30" focusable="false"><path d="M3 2 8 4 13 11 20 2 23 5 16 15 22 22 18 25 12 18 5 26 1 22 8 14 2 7Z"/><path d="M17 23C14 28 17 30 19 27Z"/></svg>';
+    (anchor.querySelector('h3, h2') || anchor).prepend(marker);
+    anchor.setAttribute('aria-description', 'Permanently dead');
+  }
+}
 function render() {
   if(D.publication==='supabase-rls'&&!window.campaignAccess)return;
   if(abilityDialog.open)abilityDialog.close();
@@ -245,6 +263,7 @@ function render() {
     if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
   }
   app.innerHTML = state.route==='coterie'&&!state.id ? Coterie.render(D,model) : state.route==='edit' ? CampaignEditor.render(state.id) : state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : state.route === 'storyteller' ? storytellerTools() : collections[state.route] ? listing(state.route) : missing();
+  markDeadCharacterLinks();
   document.title = `${state.route==='edit' ? 'Edit campaign record' : state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
 }
 function boot(focus = false) {
@@ -292,9 +311,9 @@ app.addEventListener('input', event => {
   if (event.target.id !== 'campaignSearch') return;
   state.query = event.target.value;
   history.replaceState(null, '', '#search' + (state.query ? '?q=' + encodeURIComponent(state.query) : ''));
-  document.querySelector('#searchResults').innerHTML = searchResults();
+  document.querySelector('#searchResults').innerHTML = searchResults(); markDeadCharacterLinks(document.querySelector('#searchResults'));
 });
-app.addEventListener('submit', event => { if (event.target.id === 'searchForm') { event.preventDefault(); document.querySelector('#searchResults').innerHTML = searchResults(); } });
+app.addEventListener('submit', event => { if (event.target.id === 'searchForm') { event.preventDefault(); document.querySelector('#searchResults').innerHTML = searchResults(); markDeadCharacterLinks(document.querySelector('#searchResults')); } });
 window.addEventListener('hashchange', () => boot(true));
 boot();
 
