@@ -10,6 +10,8 @@ The application is a dependency-free static website backed by Supabase Auth and 
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
+When releasing campaign JavaScript or style changes, update the matching `v` release value on `styles.css` and `supabase-session.js` in `campaign.html`. The session loader carries that version to `app.js` after sign-in so a previously cached app script cannot hide the update.
+
 Hash routes support direct record links and browser history without server rewrites. The manifest supplies install metadata; there is no service worker or offline guarantee.
 
 ## Current architecture

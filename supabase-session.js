@@ -2,6 +2,8 @@
 // Access decisions are made by Supabase RLS, never by the displayed role label.
 (async function(){
  const config=window.SUPABASE_CONFIG,app=document.querySelector('#app');
+ // Carry the HTML release version through the script loaded after signing in.
+ const appVersion=new URL(document.currentScript.src).searchParams.get('v');
  const tables=['campaign_status','records','record_names','sections','content_items','relationship_types','relationships','domain_claims','membership_implications','attachments','sources','item_references','selected_powers','power_definitions','route_aliases','review_issues','person_status',...['record_names','content_items','relationships','domain_claims','membership_implications','attachments','power_definitions'].map(x=>x+'_sources')];
  let session=null,refreshTimer=null;
  const headers=()=>({apikey:config.publishableKey,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'});
@@ -89,7 +91,7 @@
   };
   if(window.campaignSession.isStoryteller){const tools=document.createElement('a');tools.href='#storyteller';tools.textContent='Storyteller';document.querySelector('#nav').append(tools);}
   document.querySelector('#nav').hidden=false;
-  await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='app.js';script.onload=resolve;script.onerror=()=>reject(Error('Could not start the website. Reload to try again.'));document.body.append(script);});
+  await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='app.js'+(appVersion?'?v='+encodeURIComponent(appVersion):'');script.onload=resolve;script.onerror=()=>reject(Error('Could not start the website. Reload to try again.'));document.body.append(script);});
   refreshTimer=setInterval(async()=>{
    if(session.expires_at*1000>Date.now()+90000)return;
    try{const next=await auth('token?grant_type=refresh_token',{refresh_token:session.refresh_token});session={...next,expires_at:next.expires_at||Date.now()/1000+next.expires_in};}
