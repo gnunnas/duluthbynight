@@ -10,6 +10,12 @@ const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8010';
   {campaign_id:'duluth-by-night',id:'test-protected-child',record_id:'person:alan-sovereign',section_id:'section:person:alan-sovereign:storyteller-notes',parent_item_id:'item:person:alan-sovereign:storyteller-notes',item_kind:'note',body:'Protected nested test',audience:'storyteller',revision:1},
   {campaign_id:'duluth-by-night',id:'test-archived-entry',record_id:'person:alan-sovereign',section_id:'section:person:alan-sovereign:facts',item_kind:'note',body:'Archived test',archived_at:'2026-01-01T00:00:00Z',audience:'storyteller',revision:1}
  );
+ for(const [index,nature]of ['Kindred','Ghoul','Mortal','Thin-blood',null].entries()){
+  const id='person:nature-test-'+index,section='section:nature-test-'+index;
+  rows.records.push({id,record_type:'person',route_key:'nature-test-'+index,display_name:'Nature test '+index,audience:'storyteller',revision:1});
+  rows.sections.push({id:section,record_id:id,template_key:'facts',heading:'Facts',audience:'storyteller',revision:1});
+  for(const [key,value]of [['overview','A test summary'],...(nature?[['person.nature',nature]]:[]),['person.secret','Keep private']])rows.content_items.push({id:id+':'+key,record_id:id,section_id:section,item_kind:'fact',field_key:key,...(key==='overview'?{body:value}:{value}),audience:'storyteller',revision:1});
+ }
  rows.campaign_status=[];let conflict=false,conflictCode='40001';
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://xrkvbbmilgdubbwuffhu.supabase.co/**',async route=>{
@@ -117,6 +123,24 @@ const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8010';
  const location=rows.records.find(r=>r.record_type==='place'&&r.display_name==='The Watchtower');assert(location);
  assert(rows.content_items.filter(r=>r.record_id===location.id&&r.field_key!=='notes.storyteller').every(r=>r.audience==='players'));
  assert.equal(rows.content_items.find(r=>r.record_id===location.id&&r.field_key==='notes.storyteller').audience,'storyteller');
+ await page.locator('[data-editor-search]').fill('');await page.locator('[data-editor-type]').selectOption('');
+ // Selected names/summaries also reveal recorded person types, including hidden checked selections.
+ for(const checkbox of await page.locator('[data-overview-record]:checked').all())await checkbox.uncheck();
+ await page.locator('[data-editor-search]').fill('Nature test');await page.getByRole('checkbox',{name:'Select all shown',exact:true}).check();
+ await page.locator('[data-editor-type]').selectOption('place');
+ const beforeTypes=requests.length;await page.getByRole('button',{name:'Reveal selected names + summaries',exact:true}).click();await page.locator('.reveal-dialog').waitFor();
+ for(const type of ['Kindred','Ghoul','Mortal','Thin-blood'])assert((await page.locator('.reveal-dialog').textContent()).includes(type));
+ await page.getByRole('button',{name:'Cancel',exact:true}).click();assert.equal(requests.length,beforeTypes);
+ await page.getByRole('button',{name:'Reveal selected names + summaries',exact:true}).click();await page.getByRole('button',{name:'Reveal these entries',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.reveal-dialog')?.open);
+ const typeBatch=requests.at(-1);
+ assert.equal(typeBatch.filter(c=>rows.content_items.find(i=>i.id===c.id)?.field_key==='person.nature').length,4);
+ for(let i=0;i<5;i++){
+  const id='person:nature-test-'+i;assert.equal(rows.records.find(r=>r.id===id).audience,'players');
+  assert.equal(rows.content_items.find(r=>r.id===id+':overview').audience,'players');
+  assert.equal(rows.content_items.find(r=>r.id===id+':person.secret').audience,'storyteller');
+ }
+ assert(!rows.content_items.some(r=>r.id==='person:nature-test-4:person.nature'),'Missing nature stays absent');
+ assert(typeBatch.every(c=>['records','sections','content_items'].includes(c.table)));
  await page.locator('[data-editor-search]').fill('');await page.locator('[data-editor-type]').selectOption('');
  await page.getByRole('button',{name:'Reveal homepage names + summaries'}).click();await page.locator('.reveal-dialog').waitFor();const text=await page.locator('.reveal-dialog').textContent();assert(text.includes('Record name'));await page.getByRole('button',{name:'Reveal these entries'}).click();await page.waitForFunction(()=>!document.querySelector('.reveal-dialog')?.open);
  assert(rows.records.filter(r=>['thread','session'].includes(r.record_type)).every(r=>r.audience==='players'));

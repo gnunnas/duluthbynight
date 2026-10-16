@@ -106,3 +106,10 @@ Migration `20261016001200_personal_connection_labels.sql` adds a narrow SECURITY
 - Verification passed: local People filter check (Kindred default, All last, both Thin-blood spellings included, tab-local chosen selection), summary/browser-card suite and death-marker/browser suite. Existing card tests explicitly select All when testing unclassified fixtures. Syntax and whitespace checks passed.
 
 Final release for these three display changes: `20261016-people-filters`. Earlier intermediate release names are historical. Branch `hide-empty-organization-parent` packages all three changes; check remote state for PR/merge status. No SQL migration or live data update is required.
+
+## Current task: include person types in selected-name reveals
+
+- Branch `reveal-selected-person-types` starts from fetched remote main `213c79e` (PR #37). The preceding directory/filter changes are merged.
+- Storyteller **Reveal selected names + summaries** now includes active `person.nature` fields for selected person records, using recorded values only. It still loads full dependencies, preserves hidden checked selections and requires confirmation. Other fields, clans, affiliations, death status and protected notes remain outside this action.
+- The helper's include-nature flag is opt-in for this dashboard button only. Homepage and record-level Share name + overview keep their existing scope. Field label is Nature / type; hover description explains inclusion. No SQL/data changes. Release `20261016-reveal-person-types`, packaged for user-requested CPAP; check remote state for PR/merge status. Deployment remains unconfirmed.
+- Verification passed: existing editor browser suite plus Kindred/Ghoul/Mortal/Thin-blood reveal preview and confirmation, cancellation without writes, filter-hidden checked people, absent-type preservation and unrelated-field privacy. Syntax and whitespace checks passed.
