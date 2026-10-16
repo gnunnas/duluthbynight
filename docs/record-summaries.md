@@ -6,7 +6,7 @@ Apply [migration 013](../supabase/migrations/20261016001300_record_summaries.sql
 
 ## Current handoff
 
-Implementation and documentation are complete on `editable-record-summaries`, packaged for the user-requested CPAP. Check remote state for PR/merge status. No migration execution or website deployment has been confirmed. Full PostgreSQL checks and the summary, existing editor, and connection-label browser suites passed. Notes-only updates do not require rerunning these checks.
+The summary editor merged in PR #33 (`8df46f8` on remote main, verified before the scoped-editing follow-up). The user’s uploaded trace confirms the `20261016-summary-editor` website release was running. Migration 013 installation remains unconfirmed; the trace does not prove it. Full PostgreSQL checks and the summary, existing editor, and connection-label browser suites passed. Notes-only updates do not require rerunning these checks.
 
 ## Behavior
 
@@ -22,7 +22,7 @@ Summaries remain `content_items` with `field_key = overview`, using `body`, as a
 
 The RPC validates Storyteller access, an active record, the expected revision and one active overview entry. It rejects an unexpected parent structure or ambiguous multiple summaries rather than choosing arbitrarily. Empty creation is a no-op. Clearing sets knowledge state to unrecorded; updates retain audit attribution. Revealed summaries are edited through `edit_campaign_rows` and reveal review instead of the private-save RPC. The migration grants no new table permissions and creates no campaign content by itself.
 
-The frontend uses the existing complete paged editor bundle, so this feature does not restore the oversized editor RPC or change initial login loading. Release query string: `20261016-summary-editor`.
+The summary feature originally shipped with release `20261016-summary-editor`. The newer [scoped editor](scoped-record-editing.md) loads only the selected record for private summary saves and waits for full paged dependencies before reviewing shared edits. It does not restore the oversized editor RPC or change initial login loading.
 
 ## Verification
 
