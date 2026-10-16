@@ -80,3 +80,5 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 /* Detail-page death cross: translucent paint over the name, without changing text contrast. */
 .dead-person-name{position:relative;display:inline-block;max-width:100%;overflow-wrap:anywhere}
 .death-name-cross{position:absolute;inset:0;width:100%;height:100%;fill:#df4b55;opacity:.38;pointer-events:none;user-select:none}
+
+.summary-editor{display:grid;gap:12px}.summary-editor label{display:grid;gap:6px}.summary-editor textarea{width:100%;min-width:0;resize:vertical;padding:10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);font:inherit}.summary-editor button{justify-self:start}

@@ -19,12 +19,14 @@ Completed threads remain readable without database archiving. Chronicle links to
 - Do not infer Mortal, Ghoul, or Kindred from an occupation or a Thralls and Tools heading alone. Ask about unclear wording and conflicting facts; do not invent data.
 - New people default to **For Real Dead? → No**, unless the user/source explicitly supplies another death status. Existing death statuses are retained when filling out a record.
 - New NPC content remains Storyteller-only unless the user explicitly requests sharing. Keep private import artifacts outside the published website checkout.
+- When supplied facts give a personal association a clear description, store a concise person-scoped `relationship.details` label using only those facts. Do not infer a reciprocal label or feelings. Unspecified associations remain “Associate”. See [connection labels](personal-connection-labels.md).
 
-## Planned: easy record summaries
+## Record summary editing
 
-- Add a clearly labeled Summary field for each campaign entry in Storyteller editing, including entries that do not yet have an overview field.
-- Use the saved summary on record cards and detail pages so entries can replace “No summary recorded” with a useful introduction.
-- Preserve summary reveal permissions and edit history; do not generate or reveal summaries automatically.
+- The editor now includes a clearly labeled Summary textarea for each campaign entry, including entries without an existing overview field. Apply migration 013 to save missing/private summaries; deployment is not yet confirmed.
+- Reuse `overview` body text for cards and detail pages. Clearing a person's summary leaves the People card blank.
+- New summaries are Storyteller-only; already shared summaries use reveal review before changes are saved. Preserve edit history and reject stale revisions. Do not generate or reveal summaries automatically.
+- See [summary editing and migration](record-summaries.md).
 
 ## Planned: membership role editing
 
@@ -33,6 +35,8 @@ Completed threads remain readable without database archiving. Chronicle links to
 - Reuse the existing relationship.role storage, audit history and reveal permissions. Keep the role attached to the specific membership connection.
 
 ## Personal connection labels
+
+Implemented in PR #32; migration 012 application and website deployment still need confirmation. See [usage and storage](personal-connection-labels.md).
 
 - Apply migration 012 to enable saving descriptive labels for existing person-to-person associations from **Edit record & reveals → Personal connection labels**.
 - Labels describe the connection from the person being edited. They do not automatically appear on the other person's profile, change the connection type, or infer facts from imported prose.
