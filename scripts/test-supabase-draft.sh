@@ -46,6 +46,11 @@ if ! rg -q 'Campaign already contains records' "$repeat_log";then
  cat "$repeat_log";rm -f "$repeat_log";exit 1
 fi
 rm -f "$repeat_log"
+# Simulate older imports missing panels, then prove repeatable backfill preserves notes.
+run_sql < tests/postgres/person-player-notes-before.sql
+run_sql < supabase/migrations/20261016001400_person_player_notes.sql
+run_sql < supabase/migrations/20261016001400_person_player_notes.sql
+run_sql < tests/postgres/person-player-notes.sql
 run_sql < tests/postgres/status.sql
 run_sql < tests/postgres/record-editing.sql
 run_sql < tests/postgres/function-search-path.sql
