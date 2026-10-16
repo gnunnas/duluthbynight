@@ -94,7 +94,7 @@
    return row.record_id===id;
   })]));
  }
- function recordLink(id){return `<p class="storyteller-actions"><a class="chip" href="#edit/${encodeURIComponent(id)}">Edit record &amp; reveals</a></p>`;}
+ function recordLink(id,personBasics=false){return `<p class="storyteller-actions"><a class="chip" href="#edit/${encodeURIComponent(id)}">Edit record &amp; reveals</a>${personBasics?` <button class="chip" type="button" data-share-person-basics="${esc(id)}" title="Review sharing this person’s name, organization memberships and roles, For Real Dead? status, artwork, nature/type and clan.">Reveal character basics</button>`:''}</p>`;}
  function picker(){return `<datalist id="campaign-record-picker">${choices().map(r=>`<option value="${esc(recordLabel(r))}"></option>`).join('')}</datalist>`;}
  function summaryEditor(id){
   const item=(rows().content_items||[]).find(x=>x.record_id===id&&x.field_key==='overview'&&!x.archived_at);
@@ -144,6 +144,17 @@
    if(['item_references','selected_powers','attachments'].includes(table))return itemEligible(row.item_id);
    return true;
   }).map(row=>({table,id:key(row)})));
+ }
+ function personBasicsTargets(id){
+  if(record(id)?.record_type!=='person')return [];
+  const memberships=new Set((rows().relationships||[]).filter(r=>r.from_record_id===id&&['member_of','associate_of','affiliated_with'].includes(r.relationship_type)&&!r.archived_at).map(r=>r.id));
+  return allTargets(id).filter(target=>{
+   const row=get(target.table,target.id);
+   if(['records','person_status','attachments'].includes(target.table))return true;
+   if(target.table==='relationships')return memberships.has(row.id)||row.from_record_id===id&&row.relationship_type==='clan_member_of';
+   if(target.table==='content_items')return row.field_key==='person.nature'||row.field_key==='relationship.role'&&memberships.has(row.subject_relationship_id);
+   return false;
+  });
  }
  function revealPlan(targets,edits=[]){
   const overrides=new Map(edits.filter(x=>!x.insert).map(x=>[x.table+':'+x.id,x.patch]));
@@ -284,6 +295,7 @@
     catch(error){message.textContent=(committed?'Saved, but reload failed. ':'')+error.message;const conflict=['40001','PT409'].includes(error.code);if(conflict&&!committed){dialog.querySelector('[data-reload-reveal]').hidden=pendingEdits.length>0;message.textContent=pendingEdits.length?'Nothing was saved. Cancel this review, copy any draft text you need, then reload saved entries and review your edits.':'Nothing in this batch was revealed. Some entries changed since this page loaded. Reload and review again before confirming.';}else if(!committed)target.disabled=false;message.tabIndex=-1;message.focus();}return;
    }
    if(target.hasAttribute('data-editor-reload')){target.disabled=true;await root.refreshCampaignViews();return;}
+   if(target.hasAttribute('data-share-person-basics')){if(!root.campaignSession?.isStoryteller)return;target.disabled=true;await review(()=>personBasicsTargets(target.dataset.sharePersonBasics));target.disabled=false;return;}
    if(target.hasAttribute('data-share-all')){target.disabled=true;await review(()=>allTargets(target.dataset.shareAll));target.disabled=false;return;}
    if(target.hasAttribute('data-share-overview')){target.disabled=true;await review(()=>overviewTargets(target.dataset.shareOverview));target.disabled=false;return;}
    if(target.hasAttribute('data-review-share')){await review([...document.querySelectorAll('[data-share-table]:checked')].map(x=>({table:x.dataset.shareTable,id:x.dataset.shareId})));return;}

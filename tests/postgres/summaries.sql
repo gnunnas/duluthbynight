@@ -18,7 +18,7 @@ end $$;
 reset role;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',true);set local role authenticated;
 do $$begin
- if exists(select 1 from public.content_items where record_id='person:summary-test') then raise exception 'Private summary leaked on shared person';end if;
+ if exists(select 1 from public.content_items where record_id='person:summary-test' and field_key='overview') then raise exception 'Private summary leaked on shared person';end if;
  begin perform public.save_record_summary('duluth-by-night','person:summary-test',3,'Player edit');raise exception 'Player save accepted';exception when insufficient_privilege then null;end;
 end $$;
 reset role;select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);set local role authenticated;

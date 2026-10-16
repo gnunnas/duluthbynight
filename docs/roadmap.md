@@ -19,6 +19,7 @@ Completed threads remain readable without database archiving. Chronicle links to
 - Do not infer Mortal, Ghoul, or Kindred from an occupation or a Thralls and Tools heading alone. Ask about unclear wording and conflicting facts; do not invent data.
 - New people default to **For Real Dead? → No**, unless the user/source explicitly supplies another death status. Existing death statuses are retained when filling out a record.
 - New NPC content remains Storyteller-only unless the user explicitly requests sharing. Keep private import artifacts outside the published website checkout.
+- Every person, including placeholders, gets an empty shared Player notes panel. Migration 014 backfills missing panels and provisions future people at transaction end. Keep lore private, preserve existing player text, and reuse existing note rows when filling placeholders. See [Player notes provisioning](person-player-notes.md).
 - When supplied facts give a personal association a clear description, store a concise person-scoped `relationship.details` label using only those facts. Do not infer a reciprocal label or feelings. Unspecified associations remain “Associate”. See [connection labels](personal-connection-labels.md).
 
 ## Record summary editing
@@ -27,6 +28,10 @@ Completed threads remain readable without database archiving. Chronicle links to
 - Reuse `overview` body text for cards and detail pages. Clearing a person's summary leaves the People card blank.
 - New summaries are Storyteller-only; already shared summaries use reveal review before changes are saved. Preserve edit history and reject stale revisions. Do not generate or reveal summaries automatically.
 - See [summary editing and migration](record-summaries.md).
+
+## Implemented: person basics reveal
+
+Person detail pages have a Storyteller-only **Reveal character basics** action that reviews the name, recorded memberships and roles, death status, artwork, nature/type and clan. It waits for complete dependencies and uses the existing atomic reveal confirmation. Missing information stays absent; other lore and protected notes remain outside the selected scope. See [scope, safeguards and deployment](storyteller-record-editing.md). Website deployment is required; no new migration.
 
 ## Planned: membership role editing
 
