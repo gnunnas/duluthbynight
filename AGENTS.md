@@ -53,12 +53,26 @@ Migration `20261016001200_personal_connection_labels.sql` adds a narrow SECURITY
 - Guide: `docs/record-summaries.md`. Roadmap summary editing is implemented locally rather than deferred. No live campaign data was changed.
 - Earlier docs-only handoff `0e85392` on `document-connection-labels-handoff` was not merged when remote state was checked for this CPAP. Its connection-label guide, import rule and refreshed historical rollout notes are included in this branch; a separate docs PR is unnecessary.
 
-## Current task handoff: faster record editing
+## Previous task handoff: faster record editing (merged PR #34)
 
-- Branch `faster-record-editor` is based on fetched remote `main` merge `8df46f8` (PR #33). The user requested CPAP; this branch packages the implementation, tests and docs for review. Check remote state for PR/merge status; no deployment or live database mutation is claimed. The user trace confirms the summary-editor website release was deployed, but does not establish migration 013 installation.
+- Implementation `85d806b` from `faster-record-editor` merged in PR #34 (`f092412`), verified by fetch. The user reports a large improvement after deployment; no fresh live timing or database mutation is claimed. The earlier user trace confirms the summary-editor website release was deployed, but does not establish migration 013 installation.
 - The user's Performance trace measured 28.8 seconds fetching all editing data plus a 5.6-second browser task. The slowest chain was seven attribution pages. This change removes the full-campaign fetch from editor entry and ordinary save/reload.
 - `campaign-loader.js` separates selected-record editing from `reviewData()`. The client-only `record-editor` scope becomes the existing detail RPC in `supabase-session.js`; source-note definitions use a filtered REST query. No new migration.
 - `record-editor.js` builds closed forms/advanced controls on expansion, preserves snapshots/drafts, and waits for complete data before constructing reveal previews. Always compute bulk targets after the full load. Never reveal based only on the scoped cache. Shared edit revisions must not be rebased after dependency loading.
 - Failed multi-page review reads are atomic/retryable. Navigation, logout and session expiry reject late previews/data; logout clears form snapshots/plans. Full review remains potentially slow and is deliberately deferred, not removed.
 - Release query string `20261016-scoped-editor`. Guide, measured comparison and validation commands: `docs/scoped-record-editing.md`. Private recordings/exports/benchmarks remain outside this checkout.
 - Validation passed: 41 unit checks; scoped large-record browser suite; existing editor, summary, connection-label/pagination, lazy-loading and auth/player/logout browser suites. No SQL changed. Local private saved-data comparison: 38 requests/5.45 MB/266,494 controls-and-options before, one request/146 KB/500 after; 17.7 s vs 0.10 s locally with mocked network, not live timing.
+
+## Current task handoff: descriptive editor connection headings
+
+- `descriptive-editor-connections` includes fetched remote main `f16e07d` (portrait asset upload following PR #34). The user reports a large editing-speed improvement after deployment.
+- Collapsed relationship entries now show the relationship type and other record using the edited record's perspective (forward/reverse labels). Generic selectors and reveal previews show both endpoints. Visibility badges, lazy forms, scoped loading and reveal authorization remain unchanged.
+- Files: `record-editor.js`, synchronized `campaign.html` assets, existing editor browser assertions and `docs/storyteller-record-editing.md`. Release `20261016-connection-headings`; no SQL or live data changes. Packaged for user-requested CPAP; deployment remains unconfirmed.
+- Verification: existing full editor browser suite passed, including new clan/affiliation/association labels, reverse sire direction, lazy controls, reveal review, conflicts, and mobile/desktop layout. JavaScript syntax and diff whitespace checks passed.
+
+## Latest portrait request and documentation handoff
+
+- Kevin Jackson's new image is in remote main upload `f16e07d` at `assets/kevin jackson.png` (case-sensitive). This asset commit is included in the branch base for the connection-heading CPAP.
+- A read-only check before preparing SQL found existing `person:kevin-jackson` with player-visible identity and no attachment rows. Supplied portrait SQL uses `attachment:kevin-jackson:portrait`, URL `assets/kevin%20jackson.png`, alt text Kevin Jackson and initial audience Storyteller-only. Its repeat-path update preserves existing visibility. User execution/reveal is **not confirmed**; do not claim the portrait is installed or shared.
+- Manual portrait SQL is recorded outside the published checkout at `/workspace/npc-imports/kevin-jackson/portrait.sql`; no database writes were performed. General attachment/reveal workflow is in `docs/storyteller-record-editing.md`.
+- Descriptive connection headings and these documentation updates are packaged on `descriptive-editor-connections` for the user-requested CPAP; check remote state for PR/merge status. Deployment remains unconfirmed. No additional JavaScript or SQL changes were needed for this documentation request.

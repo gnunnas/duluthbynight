@@ -6,6 +6,14 @@ Open **Storyteller → Campaign records & reveals**, search for a record and cho
 
 To link text, choose a campaign record under **Add a link to this field** and provide the exact words already present in its Text or text Value. This creates a reference, not a new relationship or geographic parent. Existing references can be edited under **Links in text**. A new reference starts private; revealing the containing field shares its active inline references and the referenced records' names.
 
+Collapsed **Connections** entries show the relationship and the other record, such as **Clan — Ventrue**, **Affiliated with — Camarilla**, or **Childe of — Horatio Ballard**. Direction follows the record being edited. The visibility badge remains beside the label, and the form still builds only when expanded. Reveal previews identify both endpoints. These headings do not create, edit or share relationship data.
+
+## Portrait artwork
+
+Portraits use `attachments` rows with `attachment_kind = portrait`, the person’s `record_id`, a null `item_id`, a `legacy_path` to the uploaded asset and descriptive `alt_text`. Uploading a file to GitHub’s `assets/` directory does not create its database attachment automatically. Check the existing record and attachments before preparing manual SQL; reuse an existing portrait instead of creating duplicates.
+
+New portrait metadata defaults to Storyteller-only. Reveal the attachment under **Artwork** through the existing review when requested; sharing the person's name does not automatically share the portrait. Repeated portrait-path updates should preserve the attachment’s existing audience. GitHub-hosted image files themselves remain public; attachment visibility does not make an uploaded asset private. Keep character-specific manual SQL outside this published checkout and distinguish SQL supplied from SQL actually applied.
+
 ## Loading behavior
 
 Opening an editor loads the selected record. Ordinary fields and advanced controls build when expanded. Reveal actions load the complete dependency graph before showing the confirmation; this first review may take longer. Saving/reloading refreshes the catalog and selected record. See [scoped editing, safety and performance](scoped-record-editing.md). No new migration is needed for this loading change.
