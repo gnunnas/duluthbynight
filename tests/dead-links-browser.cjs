@@ -26,6 +26,7 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
   });
   await page.goto(base+'/campaign.html#people');
   await page.locator('[name=email]').fill('fixture@example.test');await page.locator('[name=password]').fill('fixture');await page.getByRole('button',{name:'Sign in',exact:true}).click();await page.getByRole('heading',{name:'People',exact:true}).waitFor();
+  await page.getByRole('button',{name:'All',exact:true}).click();
   const versions=await page.evaluate(()=>[document.querySelector('link[href*="styles.css"]').href,document.querySelector('script[src*="supabase-session.js"]').src,document.querySelector('script[src*="app.js"]').src].map(src=>new URL(src).searchParams.get('v')));
   assert(versions[0]);assert(versions.every(version=>version===versions[0]),'Style, login and delayed app versions must match');
   const dead=page.locator('a.card[href="#people/test-death-yes"]');assert.equal(await dead.locator('.death-mark').count(),1);assert((await dead.textContent()).includes('Test character yes'));assert.equal(await dead.getAttribute('aria-description'),'Permanently dead');
