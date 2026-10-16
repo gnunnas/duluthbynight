@@ -39,7 +39,7 @@ const base=process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8010';
  assert(requests.at(-1).some(c=>c.insert&&c.patch.target_record_id==='person:horatio-ballard'));
  await form().locator('..').locator(':scope > summary').click();await form().locator('[name=value]').fill('Unsaved draft');conflict=true;
  await form().getByRole('button',{name:'Save entry'}).click();await page.getByText('Another edit was saved first. Reload the latest version; your draft has not been saved.').waitFor();assert.equal(await form().locator('[name=value]').inputValue(),'Unsaved draft');
- await page.getByRole('button',{name:'Reload saved entries'}).click();await form().locator('..').locator(':scope > summary').click();
+ const previousForm=await form().elementHandle();await page.getByRole('button',{name:'Reload saved entries'}).click();await page.waitForFunction(node=>!node.isConnected,previousForm);await form().locator('..').locator(':scope > summary').click();
  await form().locator('[name=audience]').selectOption('players');await form().getByRole('button',{name:'Save entry'}).click();await page.locator('.reveal-dialog').waitFor();
  assert((await page.locator('.reveal-dialog').textContent()).includes('Horatio Ballard'));
  await page.getByRole('button',{name:'Reveal these entries'}).click();await page.waitForFunction(()=>!document.querySelector('.reveal-dialog')?.open);

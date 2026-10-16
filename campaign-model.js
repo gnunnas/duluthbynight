@@ -190,7 +190,7 @@
     function personalRelationships(personId){
       return data.relationships.filter(x=>['associated_with','sire_of','employs'].includes(x.relationshipType)&&rawById.get(x.fromRecordId).recordType==='person'&&rawById.get(x.toRecordId).recordType==='person'&&(x.fromRecordId===personId||x.toRecordId===personId)).map(x=>{
         const from=rawById.get(x.fromRecordId),to=rawById.get(x.toRecordId),type=relationshipTypes.get(x.relationshipType);
-        const details=data.items.find(item=>item.subjectRef?.id===x.id&&item.fieldKey==='relationship.details')?.value;
+        const details=data.items.find(item=>item.recordId===personId&&item.subjectRef?.kind==='relationship'&&item.subjectRef.id===x.id&&item.fieldKey==='relationship.details')?.value;
         return {from:from.routeKey,to:to.routeKey,kind:x.relationshipType==='associated_with'?'association':x.relationshipType,label:details|| (x.relationshipType==='associated_with'?null:x.fromRecordId===personId?type.forwardLabel:type.reverseLabel)};
       });
     }

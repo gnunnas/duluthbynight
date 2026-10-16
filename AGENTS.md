@@ -10,6 +10,7 @@ Read `README.md`, `docs/roadmap.md`, `docs/supabase-website.md`, and `docs/campa
 - Login fetches a catalog, not every NPC's full entries or source archive. Details, ability rules, Coterie content, and source text load on demand. Search uses the RLS-filtered server RPC plus catalog connection matching.
 - Storyteller tools intentionally load the complete authorized editor bundle for accurate dependencies and bulk reveals. Preserve that behavior until the editor/reveal planner itself supports partial data.
 - Keep RPCs `SECURITY INVOKER`, existing RLS, revision conflicts, protected Storyteller notes, and shared Player notes intact. No service-role key in browser code.
+- The large editor RPC timed out live after dataset growth. Editor entry/refresh now reads all 24 authorized tables via paged REST (500 rows, stable order, three concurrent tables), then publishes the complete graph. Preserve complete archives/provenance and account invalidation. Catalog/detail RPCs stay lazy. This client fix needs no new SQL; see `docs/campaign-loading.md`. Deployment of this follow-up is not yet confirmed.
 - Permanent-death Yes adds a small marker on People links and a translucent red X across the detail-page name; No, Unknown, and unavailable statuses stay unmarked. Preserve name readability and RLS filtering.
 - Chronicle history uses `thread.status` (active/completed), not database archiving; keep completed records readable under existing RLS. Migration 011 includes completion and in-world dates in the lazy catalog. See `docs/chronicle-history.md`.
 - Recap import artifacts live under `/workspace/session-reviews/` outside this published checkout; use the dedicated reader for comparisons, then prepare guarded SQL for manual application. Never publish private recaps or withheld original passages in Git.
@@ -33,3 +34,7 @@ Chronicle-history follow-up: the user applied migration 011 and the private reca
 - **CPAP** means commit, push, and provide the pull-request link. It does not mean merge automatically.
 - Follow the NPC import rules in `docs/roadmap.md`: reuse identities, ask about unclear classifications/text, invent no facts, default new people to permanent death No, and keep new imports Storyteller-only unless explicitly shared.
 - Private NPC artifacts and credentials stay outside the published checkout. Never commit a live database export.
+
+## Personal connection label editing
+
+Migration `20261016001200_personal_connection_labels.sql` adds a narrow SECURITY INVOKER RPC for creating/updating private `relationship.details` fields on existing personal associations. The editor has **Personal connection labels**; the person being edited owns that label's perspective. Keep label projection scoped to that person. New labels stay private and shared-label edits use the existing reveal review. Unlabeled associations display “Associate”. Deployment/application of migration 012 is not yet confirmed; do not claim it is installed until verified.

@@ -11,9 +11,10 @@
   if(!response.ok)throw Error(path==='token?grant_type=password'?'Sign-in failed. Check your email and password.':'Your session has ended. Sign in again.');
   return response.status===204?null:response.json();
  }
- async function read(table){
+ async function read(table,expectedSession=session){
   const rows=[];
   for(let offset=0;;offset+=500){
+   if(session!==expectedSession)throw Error('Campaign session changed.');
    const query=new URLSearchParams({select:'*',campaign_id:'eq.'+config.campaignId,limit:'500',offset:String(offset),order:table.endsWith('_sources')?'owner_id,source_id':table==='power_definitions'?'power_record_id':table==='route_aliases'?'old_route':table==='campaign_memberships'?'user_id':'id'});
    const response=await fetch(config.url+'/rest/v1/'+table+'?'+query,{headers:headers(),cache:'no-store'});
    if(table==='campaign_status'&&response.status===404)return []; // Status migration may not be installed yet.
@@ -42,6 +43,13 @@
   const campaigns=await response.json();const owner=campaigns.some(x=>x.owner_user_id===session.user.id);
   if(!own&&!owner)throw Error('This account does not have active access to this campaign. Ask your Storyteller to add it.');
   loader=createCampaignLoader(async(name,payload)=>{
+   if(name==='load_campaign_page'&&payload.p_scope==='editor'){
+    // Keep the full editor graph, but avoid one oversized SQL/RLS statement.
+    const tables=['campaign_status','records','record_names','sections','content_items','relationship_types','relationships','domain_claims','membership_implications','attachments','sources','item_references','selected_powers','power_definitions','route_aliases','review_issues','person_status','record_names_sources','content_items_sources','relationships_sources','domain_claims_sources','membership_implications_sources','attachments_sources','power_definitions_sources'];
+    const result={},expectedSession=session;let next=0,failed=false;
+    async function worker(){try{while(!failed&&next<tables.length){if(session!==expectedSession)throw Error('Campaign session changed.');const table=tables[next++];result[table]=await read(table,expectedSession);}}catch(error){failed=true;throw error;}}
+    await Promise.all([worker(),worker(),worker()]);return result;
+   }
    const response=await fetch(config.url+'/rest/v1/rpc/'+name,{method:'POST',headers:headers(),body:JSON.stringify(payload),cache:'no-store'});
    if(!response.ok){let detail;try{detail=await response.json();}catch{}throw Error(detail?.code==='PGRST202'?'Apply migration 010 (campaign lazy loading) in Supabase before using this website.':'Could not load this campaign page. Check your connection and access.');}
    return response.json();
@@ -71,6 +79,12 @@
    const response=await fetch(config.url+'/rest/v1/rpc/edit_campaign_rows',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_changes:changes}),cache:'no-store'});
    if(!response.ok){let detail;try{detail=await response.json();}catch{}const error=Error(['40001','PT409'].includes(detail?.code)?'Another edit was saved first. Reload the latest version; your draft has not been saved.':detail?.code==='PGRST202'?'Apply the new Storyteller editing migration before saving.':'Could not save: '+(detail?.message||'check your connection and permissions.'));error.code=detail?.code;throw error;}
    await response.json();
+  };
+  window.campaignSession.saveConnectionLabel=async(recordId,relationshipId,revision,label)=>{
+   if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access required.');
+   const response=await fetch(config.url+'/rest/v1/rpc/save_personal_connection_label',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_record:recordId,p_relationship:relationshipId,p_revision:revision,p_label:label}),cache:'no-store'});
+   if(!response.ok){let detail;try{detail=await response.json();}catch{}const error=Error(detail?.code==='40001'?'Another edit was saved first. Your draft is retained; copy it before reloading.':detail?.code==='PGRST202'?'Apply migration 012 for personal connection labels before saving.':detail?.message||'Could not save this label.');error.code=detail?.code;throw error;}
+   return response.json();
   };
   window.campaignSession.saveCoterie=async(kind,id,revision,payload)=>{
    if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access required.');
