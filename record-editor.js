@@ -30,7 +30,7 @@
  };
  const jsonFields=new Set(['valid_from','valid_until','death_date','eligible_connection_types']);
  const isRecordRef=k=>k.endsWith('_record_id')||['place_id','source_organization_id','target_organization_id'].includes(k);
- function options(table){return (rows()[table]||[]).map(x=>[key(x),label(table,x)]);}
+ function options(table,owner,exclude){return (rows()[table]||[]).filter(x=>(!owner||x.record_id===owner)&&key(x)!==exclude).map(x=>[key(x),label(table,x)]);}
  function formInput(table,row,column){
   const value=row[column],id=key(row),uid='edit-'+encodeURIComponent(table+id+column);
   let input;
@@ -41,7 +41,7 @@
    input=`<input name="${column}" data-record-ref list="campaign-record-picker" value="${esc(record(value)?recordLabel(record(value)):'')}" placeholder="Search a person, place, clan, group…">`;
   }else if(['section_id','parent_item_id','subject_relationship_id','subject_claim_id','subject_name_id','item_id'].includes(column)){
    const source={section_id:'sections',parent_item_id:'content_items',subject_relationship_id:'relationships',subject_claim_id:'domain_claims',subject_name_id:'record_names',item_id:'content_items'}[column];
-   let opts=options(source);if(['section_id','parent_item_id'].includes(column))opts=opts.filter(([v])=>get(source,v).record_id===row.record_id&&v!==row.id);
+   const opts=options(source,['section_id','parent_item_id'].includes(column)?row.record_id:null,row.id);
    input=`<select name="${column}"><option value="">None</option>${opts.map(([v,n])=>`<option value="${esc(v)}" ${v===value?'selected':''}>${esc(n)}</option>`).join('')}</select>`;
   }else if(column==='relationship_type')input=`<select name="${column}">${(rows().relationship_types||[]).map(t=>`<option value="${esc(t.id)}" ${t.id===value?'selected':''}>${esc(t.forward_label)}</option>`).join('')}</select>`;
   else if(column==='permanently_dead')input=`<select name="${column}">${['unknown','no','yes'].map(v=>`<option value="${v}" ${v===value?'selected':''}>${v==='unknown'?'Unknown':v==='yes'?'Yes':'No'}</option>`).join('')}</select>`;
@@ -52,12 +52,27 @@
   else input=`<input name="${column}" value="${esc(value)}">`;
   return `<label for="${uid}">${esc(({display_name:'Name',value:'Value / mechanics',title_record_id:'Link the title to',reference_record_id:'Reference record',body:'Text',audience:'Visibility',permanently_dead:'For Real Dead?',sort_order:'Display order',archived_at:'Archived at (timestamp; clear to restore)'})[column]||column.replaceAll('_',' '))}<span>${input.replace(/<(input|textarea|select) /,'<$1 id="'+uid+'" ')}</span></label>`;
  }
+ const renderedRows=new Map();
+ function rowFields(table,row){
+  const addLink=table==='content_items';
+  return `${fields[table].filter(k=>!['field_key','item_kind','value_type','section_id','parent_item_id','subject_relationship_id','subject_claim_id','subject_name_id'].includes(k)).map(k=>formInput(table,row,k)).join('')}${table==='content_items'?'<details class="editor-advanced"><summary>Advanced field structure</summary><div data-advanced-fields></div></details>':''}${addLink?`<fieldset><legend>Add a link to this field</legend><label>Campaign record<input name="newLink" data-record-ref list="campaign-record-picker" placeholder="Search a campaign record"></label><label>Text to turn into a link<input name="newLinkLabel" placeholder="Exact words in the field"></label><small>Existing links can be edited below under Links in text. This adds a reference, not membership or geographic containment.</small></fieldset>`:''}<button type="submit" class="chip">Save entry</button><p role="status" aria-live="polite"></p>`;
+ }
  function rowForm(table,row){
   const id=key(row),protectedNote=table==='content_items'&&row.field_key==='notes.storyteller'||table==='sections'&&row.template_key==='storyteller-notes';
+  renderedRows.set(table+':'+id,row);
   const canReveal=row.audience&&!protectedNote&&row.field_key!=='notes.player'&&!row.archived_at;
-  const addLink=table==='content_items';
-  return `<details class="npc-panel editor-row"><summary><strong>${esc(label(table,row))}</strong> <span class="meta">${esc(row.audience==='players'?'Revealed':row.audience==='public'?'Public':row.audience?'Storyteller-only':'Reference data')}</span></summary>${canReveal?`<p><label class="reveal-choice"><input type="checkbox" data-share-table="${table}" data-share-id="${esc(id)}"> Reveal this entry to all players</label></p>`:''}<form data-edit-table="${table}" data-edit-id="${esc(id)}" data-revision="${row.revision}">${fields[table].filter(k=>!['field_key','item_kind','value_type','section_id','parent_item_id','subject_relationship_id','subject_claim_id','subject_name_id'].includes(k)).map(k=>formInput(table,row,k)).join('')}${table==='content_items'?`<details class="editor-advanced"><summary>Advanced field structure</summary>${fields[table].filter(k=>['field_key','item_kind','value_type','section_id','parent_item_id','subject_relationship_id','subject_claim_id','subject_name_id'].includes(k)).map(k=>formInput(table,row,k)).join('')}</details>`:''}${addLink?`<fieldset><legend>Add a link to this field</legend><label>Campaign record<input name="newLink" data-record-ref list="campaign-record-picker" placeholder="Search a campaign record"></label><label>Text to turn into a link<input name="newLinkLabel" placeholder="Exact words in the field"></label><small>Existing links can be edited below under Links in text. This adds a reference, not membership or geographic containment.</small></fieldset>`:''}<button type="submit" class="chip">Save entry</button><p role="status" aria-live="polite"></p></form></details>`;
+  return `<details class="npc-panel editor-row"><summary><strong>${esc(label(table,row))}</strong> <span class="meta">${esc(row.audience==='players'?'Revealed':row.audience==='public'?'Public':row.audience?'Storyteller-only':'Reference data')}</span></summary>${canReveal?`<p><label class="reveal-choice"><input type="checkbox" data-share-table="${table}" data-share-id="${esc(id)}"> Reveal this entry to all players</label></p>`:''}<form data-edit-table="${table}" data-edit-id="${esc(id)}" data-revision="${row.revision}" data-lazy-fields></form></details>`;
  }
+ document.addEventListener('toggle',event=>{
+  const details=event.target;if(!details.open)return;
+  const form=details.matches('.editor-row')?details.querySelector('form[data-lazy-fields]'):details.closest('form[data-edit-table]');
+  if(!form)return;
+  const table=form.dataset.editTable,row=renderedRows.get(table+':'+form.dataset.editId);if(!row)return;
+  if(details.matches('.editor-row')&&form.hasAttribute('data-lazy-fields')){form.innerHTML=rowFields(table,row);form.removeAttribute('data-lazy-fields');}
+  else if(details.matches('.editor-advanced')){
+   const container=details.querySelector('[data-advanced-fields]');if(container){container.innerHTML=fields[table].filter(k=>['field_key','item_kind','value_type','section_id','parent_item_id','subject_relationship_id','subject_claim_id','subject_name_id'].includes(k)).map(k=>formInput(table,row,k)).join('');container.removeAttribute('data-advanced-fields');}
+  }
+ },true);
  function ownedRows(id){
   const data=rows(),itemIds=new Set((data.content_items||[]).filter(x=>x.record_id===id).map(x=>x.id));
   return Object.fromEntries(Object.entries(fields).map(([table])=>[table,(data[table]||[]).filter(row=>{
@@ -89,7 +104,7 @@
  }
  function render(id){
   if(!root.campaignSession?.isStoryteller)return '<h1>Storyteller access required</h1><a href="#home">Return to Tonight</a>';
-  const r=record(id);if(!r)return '<h1>Record not found</h1><a href="#storyteller">Storyteller tools</a>';
+  renderedRows.clear();const r=record(id);if(!r)return '<h1>Record not found</h1><a href="#storyteller">Storyteller tools</a>';
   return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Reveal all shares saved details, excluding Storyteller notes and archived entries. Save any drafts first.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-share-all="${esc(id)}" type="button">Reveal all</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${summaryEditor(id)}${connectionLabels(id)}${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row)).join('')}</section>`).join('')}`;
  }
  const isRevealed=r=>!r.archived_at&&['players','public'].includes(r.audience);
@@ -144,7 +159,23 @@
   return [...plan.values()];
  }
  let dialog=null,pendingPlan=[],pendingTargets=[],pendingEdits=[];
- function review(targets,edits=[]){
+ let loadingReview=false,reviewEpoch=0;
+ root.addEventListener('hashchange',()=>{reviewEpoch++;loadingReview=false;dialog?.close();pendingPlan=[];pendingTargets=[];pendingEdits=[];});
+ async function review(targets,edits=[]){
+  if(Array.isArray(targets)&&!targets.length)throw Error('Select entries to reveal first.');
+  if(loadingReview)throw Error('A reveal review is already loading.');
+  loadingReview=true;const version=++reviewEpoch,route=location.hash,session=root.campaignSession;
+  const message=document.querySelector('#editorMessage')||document.querySelector('#recordEditorMessage');
+  if(message)message.textContent='Loading dependencies for reveal review…';
+  try{
+   await session.loadRevealData();
+   if(version!==reviewEpoch||!root.campaignAccess||root.campaignSession!==session||location.hash!==route)return;
+   for(const edit of edits)if(!edit.insert&&get(edit.table,edit.id)?.revision!==edit.revision)throw Error('Another edit was saved first. Copy your draft before reloading and reviewing again.');
+   showReview(typeof targets==='function'?targets():targets,edits);
+   if(message)message.textContent='';
+  }finally{if(version===reviewEpoch)loadingReview=false;}
+ }
+ function showReview(targets,edits=[]){
   if(!targets.length)throw Error('Select entries to reveal first.');
   const merged=new Map(revealPlan(targets,edits).map(p=>[p.table+':'+p.id,p]));
   for(const edit of edits){const token=edit.table+':'+edit.id,existing=merged.get(token);merged.set(token,existing?{...edit,patch:{...existing.patch,...edit.patch}}:edit);}
@@ -161,7 +192,7 @@
    const body=form.elements.body.value.trim(),item=get('content_items',form.dataset.item),revision=Number(form.dataset.revision);
    if((item?.body||'')===body){message.textContent='No changes to save.';return;}
    if(item&&item.audience!=='storyteller'){
-    review([{table:'content_items',id:item.id}],[{table:'content_items',id:item.id,revision,patch:{body,knowledge_state:body?'recorded':'unrecorded'}}]);message.textContent='Review the reveal before saving.';return;
+    await review([{table:'content_items',id:item.id}],[{table:'content_items',id:item.id,revision,patch:{body,knowledge_state:body?'recorded':'unrecorded'}}]);message.textContent='Review the reveal before saving.';return;
    }
    await root.campaignSession.saveSummary(form.dataset.summaryEditor,revision,body);committed=true;await root.refreshCampaignViews();document.querySelector('#editorMessage').textContent='Summary saved.';
   }catch(error){message.textContent=(committed?'Saved, but reload failed. Reload saved entries before editing again. ':'')+error.message;}finally{button.disabled=false;}
@@ -173,7 +204,7 @@
    const value=form.elements.label.value.trim()||null,item=get('content_items',form.dataset.item),revision=Number(form.dataset.revision);
    if((item?.value||null)===value){message.textContent='No changes to save.';return;}
    if(item&&item.audience!=='storyteller'){
-    review([{table:'content_items',id:item.id}],[{table:'content_items',id:item.id,revision,patch:{value,knowledge_state:value?'recorded':'unrecorded'}}]);message.textContent='Review the reveal before saving.';return;
+    await review([{table:'content_items',id:item.id}],[{table:'content_items',id:item.id,revision,patch:{value,knowledge_state:value?'recorded':'unrecorded'}}]);message.textContent='Review the reveal before saving.';return;
    }
    await root.campaignSession.saveConnectionLabel(form.dataset.person,form.dataset.connectionLabel,revision,value);committed=true;await root.refreshCampaignViews();document.querySelector('#editorMessage').textContent='Connection label saved.';
   }catch(error){message.textContent=(committed?'Saved, but reload failed. Reload saved entries before editing again. ':'')+error.message;}finally{button.disabled=false;}
@@ -200,7 +231,7 @@
     changes.push({table:'item_references',id:'link:'+crypto.randomUUID(),revision:0,insert:true,patch:{item_id:row.id,target_record_id:target,label:labelText,audience:'storyteller'}});
    }
    if(!changes.length){message.textContent='No changes to save.';return;}
-   if(patch.audience==='players'||row.audience==='players'&&patch.audience!=='storyteller'){review([{table,id:key(row)}],changes);message.textContent='Review the reveal before saving.';return;}
+   if(['players','public'].includes(patch.audience)||['players','public'].includes(row.audience)&&patch.audience!=='storyteller'){await review([{table,id:key(row)}],changes);message.textContent='Review the reveal before saving.';return;}
    await root.campaignSession.editRows(changes);committed=true;await root.refreshCampaignViews();const savedMessage=document.querySelector('#editorMessage');if(savedMessage)savedMessage.textContent='Saved. Entries reloaded from the database.';
   }catch(error){message.textContent=(committed?'Saved, but could not reload. Reload saved entries before editing again. ':'')+error.message;}finally{button.disabled=false;}
  });
@@ -227,9 +258,9 @@
   try{
    if(target.hasAttribute('data-cancel-reveal')){dialog.close();return;}
    if(target.hasAttribute('data-reload-reveal')){
-    target.disabled=true;await root.campaignSession.reloadCampaign();
+    target.disabled=true;await root.campaignSession.reloadCampaign();await root.campaignSession.loadRevealData();
     if(pendingEdits.length){dialog.close();await root.refreshCampaignViews();const message=document.querySelector('#editorMessage');if(message)message.textContent='Reloaded. Review your field edits before saving again.';return;}
-    const targets=pendingTargets;if(!revealPlan(targets).length){dialog.close();await root.refreshCampaignViews();const message=document.querySelector('#editorMessage');if(message)message.textContent='These entries are already revealed.';return;}review(targets);return;
+    const targets=pendingTargets;if(!revealPlan(targets).length){dialog.close();await root.refreshCampaignViews();const message=document.querySelector('#editorMessage');if(message)message.textContent='These entries are already revealed.';return;}await review(targets);return;
    }
    if(target.hasAttribute('data-confirm-reveal')){
     if(target.disabled)return;target.disabled=true;const message=dialog.querySelector('[role="status"]');message.textContent='Revealing…';let committed=false;
@@ -237,14 +268,13 @@
     catch(error){message.textContent=(committed?'Saved, but reload failed. ':'')+error.message;const conflict=['40001','PT409'].includes(error.code);if(conflict&&!committed){dialog.querySelector('[data-reload-reveal]').hidden=pendingEdits.length>0;message.textContent=pendingEdits.length?'Nothing was saved. Cancel this review, copy any draft text you need, then reload saved entries and review your edits.':'Nothing in this batch was revealed. Some entries changed since this page loaded. Reload and review again before confirming.';}else if(!committed)target.disabled=false;message.tabIndex=-1;message.focus();}return;
    }
    if(target.hasAttribute('data-editor-reload')){target.disabled=true;await root.refreshCampaignViews();return;}
-   if(target.hasAttribute('data-share-all')){review(allTargets(target.dataset.shareAll));return;}
-   if(target.hasAttribute('data-share-overview')){review(overviewTargets(target.dataset.shareOverview));return;}
-   if(target.hasAttribute('data-review-share')){review([...document.querySelectorAll('[data-share-table]:checked')].map(x=>({table:x.dataset.shareTable,id:x.dataset.shareId})));return;}
-   if(target.hasAttribute('data-dashboard-share')){review([...document.querySelectorAll('[data-overview-record]:checked')].flatMap(x=>overviewTargets(x.dataset.overviewRecord)));return;}
-   if(target.hasAttribute('data-dashboard-all')){review([...document.querySelectorAll('[data-overview-record]:checked')].flatMap(node=>allTargets(node.dataset.overviewRecord)));return;}
-   if(target.hasAttribute('data-homepage-share'))review(choices().filter(r=>['thread','session'].includes(r.record_type)&&!r.archived_at).flatMap(r=>overviewTargets(r.id)));
+   if(target.hasAttribute('data-share-all')){target.disabled=true;await review(()=>allTargets(target.dataset.shareAll));target.disabled=false;return;}
+   if(target.hasAttribute('data-share-overview')){target.disabled=true;await review(()=>overviewTargets(target.dataset.shareOverview));target.disabled=false;return;}
+   if(target.hasAttribute('data-review-share')){await review([...document.querySelectorAll('[data-share-table]:checked')].map(x=>({table:x.dataset.shareTable,id:x.dataset.shareId})));return;}
+   if(target.hasAttribute('data-dashboard-share')||target.hasAttribute('data-dashboard-all')){const ids=[...document.querySelectorAll('[data-overview-record]:checked')].map(x=>x.dataset.overviewRecord);if(!ids.length)throw Error('Select entries to reveal first.');target.disabled=true;await review(()=>ids.flatMap(id=>target.hasAttribute('data-dashboard-all')?allTargets(id):overviewTargets(id)));target.disabled=false;return;}
+   if(target.hasAttribute('data-homepage-share'))await review(()=>choices().filter(r=>['thread','session'].includes(r.record_type)&&!r.archived_at).flatMap(r=>overviewTargets(r.id)));
   }catch(error){target.disabled=false;const message=document.querySelector('#editorMessage');if(message)message.textContent=error.message;else{let p=document.querySelector('#recordEditorMessage');if(!p){p=document.createElement('p');p.id='recordEditorMessage';p.setAttribute('role','status');target.after(p);}p.textContent=error.message;}}
  });
- root.CampaignEditor={render,dashboard,recordLink,revealPlan};
+ root.CampaignEditor={render,dashboard,recordLink,revealPlan,clear(){reviewEpoch++;loadingReview=false;renderedRows.clear();pendingPlan=[];pendingTargets=[];pendingEdits=[];dialog?.remove();dialog=null;}};
  if(typeof module!=='undefined')module.exports={fields};
 })(globalThis);

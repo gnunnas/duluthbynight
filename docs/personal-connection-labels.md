@@ -6,6 +6,8 @@ Implementation `0f96693` was pushed on `connection-labels-and-editor-loading` an
 
 To enable label saves, apply the entire [migration 012](../supabase/migrations/20261016001200_personal_connection_labels.sql) in Supabase SQL Editor as postgres, after existing migrations, then deploy the website changes. If already installed, do not rerun it without checking. No campaign reimport is needed, and it creates no labels or facts automatically.
 
+The newer [scoped editor](scoped-record-editing.md) loads only the selected person for ordinary label editing, and waits for complete dependencies before reviewing shared changes. This loading change needs no additional SQL.
+
 The accompanying editor timeout fix is independent: it uses paged REST reads and requires no new SQL. See [campaign loading](campaign-loading.md). A failing editor before this deployment was reproduced as SQL statement timeout `57014`; installing migration 012 alone cannot resolve it.
 
 ## Editing a label

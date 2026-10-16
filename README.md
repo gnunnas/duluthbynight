@@ -110,7 +110,7 @@ The **Coterie** tab tracks character links, the haven, boons, multiple resources
 
 New person death-status rows default to **For Real Dead? → No** after migration `20261008000900_person_death_default.sql`. Existing death statuses remain as recorded. See the [NPC import rules](docs/roadmap.md) for identity reuse and classification clarification requirements.
 
-Campaign browsing now uses a small initial catalog, on-demand record/ability/source loads, session memory caching, and permission-filtered server search. **Apply migration 010 before deploying this version.** See [loading behavior, deployment order, and verification](docs/campaign-loading.md). Storyteller editing still loads the complete authorized dataset when opened for accurate bulk reveals.
+Campaign browsing now uses a small initial catalog, on-demand record/ability/source loads, session memory caching, and permission-filtered server search. **Apply migration 010 before deploying this version.** See [loading behavior, deployment order, and verification](docs/campaign-loading.md). Storyteller editing loads the selected record; full dependency data loads before reveal review. See [scoped editing and performance evidence](docs/scoped-record-editing.md).
 
 Chronicle now separates active threads from readable completed history and links to older session recaps. Sessions can display separate play and in-world dates. Apply migration 011 before deployment; see [Chronicle history and recap workflow](docs/chronicle-history.md).
 

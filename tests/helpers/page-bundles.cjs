@@ -9,7 +9,8 @@ function pageBundle(rows,scope,id){
    else if(table==='sections')out[table]=list.filter(r=>sections.has(r.id));
    else if(table==='attachments')out[table]=list.filter(r=>r.attachment_kind==='portrait'&&!r.item_id);
    else if(!['sources','item_references','selected_powers'].includes(table)&&!table.endsWith('_sources'))out[table]=list;
-  }else if(table==='records')out[table]=list.filter(r=>r.id===id);
+  }else if(scope==='record-editor'&&table==='sources')out[table]=list.filter(r=>r.note_record_id===id);
+  else if(table==='records')out[table]=list.filter(r=>r.id===id);
   else if(['record_names','sections','content_items','attachments'].includes(table))out[table]=list.filter(r=>r.record_id===id);
   else if(['item_references','selected_powers'].includes(table))out[table]=list.filter(r=>itemIds.has(r.item_id));
  }

@@ -11,11 +11,12 @@
   if(!response.ok)throw Error(path==='token?grant_type=password'?'Sign-in failed. Check your email and password.':'Your session has ended. Sign in again.');
   return response.status===204?null:response.json();
  }
- async function read(table,expectedSession=session){
+ async function read(table,expectedSession=session,filters={}){
   const rows=[];
   for(let offset=0;;offset+=500){
    if(session!==expectedSession)throw Error('Campaign session changed.');
    const query=new URLSearchParams({select:'*',campaign_id:'eq.'+config.campaignId,limit:'500',offset:String(offset),order:table.endsWith('_sources')?'owner_id,source_id':table==='power_definitions'?'power_record_id':table==='route_aliases'?'old_route':table==='campaign_memberships'?'user_id':'id'});
+   for(const [key,value]of Object.entries(filters))query.set(key,value);
    const response=await fetch(config.url+'/rest/v1/'+table+'?'+query,{headers:headers(),cache:'no-store'});
    if(table==='campaign_status'&&response.status===404)return []; // Status migration may not be installed yet.
    if(!response.ok)throw Error('Could not load campaign data. Check your connection and campaign access.');
@@ -23,7 +24,7 @@
   }
  }
  function lock(message){
-  clearInterval(refreshTimer);loader?.clear();session=null;window.campaignAccess=false;window.CAMPAIGN=null;
+  clearInterval(refreshTimer);loader?.clear();window.CampaignEditor?.clear();session=null;window.campaignAccess=false;window.CAMPAIGN=null;
   document.querySelector('.ability-dialog')?.remove();
   document.querySelector('.reveal-dialog')?.remove();
   if(window.campaignSession)window.campaignSession.isStoryteller=false;
@@ -42,7 +43,17 @@
   if(!response.ok)throw Error('Could not check campaign access.');
   const campaigns=await response.json();const owner=campaigns.some(x=>x.owner_user_id===session.user.id);
   if(!own&&!owner)throw Error('This account does not have active access to this campaign. Ask your Storyteller to add it.');
-  loader=createCampaignLoader(async(name,payload)=>{
+  loader=createCampaignLoader(async function requestPage(name,payload){
+   if(name==='load_campaign_page'&&payload.p_scope==='record-editor'){
+    // Ordinary editing needs this record, not every campaign field or provenance link.
+    const expectedSession=session,isArchive=loader.rows.records?.some(row=>row.id===payload.p_record&&row.record_type==='note');
+    const [detail,sources]=await Promise.all([
+     requestPage(name,{...payload,p_scope:'detail'}),
+     isArchive?read('sources',expectedSession,{note_record_id:'eq.'+payload.p_record}):Promise.resolve([])
+    ]);
+    if(session!==expectedSession)throw Error('Campaign session changed.');
+    return {...detail,sources};
+   }
    if(name==='load_campaign_page'&&payload.p_scope==='editor'){
     // Keep the full editor graph, but avoid one oversized SQL/RLS statement.
     const tables=['campaign_status','records','record_names','sections','content_items','relationship_types','relationships','domain_claims','membership_implications','attachments','sources','item_references','selected_powers','power_definitions','route_aliases','review_issues','person_status','record_names_sources','content_items_sources','relationships_sources','domain_claims_sources','membership_implications_sources','attachments_sources','power_definitions_sources'];
@@ -74,6 +85,11 @@
    return saved[0];
   }};
   window.campaignSession.editorRows=()=>rows;
+  window.campaignSession.loadRevealData=async()=>{
+   if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access is required.');
+   await loader.reviewData();
+   if(validateCampaign(loader.project()).length)throw Error('Campaign dependencies changed. Reload saved entries before reviewing again.');
+  };
   window.campaignSession.editRows=async changes=>{
    if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access is required.');
    const response=await fetch(config.url+'/rest/v1/rpc/edit_campaign_rows',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_changes:changes}),cache:'no-store'});

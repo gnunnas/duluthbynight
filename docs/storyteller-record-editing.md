@@ -6,6 +6,10 @@ Open **Storyteller → Campaign records & reveals**, search for a record and cho
 
 To link text, choose a campaign record under **Add a link to this field** and provide the exact words already present in its Text or text Value. This creates a reference, not a new relationship or geographic parent. Existing references can be edited under **Links in text**. A new reference starts private; revealing the containing field shares its active inline references and the referenced records' names.
 
+## Loading behavior
+
+Opening an editor loads the selected record. Ordinary fields and advanced controls build when expanded. Reveal actions load the complete dependency graph before showing the confirmation; this first review may take longer. Saving/reloading refreshes the catalog and selected record. See [scoped editing, safety and performance](scoped-record-editing.md). No new migration is needed for this loading change.
+
 ## Share information with players
 
 Imports started private, which explains the empty player homepage. Choose **Review homepage records** to review and share names and overview text for active threads and chronicle/session records. Or select records and choose **Review names + overviews**. Nothing is shared until you confirm the review.
