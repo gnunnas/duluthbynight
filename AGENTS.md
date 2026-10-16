@@ -63,7 +63,7 @@ Migration `20261016001200_personal_connection_labels.sql` adds a narrow SECURITY
 - Release query string `20261016-scoped-editor`. Guide, measured comparison and validation commands: `docs/scoped-record-editing.md`. Private recordings/exports/benchmarks remain outside this checkout.
 - Validation passed: 41 unit checks; scoped large-record browser suite; existing editor, summary, connection-label/pagination, lazy-loading and auth/player/logout browser suites. No SQL changed. Local private saved-data comparison: 38 requests/5.45 MB/266,494 controls-and-options before, one request/146 KB/500 after; 17.7 s vs 0.10 s locally with mocked network, not live timing.
 
-## Current task handoff: descriptive editor connection headings
+## Previous task handoff: descriptive editor connection headings (merged PR #35)
 
 - `descriptive-editor-connections` includes fetched remote main `f16e07d` (portrait asset upload following PR #34). The user reports a large editing-speed improvement after deployment.
 - Collapsed relationship entries now show the relationship type and other record using the edited record's perspective (forward/reverse labels). Generic selectors and reveal previews show both endpoints. Visibility badges, lazy forms, scoped loading and reveal authorization remain unchanged.
@@ -76,3 +76,11 @@ Migration `20261016001200_personal_connection_labels.sql` adds a narrow SECURITY
 - A read-only check before preparing SQL found existing `person:kevin-jackson` with player-visible identity and no attachment rows. Supplied portrait SQL uses `attachment:kevin-jackson:portrait`, URL `assets/kevin%20jackson.png`, alt text Kevin Jackson and initial audience Storyteller-only. Its repeat-path update preserves existing visibility. User execution/reveal is **not confirmed**; do not claim the portrait is installed or shared.
 - Manual portrait SQL is recorded outside the published checkout at `/workspace/npc-imports/kevin-jackson/portrait.sql`; no database writes were performed. General attachment/reveal workflow is in `docs/storyteller-record-editing.md`.
 - Descriptive connection headings and these documentation updates are packaged on `descriptive-editor-connections` for the user-requested CPAP; check remote state for PR/merge status. Deployment remains unconfirmed. No additional JavaScript or SQL changes were needed for this documentation request.
+
+## Current task handoff: Storyteller reveal action help
+
+- Branch `storyteller-reveal-help` starts from fetched remote main `cf28043` (PR #35). Connection headings are merged; Kevin portrait SQL execution/reveal remains unconfirmed.
+- Dashboard's three reveal actions now have hover/focus descriptions (`aria-describedby`, tooltip role, Escape dismissal) instead of the large permanent Reveal all paragraph. A short introduction remains. Scope is unchanged: checked names/summaries, all non-archived thread/session names/summaries, or checked full details. Filter-hidden selections remain included; every action still requires review and confirmation.
+- Files: `record-editor.js`, `styles.css`, synchronized `campaign.html` release `20261016-reveal-help`, and authoring docs. No SQL or data changes. Packaged for user-requested CPAP; deployment remains unconfirmed.
+- Verification passed: existing editor/reveal browser suite with hover, keyboard focus, Escape dismissal, unchanged bulk selection/confirmation, and mobile/desktop layout assertions. Syntax/whitespace checks passed.
+- Button labels clarify the action: **Reveal selected names + summaries**, **Reveal homepage names + summaries**, **Reveal selected details**. “Review” describes the confirmation step, not a separate read-only feature. “Checked” means dashboard checkboxes, including filter-hidden selections.
