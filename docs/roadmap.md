@@ -19,6 +19,7 @@ Completed threads remain readable without database archiving. Chronicle links to
 - Do not infer Mortal, Ghoul, or Kindred from an occupation or a Thralls and Tools heading alone. Ask about unclear wording and conflicting facts; do not invent data.
 - New people default to **For Real Dead? → No**, unless the user/source explicitly supplies another death status. Existing death statuses are retained when filling out a record.
 - New NPC content remains Storyteller-only unless the user explicitly requests sharing. Keep private import artifacts outside the published website checkout.
+- When supplied facts give a personal association a clear description, store a concise person-scoped `relationship.details` label using only those facts. Do not infer a reciprocal label or feelings. Unspecified associations remain “Associate”. See [connection labels](personal-connection-labels.md).
 
 ## Planned: easy record summaries
 
@@ -33,6 +34,8 @@ Completed threads remain readable without database archiving. Chronicle links to
 - Reuse the existing relationship.role storage, audit history and reveal permissions. Keep the role attached to the specific membership connection.
 
 ## Personal connection labels
+
+Implemented in PR #32; migration 012 application and website deployment still need confirmation. See [usage and storage](personal-connection-labels.md).
 
 - Apply migration 012 to enable saving descriptive labels for existing person-to-person associations from **Edit record & reveals → Personal connection labels**.
 - Labels describe the connection from the person being edited. They do not automatically appear on the other person's profile, change the connection type, or infer facts from imported prose.

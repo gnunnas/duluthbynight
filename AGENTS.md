@@ -18,15 +18,16 @@ Read `README.md`, `docs/roadmap.md`, `docs/supabase-website.md`, and `docs/campa
 - Clear account caches and reject late responses at sign-out/expiration. Do not persist campaign content in localStorage or IndexedDB.
 - Keep campaign release query strings synchronized for styles, login, and loader; login passes its version to delayed `app.js`.
 
-## Handoff as of 2026-10-15
+## Current handoff (2026-10-15, America/Chicago)
 
-The user reported applying migration `20261015001000_campaign_lazy_loading.sql` in Supabase. Do not ask them to rerun initial setup or reimport campaign data for this change. This is user-reported installation, not independent live verification.
-
-Implementation and independent code review are complete on `lazy-load-campaign-pages` (implementation commit `d4db862`). The two review findings above were fixed and rechecked. At this handoff the branch was pushed, but automatic PR creation was blocked by GitHub API `Forbidden`; the user subsequently reported live login improving from about 20 seconds to 3 seconds, with first-time character details under a second. Live timing and PR/merge state were not independently verified. Inspect current GitHub/remote state before treating this dated status as current.
-
-Local evidence: 39 unit checks, loading/login/editor/Coterie/death-marker browser checks, 98 historical snapshot routes, and the complete disposable PostgreSQL permission/migration suite passed. Saved-export initial payload fell from about 4.0 MB to 0.82 MB; this measures payload, not deployed login time. Commands and limitations are in `docs/campaign-loading.md`.
-
-Chronicle-history follow-up: the user applied migration 011 and the private recap transaction. A fresh read-only check confirmed the completion status was saved. The website release is on `chronicle-completed-history`; do not rerun recap SQL to solve a deployment delay. Private session artifacts stay outside this repository.
+- Remote `origin/main` contains PR #32, merge `4574c4e`, including implementation commit `0f96693` from `connection-labels-and-editor-loading`. This was verified by fetching the remote. Browser deployment and migration 012 installation are **not yet confirmed**.
+- The user previously reported applying migrations 010 and 011 and the private recap update. Do not rerun initial setup, migrations 010/011, or NPC/recap imports to fix editor loading.
+- The old full editor RPC reproduced a live HTTP 500 / SQL `57014` timeout after about 8.2 seconds. Editor loads now use complete, paged RLS-filtered REST reads. This loading fix needs no new SQL. Catalog/detail RPCs remain in use for normal browsing.
+- Migration `20261016001200_personal_connection_labels.sql` is needed only for **saving personal connection labels**. See `docs/personal-connection-labels.md` for storage, visibility, revisions, UI and rollout details.
+- Release query string: `20261016-editor-batches`, including styles/model/loader/session/editor; session passes the version to delayed `app.js`. Keep these synchronized when changing the relevant assets.
+- Validation passed before push: 36 unit checks, full disposable PostgreSQL migration/permission suite, existing editor/loading browser suites, and connection-label/paged-load/retry browser coverage. Read-only live pagination fetched all 24 tables in about 20.6 seconds; this is a reader-account measurement, not a deployed Storyteller timing guarantee.
+- Both GitHub GraphQL and REST PR-creation attempts returned `Forbidden`; Git pushes work. Provide a compare/PR-creation link honestly when this happens. PR #32 was subsequently created/merged outside those failed tool calls. Do not auto-merge.
+- Recap paragraph formatting shipped in PR #31 (merge `5b4a2d4`): saved newlines/blank lines display in session `recap` sections without bullet markers. No SQL required for that display change.
 
 ## User conventions
 

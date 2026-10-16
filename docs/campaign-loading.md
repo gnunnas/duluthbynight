@@ -1,12 +1,16 @@
 # Campaign loading
 
-## Current rollout status (2026-10-15)
+## Current rollout status (2026-10-15, America/Chicago)
 
-The user reported running migration 010 successfully. The implementation and independent code review are complete on branch `lazy-load-campaign-pages` (implementation commit `d4db862`). Both review findings were fixed: ability popups now recover from newly added reference targets missing from cached metadata, and authorized Geography review warnings are retained in the catalog.
+The initial lazy-loading changes, Chronicle history, recap paragraphs, and editor pagination/connection-label changes are merged into remote `main`. Latest verified merge: PR #32, `4574c4e`, containing implementation `0f96693`. Fetch the remote before treating this dated status as current. Deployment of the latest website code and installation of migration 012 have not yet been confirmed.
 
-The branch was pushed. GitHub API access returned `Forbidden` during automatic PR creation, so a PR-creation link was provided instead. Subsequently, the user reported the live website loading in about 3 seconds (previously about 20), with first-time character loads under a second. This is user-reported behavior, not an independent timing measurement; the PR/merge state was not checked. Check current remote/PR/deployment state before continuing; the dated status may have changed. The migration installation is user-reported, not independently verified against the live database.
+The user previously reported applying migrations 010 and 011. The initial lazy-loading change reduced their reported login time from about 20 seconds to 3 seconds. Later editor failures were independently traced to a statement timeout in the full editor RPC; see the follow-up below. Do not rerun setup or campaign imports for that failure.
 
-## Deploy in this order
+The editor pagination fix itself requires only the website deployment. Saving personal connection labels separately requires [migration 012](personal-connection-labels.md). If that migration is already installed, do not rerun it merely because the editor is slow. GitHub PR creation through both API routes returned `Forbidden`, but Git push worked and PR #32 was subsequently merged.
+
+## Original lazy-loading installation (historical order)
+
+For a fresh installation only; the existing campaign has already reported completing these steps.
 
 1. In Supabase → SQL Editor, run the **entire** [migration 010](../supabase/migrations/20261015001000_campaign_lazy_loading.sql), from `begin;` through `commit;`. Existing migrations 001–009 must already be installed. No campaign reimport is needed.
 2. Deploy this website version after the migration succeeds. The HTML uses a new release query string for the loader, login script, delayed app, and styles to bypass previously cached code.
