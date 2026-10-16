@@ -20,7 +20,11 @@ Opening an editor loads the selected record. Ordinary fields and advanced contro
 
 ## Share information with players
 
-Imports started private, which explains the empty player homepage. Choose **Review homepage records** to review and share names and overview text for active threads and chronicle/session records. Or select records and choose **Review names + overviews**. Nothing is shared until you confirm the review.
+These are **reveal actions**: each opens a review, then the confirmation saves the visibility changes. Opening the review alone shares nothing. “Checked records” means records whose checkboxes are selected in the dashboard list.
+
+Dashboard reveal buttons have short descriptions on mouse hover or keyboard focus, linked with `aria-describedby`. Escape dismisses the description. **Reveal selected names + summaries** uses checked records, **Reveal homepage names + summaries** uses all non-archived thread/session records regardless of selections, and **Reveal selected details** reviews full saved details of checked records. Filter-hidden selections remain included. The earlier long Reveal all paragraph is now in contextual help; confirmation and reveal scope have not changed.
+
+Imports started private, which explains the empty player homepage. Choose **Reveal homepage names + summaries** to review and share names and summary text for all non-archived threads and chronicle/session records. Or select records and choose **Reveal selected names + summaries**. Nothing is shared until you confirm the review.
 
 Use **Reveal all** in a record editor to review sharing all its active details, aliases, connections, artwork, status and selected abilities at once. Protected Storyteller notes and entries beneath protected or archived sections/items are excluded. Required linked record names are included, but those other records’ full details and separate source archives are not automatically shared. This shares saved entries; save any drafts first.
 
@@ -42,7 +46,7 @@ Local verification: `bash scripts/test-supabase-draft.sh`, plus `CAMPAIGN_TEST_U
 
 Apply migration `20261007000400_record_edit_conflicts.sql` after 003. Revision mismatches now return HTTP 409 (`PT409`) instead of the retryable database serialization code `40001`. A failed reveal batch changes nothing. The reveal popup disables resubmission of a stale batch and provides **Reload and review again** for reveal-only operations; field-edit conflicts preserve drafts for manual review.
 
-The dashboard’s **Reveal all selected** uses only checked records, including selections retained when a filter hides them. Filters do not select or reveal records. Its review includes full active details for those records while preserving protected Storyteller notes. Choose a type or search first to narrow the scope. Source-note records are included only if selected, so their full saved transcripts can be shared. Apply migration 006 to increase the atomic batch limit from 500 to 5,000 edits; larger batches are rejected without partial writes.
+The dashboard’s **Reveal selected details** uses only checked records, including selections retained when a filter hides them. Filters do not select or reveal records. Its review includes full active details for those records while preserving protected Storyteller notes. Choose a type or search first to narrow the scope. Source-note records are included only if selected, so their full saved transcripts can be shared. Apply migration 006 to increase the atomic batch limit from 500 to 5,000 edits; larger batches are rejected without partial writes.
 
 Use **Select all shown** above the dashboard list to check or uncheck every record matching the current search and type filter. With no filters, it selects the entire list. Hidden selections are retained and included in the selected count. A partial selection displays an indeterminate checkbox. Selecting records never saves or reveals them; use the review action separately.
 
