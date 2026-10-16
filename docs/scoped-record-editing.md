@@ -4,13 +4,13 @@
 
 The user's October 15 Performance trace showed about 28.8 seconds fetching 38 editor requests, then a 5.6-second main-thread task. Seven sequential `content_items_sources` pages occupied about 24 seconds. Opening one character's editor was fetching the whole campaign, and closed field panels were still building every input and advanced selector.
 
-This follow-up is on `faster-record-editor`, based on remote main after PR #33. It requires **website deployment only**, with release `20261016-scoped-editor`. No new SQL or campaign reimport is needed. The existing summary/connection save features still require migrations 013/012 respectively; their installation is separate from this loading change. Deployment of this follow-up is not yet confirmed.
+This follow-up is on `faster-record-editor`, based on remote main after PR #33. It requires **website deployment only**, with release `20261016-scoped-editor`. No new SQL or campaign reimport is needed. The existing summary/connection save features still require migrations 013/012 respectively; their installation is separate from this loading change. PR #34 merged as `f092412`, verified against fetched remote main. The user subsequently reported a large improvement after deployment; this is user-reported behavior, not a fresh live timing measurement.
 
 ## Release handoff
 
-Implementation and checks are complete on `faster-record-editor`, packaged for the user-requested CPAP. Check remote state for PR/merge status. CPAP means commit, push and provide a PR link, without merging automatically. No database changes or deployment were performed for this follow-up.
+Implementation `85d806b` from `faster-record-editor` merged in PR #34. The user reports the deployed change made a large difference. No database changes were needed, and the agent did not deploy or merge automatically. CPAP means commit, push and provide a PR link, without merging automatically.
 
-Deploy the website files together, retaining the synchronized `20261016-scoped-editor` asset versions in `campaign.html` and the version passed to delayed `app.js`. Check character editing and reveal review separately after deployment. Keep full-review performance as a separate remaining task rather than describing all authoring as instantaneous.
+Deploy future website updates together, retaining synchronized asset versions in `campaign.html` and the version passed to delayed `app.js`. The scoped-editor release was `20261016-scoped-editor`; the newer descriptive connection-heading release is `20261016-connection-headings`. Check character editing and reveal review separately after deployment. Keep full-review performance as a separate remaining task rather than describing all authoring as instantaneous.
 
 ## Loading boundaries
 

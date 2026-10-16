@@ -20,7 +20,13 @@
  const record=id=>get('records',id);
  const choices=()=>[...(rows().records||[])].sort((a,b)=>a.display_name.localeCompare(b.display_name));
  const recordLabel=r=>r.display_name+' · '+r.record_type+' ('+r.route_key+')';
- const label=(table,row)=>{
+ const label=(table,row,owner)=>{
+  if(table==='relationships'){
+   const type=get('relationship_types',row.relationship_type),incoming=owner&&row.to_record_id===owner&&row.from_record_id!==owner;
+   const description=(incoming?type?.reverse_label:type?.forward_label)||row.relationship_type.replaceAll('_',' ');
+   const name=id=>record(id)?.display_name||'Unavailable record';
+   return owner?description+' — '+name(incoming?row.from_record_id:row.to_record_id):name(row.from_record_id)+' — '+description+' — '+name(row.to_record_id);
+  }
   if(table==='content_items'&&row.field_key==='overview')return 'Summary';
   if(table==='content_items'&&row.field_key==='relationship.details'){
    const rel=get('relationships',row.subject_relationship_id),other=rel&&(rel.from_record_id===row.record_id?rel.to_record_id:rel.from_record_id);
@@ -57,11 +63,11 @@
   const addLink=table==='content_items';
   return `${fields[table].filter(k=>!['field_key','item_kind','value_type','section_id','parent_item_id','subject_relationship_id','subject_claim_id','subject_name_id'].includes(k)).map(k=>formInput(table,row,k)).join('')}${table==='content_items'?'<details class="editor-advanced"><summary>Advanced field structure</summary><div data-advanced-fields></div></details>':''}${addLink?`<fieldset><legend>Add a link to this field</legend><label>Campaign record<input name="newLink" data-record-ref list="campaign-record-picker" placeholder="Search a campaign record"></label><label>Text to turn into a link<input name="newLinkLabel" placeholder="Exact words in the field"></label><small>Existing links can be edited below under Links in text. This adds a reference, not membership or geographic containment.</small></fieldset>`:''}<button type="submit" class="chip">Save entry</button><p role="status" aria-live="polite"></p>`;
  }
- function rowForm(table,row){
+ function rowForm(table,row,owner){
   const id=key(row),protectedNote=table==='content_items'&&row.field_key==='notes.storyteller'||table==='sections'&&row.template_key==='storyteller-notes';
   renderedRows.set(table+':'+id,row);
   const canReveal=row.audience&&!protectedNote&&row.field_key!=='notes.player'&&!row.archived_at;
-  return `<details class="npc-panel editor-row"><summary><strong>${esc(label(table,row))}</strong> <span class="meta">${esc(row.audience==='players'?'Revealed':row.audience==='public'?'Public':row.audience?'Storyteller-only':'Reference data')}</span></summary>${canReveal?`<p><label class="reveal-choice"><input type="checkbox" data-share-table="${table}" data-share-id="${esc(id)}"> Reveal this entry to all players</label></p>`:''}<form data-edit-table="${table}" data-edit-id="${esc(id)}" data-revision="${row.revision}" data-lazy-fields></form></details>`;
+  return `<details class="npc-panel editor-row"><summary><strong>${esc(label(table,row,owner))}</strong> <span class="meta">${esc(row.audience==='players'?'Revealed':row.audience==='public'?'Public':row.audience?'Storyteller-only':'Reference data')}</span></summary>${canReveal?`<p><label class="reveal-choice"><input type="checkbox" data-share-table="${table}" data-share-id="${esc(id)}"> Reveal this entry to all players</label></p>`:''}<form data-edit-table="${table}" data-edit-id="${esc(id)}" data-revision="${row.revision}" data-lazy-fields></form></details>`;
  }
  document.addEventListener('toggle',event=>{
   const details=event.target;if(!details.open)return;
@@ -105,7 +111,7 @@
  function render(id){
   if(!root.campaignSession?.isStoryteller)return '<h1>Storyteller access required</h1><a href="#home">Return to Tonight</a>';
   renderedRows.clear();const r=record(id);if(!r)return '<h1>Record not found</h1><a href="#storyteller">Storyteller tools</a>';
-  return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Reveal all shares saved details, excluding Storyteller notes and archived entries. Save any drafts first.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-share-all="${esc(id)}" type="button">Reveal all</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${summaryEditor(id)}${connectionLabels(id)}${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row)).join('')}</section>`).join('')}`;
+  return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Reveal all shares saved details, excluding Storyteller notes and archived entries. Save any drafts first.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-share-all="${esc(id)}" type="button">Reveal all</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${summaryEditor(id)}${connectionLabels(id)}${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row,id)).join('')}</section>`).join('')}`;
  }
  const isRevealed=r=>!r.archived_at&&['players','public'].includes(r.audience);
  function dashboard(){

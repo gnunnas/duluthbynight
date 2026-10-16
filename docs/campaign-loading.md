@@ -1,6 +1,6 @@
 # Campaign loading
 
-**Latest local follow-up:** [scoped record editing](scoped-record-editing.md) removes campaign-wide reads from editor entry and ordinary saves. Complete paged data loads only for reveal review. No additional SQL is needed; deployment is pending. The earlier rollout/timeout measurements below are historical.
+**Latest loading follow-up (merged PR #34):** [scoped record editing](scoped-record-editing.md) removes campaign-wide reads from editor entry and ordinary saves. Complete paged data loads only for reveal review. No additional SQL is needed; the user reports a large editing-speed improvement after deployment. This is user-reported behavior, not an independently measured deployed timing. The earlier rollout/timeout measurements below are historical.
 
 ## Current rollout status (2026-10-15, America/Chicago)
 
