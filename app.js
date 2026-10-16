@@ -3,13 +3,21 @@ const app = document.querySelector('#app');
 const nav = document.querySelector('#nav');
 const menu = document.querySelector('#menuBtn');
 let model = createCampaignModel(D);
-let collections = model.collections;
+function alphabeticalCollections(source) {
+  const sorted = {...source};
+  for (const type of ['places', 'organizations', 'clans', 'disciplines']) {
+    sorted[type] = [...(source[type] || [])].sort((a, b) => (a.name || a.title || '').localeCompare(b.name || b.title || '', 'en', {sensitivity:'base', numeric:true}));
+  }
+  return sorted;
+}
+let collections = alphabeticalCollections(model.collections);
 const labels = { coterie:'Coterie', storyteller:'Storyteller tools', people: 'People', places: 'Places', threads: 'Active threads', organizations: 'Organizations', clans: 'Clans', schemes: 'Schemes', events: 'Events', chronicle: 'Chronicle', disciplines: 'Disciplines', powers: 'Abilities', notes: 'Imported notes' };
 const areaKinds = new Set(['City', 'Community', 'District', 'Suburb', 'Territory']);
-let state = { route: 'home', id: null, filter: 'All', query: '' };
+let state = { route: 'home', id: null, filter: 'Kindred', query: '' };
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let by = model.by;
 const name = record => record.name || record.title;
+const personType = record => /^thin[ -]?blood$/i.test(record.type || '') ? 'Thin-blood' : record.type;
 const url = (type, id) => `#${type}${id ? '/' + encodeURIComponent(id) : ''}`;
 function link(type, record) { return `<a href="${url(type, record.id)}">${escapeHTML(name(record))}</a>`; }
 function card(record, type) {
@@ -160,7 +168,11 @@ function detail(type, id) {
     }
     if (record.affiliationStatus) facts.push(['Affiliation status', escapeHTML(record.affiliationStatus)]);
   }
-  if (type === 'organizations') facts.push(['Organization type', escapeHTML(record.kind || 'Unknown')], ['Parent organization', by('organizations', record.parent) ? link('organizations', by('organizations', record.parent)) : 'Unknown']);
+  if (type === 'organizations') {
+    facts.push(['Organization type', escapeHTML(record.kind || 'Unknown')]);
+    const parent = by('organizations', record.parent);
+    if (parent) facts.push(['Parent organization', link('organizations', parent)]);
+  }
   if (type === 'places') {
     for(const [key,label] of [['place.havenFor','Haven for'],['place.floorCount','Floors'],['place.businessFloors','Business floors'],['place.parkingLevels','Parking levels'],['place.resourcesBonus','Resources'],['place.securityCoverage','Security coverage']]){
       const item=model.itemsFor(record.recordId).find(x=>x.fieldKey===key);
@@ -226,8 +238,10 @@ function listing(type) {
   if (type === 'organizations' && state.category) records = records.filter(x => x.category === state.category);
   let filters = '';
   if (type === 'people') {
-    filters = `<div class="filters" aria-label="Filter people">${['All', ...new Set(collections.people.map(x => x.type).filter(Boolean))].map(value => `<button class="chip ${state.filter === value ? 'active' : ''}" aria-pressed="${state.filter === value}" data-filter="${escapeHTML(value)}">${escapeHTML(value)}</button>`).join('')}</div>`;
-    if (state.filter !== 'All') records = records.filter(x => x.type === state.filter);
+    const types = new Set(collections.people.map(personType).filter(Boolean));
+    const filterOrder = ['Kindred', ...['Mortal', 'Ghoul'].filter(type => types.has(type)), ...[...types].filter(type => !['Kindred', 'Mortal', 'Ghoul', 'Thin-blood'].includes(type)).sort(), ...(types.has('Thin-blood') ? ['Thin-blood'] : []), 'All'];
+    filters = `<div class="filters" aria-label="Filter people">${filterOrder.map(value => `<button class="chip ${state.filter === value ? 'active' : ''}" aria-pressed="${state.filter === value}" data-filter="${escapeHTML(value)}">${escapeHTML(value)}</button>`).join('')}</div>`;
+    if (state.filter !== 'All') records = records.filter(x => personType(x) === state.filter);
   }
   return `<h1>${labels[type]}</h1>${['clans', 'organizations'].includes(type) ? '<p class="intro">Recorded connections only. Unknown roles, lineage, and organizational hierarchy remain unknown.</p>' : ''}${type === 'people' ? '<div class="filters"><a class="chip" href="#clans">Browse clans</a><a class="chip" href="#organizations?category=group">Browse groups</a><a class="chip" href="#organizations?category=political">Political affiliations</a></div>' : ''}${filters}<div class="grid three">${records.map(x => card(x, type)).join('')}</div>`;
 }
@@ -279,7 +293,7 @@ function render() {
   document.title = `${state.route==='edit' ? 'Edit campaign record' : !state.id&&state.route==='threads'&&state.view==='completed'?'Completed threads':!state.id&&state.route==='chronicle'&&state.view==='past'?'Past session recaps':state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
 }
 let navigationVersion=0;
-function applyCampaign(fresh){const next=createCampaignModel(fresh);D=fresh;window.CAMPAIGN=fresh;model=next;collections=next.collections;by=next.by;}
+function applyCampaign(fresh){const next=createCampaignModel(fresh);D=fresh;window.CAMPAIGN=fresh;model=next;collections=alphabeticalCollections(next.collections);by=next.by;}
 async function boot(focus = false) {
   const version=++navigationVersion;
   let hash = location.hash.slice(1) || 'home';

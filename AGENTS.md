@@ -77,10 +77,32 @@ Migration `20261016001200_personal_connection_labels.sql` adds a narrow SECURITY
 - Manual portrait SQL is recorded outside the published checkout at `/workspace/npc-imports/kevin-jackson/portrait.sql`; no database writes were performed. General attachment/reveal workflow is in `docs/storyteller-record-editing.md`.
 - Descriptive connection headings and these documentation updates are packaged on `descriptive-editor-connections` for the user-requested CPAP; check remote state for PR/merge status. Deployment remains unconfirmed. No additional JavaScript or SQL changes were needed for this documentation request.
 
-## Current task handoff: Storyteller reveal action help
+## Previous task handoff: Storyteller reveal action help (merged PR #36)
 
 - Branch `storyteller-reveal-help` starts from fetched remote main `cf28043` (PR #35). Connection headings are merged; Kevin portrait SQL execution/reveal remains unconfirmed.
 - Dashboard's three reveal actions now have hover/focus descriptions (`aria-describedby`, tooltip role, Escape dismissal) instead of the large permanent Reveal all paragraph. A short introduction remains. Scope is unchanged: checked names/summaries, all non-archived thread/session names/summaries, or checked full details. Filter-hidden selections remain included; every action still requires review and confirmation.
 - Files: `record-editor.js`, `styles.css`, synchronized `campaign.html` release `20261016-reveal-help`, and authoring docs. No SQL or data changes. Packaged for user-requested CPAP; deployment remains unconfirmed.
 - Verification passed: existing editor/reveal browser suite with hover, keyboard focus, Escape dismissal, unchanged bulk selection/confirmation, and mobile/desktop layout assertions. Syntax/whitespace checks passed.
 - Button labels clarify the action: **Reveal selected names + summaries**, **Reveal homepage names + summaries**, **Reveal selected details**. “Review” describes the confirmation step, not a separate read-only feature. “Checked” means dashboard checkboxes, including filter-hidden selections.
+
+## Current task handoff: omit empty organization parents
+
+- Branch `hide-empty-organization-parent` starts from fetched remote main `5a03e8d` (PR #36).
+- Organization detail pages omit the Parent organization fact when no visible parent resolves. Existing visible parents still display as links; organization type and hierarchy behavior are unchanged. No database changes or inferred parent relationships.
+- Files: `app.js`, synchronized `campaign.html` release `20261016-organization-parent`. Included in user-requested CPAP; deployment remains unconfirmed.
+- Verified in a local browser with mocked authorized rows: Anarchs has no Parent organization field; Night Forum retains its Anarchs parent link. JavaScript syntax and whitespace checks passed.
+
+## Current addition: alphabetical reference lists
+
+- On the same local `hide-empty-organization-parent` branch, Places, Organizations, Clans and Disciplines sort by displayed name with case-insensitive English/numeric collation. Sorting copies view arrays; stored ordering is not changed. Geographic groups, subgroup hierarchy, organization category filters, People sorting and Chronicle chronology are preserved.
+- Sorting applies at initial model setup and every refreshed projection, including place children and organization subgroups. Release `20261016-alphabetical-lists` supersedes `20261016-organization-parent`; includes the pending empty-parent-field change. No SQL. Both changes included in user-requested CPAP; deployment remains unconfirmed.
+- Verification passed in a local mocked browser: all four directory grids and Twig child groups sort alphabetically, with the no-parent omission/existing-parent link still correct. Syntax and whitespace checks passed.
+
+## Current addition: People filter defaults
+
+- People initially selects Kindred. Other known filters are Mortal, Ghoul, then Thin-blood, with All last. Available additional types stay before Thin-blood/All. A user's chosen filter persists within the signed-in tab as before.
+- Thin-Blood/Thin-blood/Thin Blood spellings are grouped as Thin-blood for filter selection only, so Nora, Tom and Jessica do not split into duplicate filter options. No saved classifications, audiences or database rows are changed.
+- Same local branch includes parent omission and alphabetical reference lists. Release `20261016-people-filters`; no SQL. Included in user-requested CPAP; deployment remains unconfirmed.
+- Verification passed: local People filter check (Kindred default, All last, both Thin-blood spellings included, tab-local chosen selection), summary/browser-card suite and death-marker/browser suite. Existing card tests explicitly select All when testing unclassified fixtures. Syntax and whitespace checks passed.
+
+Final release for these three display changes: `20261016-people-filters`. Earlier intermediate release names are historical. Branch `hide-empty-organization-parent` packages all three changes; check remote state for PR/merge status. No SQL migration or live data update is required.
