@@ -33,6 +33,10 @@ Completed threads remain readable without database archiving. Chronicle links to
 
 Person detail pages have a Storyteller-only **Reveal character basics** action that reviews the name, recorded memberships and roles, death status, artwork, nature/type and clan. It waits for complete dependencies and uses the existing atomic reveal confirmation. Missing information stays absent; other lore and protected notes remain outside the selected scope. See [scope, safeguards and deployment](storyteller-record-editing.md). Website deployment is required; no new migration.
 
+## Implemented: organization type editing
+
+The organization editor has a plain-text Organization type field for custom labels and missing type fields. It reuses `organization.kind`, preserves visibility/audit/revisions, and reviews shared edits. Apply migration 015, then deploy the website; installation/deployment are unconfirmed. See [organization type editing](organization-type-editing.md). Browse categories and memberships are unchanged.
+
 ## Planned: membership role editing
 
 - Add a simple Role field beside each person’s organization membership in Storyteller tools, such as Leader for An Tran’s Circle of Mercy membership.

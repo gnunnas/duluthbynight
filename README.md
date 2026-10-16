@@ -121,3 +121,5 @@ A dedicated **Summary** field now supports creating, editing and clearing record
 Every person now has automatic empty shared Player notes infrastructure after applying [migration 014](supabase/migrations/20261016001400_person_player_notes.sql), which also backfills missing panels without overwriting existing notes. See [installation, import rules and verification](docs/person-player-notes.md). No website deployment is required for this database-only change.
 
 Person pages have a Storyteller-only **Reveal character basics** button for sharing the name, memberships/roles, death status, artwork, nature and clan after review. See [reveal scope and usage](docs/storyteller-record-editing.md). Deploy the website assets; this button needs no SQL migration.
+
+Organization types such as Coterie, Band or Sect can be typed directly near the top of the organization editor. Apply [migration 015](supabase/migrations/20261016001500_organization_type_editor.sql) before deployment; see [type editing and visibility](docs/organization-type-editing.md).

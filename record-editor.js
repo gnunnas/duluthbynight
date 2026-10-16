@@ -29,6 +29,7 @@
   }
   if(table==='content_items'&&row.field_key==='overview')return 'Summary';
   if(table==='content_items'&&row.field_key==='person.nature')return 'Nature / type';
+  if(table==='content_items'&&row.field_key==='organization.kind')return 'Organization type';
   if(table==='content_items'&&row.field_key==='relationship.details'){
    const rel=get('relationships',row.subject_relationship_id),other=rel&&(rel.from_record_id===row.record_id?rel.to_record_id:rel.from_record_id);
    return 'Connection label for '+(record(other)?.display_name||'person');
@@ -100,6 +101,11 @@
   const item=(rows().content_items||[]).find(x=>x.record_id===id&&x.field_key==='overview'&&!x.archived_at);
   return `<section class="editor-section"><h2>Summary</h2><form class="npc-panel summary-editor" data-summary-editor="${esc(id)}" data-item="${esc(item?.id||'')}" data-revision="${item?.revision||0}"><label>Summary<textarea name="body" rows="4" placeholder="A short introduction for this entry">${esc(item?.body||'')}</textarea></label><p>${item?.audience&&item.audience!=='storyteller'?'This summary is shared. Changes require review before saving.':'New summaries stay Storyteller-only. Use the saved Summary field below to reveal it when ready.'}</p><button class="chip" type="submit">${item?.audience&&item.audience!=='storyteller'?'Review and save summary':'Save summary'}</button><p role="status" aria-live="polite"></p></form></section>`;
  }
+ function organizationTypeEditor(id){
+  if(record(id)?.record_type!=='organization')return '';
+  const item=(rows().content_items||[]).find(x=>x.record_id===id&&x.field_key==='organization.kind'&&!x.archived_at);
+  return `<section class="editor-section"><h2>Organization type</h2><form class="npc-panel summary-editor" data-organization-type="${esc(id)}" data-item="${esc(item?.id||'')}" data-revision="${item?.revision||0}"><label>Organization type<input type="text" name="organizationType" value="${esc(typeof item?.value==='string'?item.value:'')}" placeholder="Coterie, Band, Sect…"></label><p>${item?.audience&&item.audience!=='storyteller'?'This type is shared. Changes require review before saving.':'New types stay Storyteller-only. Reveal the saved Organization type field below when ready.'}</p><button class="chip" type="submit">${item?.audience&&item.audience!=='storyteller'?'Review and save type':'Save type'}</button><p role="status" aria-live="polite"></p></form></section>`;
+ }
  function connectionLabels(id){
   if(record(id)?.record_type!=='person')return '';
   const associations=(rows().relationships||[]).filter(x=>x.relationship_type==='associated_with'&&!x.archived_at&&[x.from_record_id,x.to_record_id].includes(id)&&[x.from_record_id,x.to_record_id].every(key=>record(key)?.record_type==='person'&&!record(key).archived_at));
@@ -112,7 +118,7 @@
  function render(id){
   if(!root.campaignSession?.isStoryteller)return '<h1>Storyteller access required</h1><a href="#home">Return to Tonight</a>';
   renderedRows.clear();const r=record(id);if(!r)return '<h1>Record not found</h1><a href="#storyteller">Storyteller tools</a>';
-  return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Reveal all shares saved details, excluding Storyteller notes and archived entries. Save any drafts first.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-share-all="${esc(id)}" type="button">Reveal all</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${summaryEditor(id)}${connectionLabels(id)}${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row,id)).join('')}</section>`).join('')}`;
+  return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Reveal all shares saved details, excluding Storyteller notes and archived entries. Save any drafts first.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-share-all="${esc(id)}" type="button">Reveal all</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${organizationTypeEditor(id)}${summaryEditor(id)}${connectionLabels(id)}${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row,id)).join('')}</section>`).join('')}`;
  }
  const isRevealed=r=>!r.archived_at&&['players','public'].includes(r.audience);
  function revealAction(attribute,text,help){
@@ -222,6 +228,18 @@
     await review([{table:'content_items',id:item.id}],[{table:'content_items',id:item.id,revision,patch:{body,knowledge_state:body?'recorded':'unrecorded'}}]);message.textContent='Review the reveal before saving.';return;
    }
    await root.campaignSession.saveSummary(form.dataset.summaryEditor,revision,body);committed=true;await root.refreshCampaignViews();document.querySelector('#editorMessage').textContent='Summary saved.';
+  }catch(error){message.textContent=(committed?'Saved, but reload failed. Reload saved entries before editing again. ':'')+error.message;}finally{button.disabled=false;}
+ });
+ document.addEventListener('submit',async event=>{
+  const form=event.target.closest('form[data-organization-type]');if(!form)return;event.preventDefault();const button=form.querySelector('button'),message=form.querySelector('[role="status"]');if(button.disabled)return;
+  button.disabled=true;message.textContent='Saving…';let committed=false;
+  try{
+   const type=form.elements.organizationType.value.trim(),item=get('content_items',form.dataset.item),revision=Number(form.dataset.revision);
+   if((item?.value||'')===type){message.textContent='No changes to save.';return;}
+   if(item&&item.audience!=='storyteller'){
+    await review([{table:'content_items',id:item.id}],[{table:'content_items',id:item.id,revision,patch:{value:type||null,knowledge_state:type?'recorded':'unrecorded'}}]);message.textContent='Review the reveal before saving.';return;
+   }
+   await root.campaignSession.saveOrganizationType(form.dataset.organizationType,revision,type);committed=true;await root.refreshCampaignViews();document.querySelector('#editorMessage').textContent='Organization type saved.';
   }catch(error){message.textContent=(committed?'Saved, but reload failed. Reload saved entries before editing again. ':'')+error.message;}finally{button.disabled=false;}
  });
  document.addEventListener('submit',async event=>{

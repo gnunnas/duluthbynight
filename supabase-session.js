@@ -102,6 +102,12 @@
    if(!response.ok){let detail;try{detail=await response.json();}catch{}const error=Error(detail?.code==='40001'?'Another edit was saved first. Your draft is retained; copy it before reloading.':detail?.code==='PGRST202'?'Apply migration 013 for summary editing before saving.':detail?.message||'Could not save this summary.');error.code=detail?.code;throw error;}
    return response.json();
   };
+  window.campaignSession.saveOrganizationType=async(recordId,revision,type)=>{
+   if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access required.');
+   const response=await fetch(config.url+'/rest/v1/rpc/save_organization_type',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_record:recordId,p_revision:revision,p_type:type}),cache:'no-store'});
+   if(!response.ok){let detail;try{detail=await response.json();}catch{}const error=Error(detail?.code==='PT409'?'Another edit was saved first. Your draft is retained; copy it before reloading.':detail?.code==='PGRST202'?'Apply migration 015 for organization type editing before saving.':detail?.message||'Could not save this organization type.');error.code=detail?.code;throw error;}
+   return response.json();
+  };
   window.campaignSession.saveConnectionLabel=async(recordId,relationshipId,revision,label)=>{
    if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access required.');
    const response=await fetch(config.url+'/rest/v1/rpc/save_personal_connection_label',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_record:recordId,p_relationship:relationshipId,p_revision:revision,p_label:label}),cache:'no-store'});

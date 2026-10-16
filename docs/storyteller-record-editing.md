@@ -8,6 +8,10 @@ To link text, choose a campaign record under **Add a link to this field** and pr
 
 Collapsed **Connections** entries show the relationship and the other record, such as **Clan — Ventrue**, **Affiliated with — Camarilla**, or **Childe of — Horatio Ballard**. Direction follows the record being edited. The visibility badge remains beside the label, and the form still builds only when expanded. Reveal previews identify both endpoints. These headings do not create, edit or share relationship data.
 
+## Organization types
+
+Organization editors have a plain-text **Organization type** field near the top. Type any descriptive label, such as Coterie, Band or Sect; existing values are prefilled and missing fields can be created. New values remain private, and already shared values use reveal review. Apply migration 015 before deploying this feature. See [storage, privacy and usage](organization-type-editing.md). This does not change the organization’s browse category or memberships.
+
 ## Portrait artwork
 
 Portraits use `attachments` rows with `attachment_kind = portrait`, the person’s `record_id`, a null `item_id`, a `legacy_path` to the uploaded asset and descriptive `alt_text`. Uploading a file to GitHub’s `assets/` directory does not create its database attachment automatically. Check the existing record and attachments before preparing manual SQL; reuse an existing portrait instead of creating duplicates.

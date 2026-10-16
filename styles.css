@@ -81,6 +81,6 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 .dead-person-name{position:relative;display:inline-block;max-width:100%;overflow-wrap:anywhere}
 .death-name-cross{position:absolute;inset:0;width:100%;height:100%;fill:#df4b55;opacity:.38;pointer-events:none;user-select:none}
 
-.summary-editor{display:grid;gap:12px}.summary-editor label{display:grid;gap:6px}.summary-editor textarea{width:100%;min-width:0;resize:vertical;padding:10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);font:inherit}.summary-editor button{justify-self:start}
+.summary-editor{display:grid;gap:12px}.summary-editor label{display:grid;gap:6px}.summary-editor textarea,.summary-editor input[type=text]{width:100%;min-width:0;resize:vertical;padding:10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);font:inherit}.summary-editor button{justify-self:start}
 
 .reveal-actions{display:flex;flex-wrap:wrap;gap:.6rem}.reveal-action{position:relative;display:inline-block;max-width:100%}.reveal-help{position:absolute;top:100%;left:0;z-index:10;box-sizing:border-box;width:min(22rem,calc(100vw - 6rem));padding:.85rem;background:#172126;color:var(--text,#eee);border:1px solid #71818c;box-shadow:0 5px 16px #0009;font-size:.9rem;line-height:1.5;visibility:hidden;opacity:0}.reveal-action:not([data-help-dismissed]):is(:hover,:focus-within) .reveal-help{visibility:visible;opacity:1}
