@@ -40,3 +40,5 @@ node tests/supabase-browser.cjs
 ```
 
 The Supabase browser suite currently expects a local static server on port 8007 and system Chromium. It tests mocked Storyteller, empty player, and revealed player responses, selected-power popups, notes, sign-out, layout, and absence of public-data script requests. `tests/browser.cjs` retains its existing comprehensive public-snapshot checks using a test-only HTML response. Production never loads that snapshot.
+
+Organization directory cards omit the summary paragraph when no summary is recorded; they no longer show “View recorded connections.” Existing summaries and links remain visible. This display change needs website deployment only.
