@@ -80,6 +80,12 @@
    if(!response.ok){let detail;try{detail=await response.json();}catch{}const error=Error(['40001','PT409'].includes(detail?.code)?'Another edit was saved first. Reload the latest version; your draft has not been saved.':detail?.code==='PGRST202'?'Apply the new Storyteller editing migration before saving.':'Could not save: '+(detail?.message||'check your connection and permissions.'));error.code=detail?.code;throw error;}
    await response.json();
   };
+  window.campaignSession.saveSummary=async(recordId,revision,body)=>{
+   if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access required.');
+   const response=await fetch(config.url+'/rest/v1/rpc/save_record_summary',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_record:recordId,p_revision:revision,p_body:body}),cache:'no-store'});
+   if(!response.ok){let detail;try{detail=await response.json();}catch{}const error=Error(detail?.code==='40001'?'Another edit was saved first. Your draft is retained; copy it before reloading.':detail?.code==='PGRST202'?'Apply migration 013 for summary editing before saving.':detail?.message||'Could not save this summary.');error.code=detail?.code;throw error;}
+   return response.json();
+  };
   window.campaignSession.saveConnectionLabel=async(recordId,relationshipId,revision,label)=>{
    if(!session||!window.campaignSession.isStoryteller)throw Error('Storyteller access required.');
    const response=await fetch(config.url+'/rest/v1/rpc/save_personal_connection_label',{method:'POST',headers:headers(),body:JSON.stringify({p_campaign:config.campaignId,p_record:recordId,p_relationship:relationshipId,p_revision:revision,p_label:label}),cache:'no-store'});
