@@ -32,6 +32,13 @@ Completed threads remain readable without database archiving. Chronicle links to
 - Allow adding, editing and clearing a role without SQL, including memberships that do not yet have a role entry.
 - Reuse the existing relationship.role storage, audit history and reveal permissions. Keep the role attached to the specific membership connection.
 
+## Personal connection labels
+
+- Apply migration 012 to enable saving descriptive labels for existing person-to-person associations from **Edit record & reveals → Personal connection labels**.
+- Labels describe the connection from the person being edited. They do not automatically appear on the other person's profile, change the connection type, or infer facts from imported prose.
+- New labels are Storyteller-only. Reveal the saved `relationship.details` field through the existing reveal review when desired. Editing an already shared label also requires that review.
+- Clearing a label restores “Associate”; explicit sire/employer connection types retain their structural labels. Saves preserve audit history and reject stale revisions.
+
 ## Planned: NPC discipline ability picker
 
 - After ability descriptions are imported, add a Storyteller dropdown and Add ability button beneath each NPC discipline, similar to the Coterie entry controls.

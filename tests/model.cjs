@@ -145,3 +145,12 @@ test('old route aliases preserve query parameters and category defaults',()=>{
  assert.equal(model.resolveRoute('groups?q=night'),'organizations?q=night&category=group');
  assert.equal(model.resolveRoute('factions?category=group'),'organizations?category=political');
 });
+
+test('personal connection labels apply only from their authoring person’s side',()=>{
+ const fixture=clone(),rel=fixture.relationships.find(r=>r.relationshipType==='associated_with');
+ const section=fixture.sections.find(s=>s.recordId===rel.fromRecordId);
+ const previous=fixture.items.find(x=>x.recordId===rel.fromRecordId&&x.subjectRef?.id===rel.id&&x.fieldKey==='relationship.details');if(previous)previous.value='Trusted adviser';else fixture.items.push({id:'test:connection-label',recordId:rel.fromRecordId,sectionId:section.id,itemKind:'fact',fieldKey:'relationship.details',knowledgeState:'recorded',value:'Trusted adviser',subjectRef:{kind:'relationship',id:rel.id}});
+ const labeled=createCampaignModel(fixture);
+ assert.equal(labeled.personalRelationships(rel.fromRecordId).find(r=>r.from===labeled.byId(rel.fromRecordId).id&&r.to===labeled.byId(rel.toRecordId).id).label,'Trusted adviser');
+ assert.notEqual(labeled.personalRelationships(rel.toRecordId).find(r=>r.from===labeled.byId(rel.fromRecordId).id&&r.to===labeled.byId(rel.toRecordId).id).label,'Trusted adviser');
+});

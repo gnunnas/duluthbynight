@@ -20,7 +20,13 @@
  const record=id=>get('records',id);
  const choices=()=>[...(rows().records||[])].sort((a,b)=>a.display_name.localeCompare(b.display_name));
  const recordLabel=r=>r.display_name+' · '+r.record_type+' ('+r.route_key+')';
- const label=(table,row)=>row.title||row.heading||row.display_name||row.text||row.label||(row.field_key?row.field_key.split('.').at(-1).replace(/([a-z])([A-Z])/g,'$1 $2'):null)||(row.body?row.body.slice(0,90):null)||tableLabels[table];
+ const label=(table,row)=>{
+  if(table==='content_items'&&row.field_key==='relationship.details'){
+   const rel=get('relationships',row.subject_relationship_id),other=rel&&(rel.from_record_id===row.record_id?rel.to_record_id:rel.from_record_id);
+   return 'Connection label for '+(record(other)?.display_name||'person');
+  }
+  return row.title||row.heading||row.display_name||row.text||row.label||(row.field_key?row.field_key.split('.').at(-1).replace(/([a-z])([A-Z])/g,'$1 $2'):null)||(row.body?row.body.slice(0,90):null)||tableLabels[table];
+ };
  const jsonFields=new Set(['valid_from','valid_until','death_date','eligible_connection_types']);
  const isRecordRef=k=>k.endsWith('_record_id')||['place_id','source_organization_id','target_organization_id'].includes(k);
  function options(table){return (rows()[table]||[]).map(x=>[key(x),label(table,x)]);}
@@ -67,10 +73,19 @@
  }
  function recordLink(id){return `<p class="storyteller-actions"><a class="chip" href="#edit/${encodeURIComponent(id)}">Edit record &amp; reveals</a></p>`;}
  function picker(){return `<datalist id="campaign-record-picker">${choices().map(r=>`<option value="${esc(recordLabel(r))}"></option>`).join('')}</datalist>`;}
+ function connectionLabels(id){
+  if(record(id)?.record_type!=='person')return '';
+  const associations=(rows().relationships||[]).filter(x=>x.relationship_type==='associated_with'&&!x.archived_at&&[x.from_record_id,x.to_record_id].includes(id)&&[x.from_record_id,x.to_record_id].every(key=>record(key)?.record_type==='person'&&!record(key).archived_at));
+  if(!associations.length)return '';
+  return `<section class="editor-section"><h2>Personal connection labels</h2><p>Describe each connection from ${esc(record(id).display_name)}’s side. New labels are Storyteller-only; reveal the saved field below to share it. Clear a label to show “Associate”.</p>${associations.map(rel=>{
+   const other=record(rel.from_record_id===id?rel.to_record_id:rel.from_record_id),item=(rows().content_items||[]).find(x=>x.record_id===id&&x.subject_relationship_id===rel.id&&x.field_key==='relationship.details'&&!x.archived_at);
+   return `<form class="npc-panel connection-label-form" data-connection-label="${esc(rel.id)}" data-person="${esc(id)}" data-item="${esc(item?.id||'')}" data-revision="${item?.revision||0}"><label>Label for ${esc(other.display_name)}<input name="label" maxlength="500" value="${esc(item?.value||'')}" placeholder="Describe this connection"></label><button class="chip" type="submit">${item?.audience&&item.audience!=='storyteller'?'Review and save label':'Save label'}</button><p role="status" aria-live="polite"></p></form>`;
+  }).join('')}</section>`;
+ }
  function render(id){
   if(!root.campaignSession?.isStoryteller)return '<h1>Storyteller access required</h1><a href="#home">Return to Tonight</a>';
   const r=record(id);if(!r)return '<h1>Record not found</h1><a href="#storyteller">Storyteller tools</a>';
-  return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Reveal all shares saved details, excluding Storyteller notes and archived entries. Save any drafts first.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-share-all="${esc(id)}" type="button">Reveal all</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row)).join('')}</section>`).join('')}`;
+  return `<a class="back" href="#storyteller">← Storyteller tools</a><h1>Edit ${esc(r.display_name)}</h1><p class="intro">Save individual entries, or select entries and review a player reveal. IDs and existing bookmarks stay stable. Reveal all shares saved details, excluding Storyteller notes and archived entries. Save any drafts first.</p>${picker()}<div class="reveal-toolbar"><button class="chip" data-review-share type="button">Review selected reveals</button><button class="chip" data-share-overview="${esc(id)}" type="button">Share name + overview</button><button class="chip" data-share-all="${esc(id)}" type="button">Reveal all</button><button class="chip" data-editor-reload type="button">Reload saved entries</button></div><p id="editorMessage" role="status" aria-live="polite"></p>${connectionLabels(id)}${Object.entries(ownedRows(id)).filter(([,values])=>values.length).map(([table,values])=>`<section class="editor-section"><h2>${tableLabels[table]}</h2>${values.map(row=>rowForm(table,row)).join('')}</section>`).join('')}`;
  }
  const isRevealed=r=>!r.archived_at&&['players','public'].includes(r.audience);
  function dashboard(){
@@ -134,6 +149,18 @@
   if(!dialog.open)dialog.showModal();dialog.querySelector('[data-confirm-reveal]').focus();
  }
  function resolveRecord(text){if(!text.trim())return null;const found=choices().find(r=>recordLabel(r)===text);if(!found)throw Error('Choose a campaign record from the search suggestions.');return found.id;}
+ document.addEventListener('submit',async event=>{
+  const form=event.target.closest('form[data-connection-label]');if(!form)return;event.preventDefault();const button=form.querySelector('button'),message=form.querySelector('[role="status"]');if(button.disabled)return;
+  button.disabled=true;message.textContent='Saving…';let committed=false;
+  try{
+   const value=form.elements.label.value.trim()||null,item=get('content_items',form.dataset.item),revision=Number(form.dataset.revision);
+   if((item?.value||null)===value){message.textContent='No changes to save.';return;}
+   if(item&&item.audience!=='storyteller'){
+    review([{table:'content_items',id:item.id}],[{table:'content_items',id:item.id,revision,patch:{value,knowledge_state:value?'recorded':'unrecorded'}}]);message.textContent='Review the reveal before saving.';return;
+   }
+   await root.campaignSession.saveConnectionLabel(form.dataset.person,form.dataset.connectionLabel,revision,value);committed=true;await root.refreshCampaignViews();document.querySelector('#editorMessage').textContent='Connection label saved.';
+  }catch(error){message.textContent=(committed?'Saved, but reload failed. Reload saved entries before editing again. ':'')+error.message;}finally{button.disabled=false;}
+ });
  document.addEventListener('submit',async event=>{
   const form=event.target.closest('form[data-edit-table]');if(!form)return;event.preventDefault();const button=form.querySelector('button'),message=form.querySelector('[role="status"]');if(button.disabled)return;
   button.disabled=true;message.textContent='Saving…';let committed=false;

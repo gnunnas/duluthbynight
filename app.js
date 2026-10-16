@@ -86,7 +86,7 @@ function flexibleSections(record, mechanicOnly = false) {
       return panel(section.heading,content+(editable?`<details class="note-editor"><summary>Edit notes</summary><form data-note-id="${escapeHTML(entry.id)}"><label>Notes<textarea name="body" rows="6">${escapeHTML(entry.body||'')}</textarea></label><button type="submit">Save notes</button><p role="status" aria-live="polite"></p></form></details>`:''),'author-notes');
     }
     if(section.templateKey==='source-text')return panel(section.heading,`<div class="source-text">${escapeHTML(items.find(x=>x.sectionId===section.id)?.body||'')}</div>`);
-    const entries = items.filter(x => x.sectionId === section.id && x.fieldKey !== 'relationship.role' && (x.body || x.title || x.itemKind === 'mechanic'));
+    const entries = items.filter(x => x.sectionId === section.id && !['relationship.role','relationship.details'].includes(x.fieldKey) && (x.body || x.title || x.itemKind === 'mechanic'));
     if (!entries.length) return '';
     const isMechanic = entries.every(x => x.itemKind === 'mechanic');
     if (record.recordType === 'person' && isMechanic !== mechanicOnly) return '';
@@ -117,10 +117,10 @@ function personSections(record) {
   if (record.affiliations.length) connectionBoxes.push(panel('Political affiliations', membershipFacts(record.affiliations)));
   const relationships = model.personalRelationships(record.recordId);
   const covered = new Set(model.itemsFor(record.recordId).filter(x => x.titleRecordId).map(x => x.titleRecordId));
-  const additional = relationships.filter(x => !covered.has(by('people', x.from === record.id ? x.to : x.from)?.recordId));
+  const additional = relationships.filter(x => x.kind==='association'&&x.label || !covered.has(by('people', x.from === record.id ? x.to : x.from)?.recordId));
   if (additional.length) connectionBoxes.push(panel('Personal connections', `<ul class="note-list">${additional.map(x => {
     const target = by('people', x.from === record.id ? x.to : x.from);
-    return `<li>${target ? link('people', target) : 'Unknown'} — ${escapeHTML(x.label || 'Association; specific relationship unknown')}</li>`;
+    return `<li>${target ? link('people', target) : 'Unknown'} — ${escapeHTML(x.label || 'Associate')}</li>`;
   }).join('')}</ul>`));
   if (record.places.length && !model.sectionsFor(record.recordId).some(x => x.templateKey === 'domain-and-haven')) connectionBoxes.push(panel('Associated places', `<ul class="record-links">${record.places.map(id => `<li>${link('places', by('places', id))}</li>`).join('')}</ul>`));
   return `${flexibleSections(record, true)}<div class="npc-sections">${connectionBoxes.join('')}${flexibleSections(record)}</div>`;
