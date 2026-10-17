@@ -16,11 +16,13 @@ Completed threads remain readable without database archiving. Chronicle links to
 
 - Check live records and aliases before each import. Reuse existing identities and fill out placeholders rather than creating duplicate people.
 - Before creating a new record, ask what to load it as unless its type/nature is explicit or obvious from the supplied context (for example, someone under Kindred Relationships) or already established in an existing record.
+- Ask only one actual clarification question at a time. When appropriate, offer a short set of mutually exclusive answers with the recommended choice first, clearly marked **Recommended**, plus a concise reason or tradeoff for each. Treat the recommendation as guidance rather than an assumed answer, and allow an exact or different answer when the supplied choices do not fit.
 - Do not infer Mortal, Ghoul, or Kindred from an occupation or a Thralls and Tools heading alone. Ask about unclear wording and conflicting facts; do not invent data.
 - New people default to **For Real Dead? → No**, unless the user/source explicitly supplies another death status. Existing death statuses are retained when filling out a record.
 - New NPC content remains Storyteller-only unless the user explicitly requests sharing. Keep private import artifacts outside the published website checkout.
 - Every person, including placeholders, gets an empty shared Player notes panel. Migration 014 backfills missing panels and provisions future people at transaction end. Keep lore private, preserve existing player text, and reuse existing note rows when filling placeholders. See [Player notes provisioning](person-player-notes.md).
 - When supplied facts give a personal association a clear description, store a concise person-scoped `relationship.details` label using only those facts. Do not infer a reciprocal label or feelings. Unspecified associations remain “Associate”. See [connection labels](personal-connection-labels.md).
+- End every manual NPC import SQL file with a final `SELECT` that returns a short, human-readable success message after `COMMIT`. This gives the Supabase SQL Editor a visible confirmation row instead of only “Success. No rows returned.” The import must remain repeat-safe; the message confirms execution, not that new rows were necessarily inserted on a rerun.
 
 ## Record summary editing
 
