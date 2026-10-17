@@ -31,10 +31,12 @@ Read `README.md`, `docs/roadmap.md`, `docs/supabase-website.md`, and `docs/campa
 
 ## User conventions
 
-- Ask one actual clarification question at a time; do not bundle multiple questions into one prompt.
+- Ask one actual clarification question at a time; do not bundle multiple questions into one prompt. When a decision has a small set of sensible answers, present mutually exclusive choices, put the recommended choice first and label it **Recommended**, and give a short reason or tradeoff for each choice. Recommendations are guidance, not permission to assume an answer; leave room for the user to supply an exact value or different answer.
 - **CPAP** means commit, push, and provide the pull-request link. It does not mean merge automatically.
 - Follow the NPC import rules in `docs/roadmap.md`: reuse identities, ask about unclear classifications/text, invent no facts, default new people to permanent death No, and keep new imports Storyteller-only unless explicitly shared.
 - Private NPC artifacts and credentials stay outside the published checkout. Never commit a live database export.
+- End manual NPC import SQL with a short success-message `SELECT` after `COMMIT`, so the Supabase SQL Editor displays a clear result row. Keep imports repeat-safe and do not treat that message alone as live-data verification.
+- Cloud live-read troubleshooting: this workspace routes outbound HTTPS through `HTTP_PROXY` / `HTTPS_PROXY`. Node 24's built-in `fetch` does not use those variables unless launched with `node --use-env-proxy` (or `NODE_USE_ENV_PROXY=1`). A bare Node request can therefore fail with `getaddrinfo EAI_AGAIN` even while Supabase is healthy. Confirm with `curl`, which uses the proxy automatically, then retry the authenticated read with Node proxy support before falling back to an older snapshot. Never print tokens or credential values.
 
 ## Personal connection label editing
 

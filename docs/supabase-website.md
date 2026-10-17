@@ -32,6 +32,25 @@ Local browser tests mock the Supabase HTTP responses. The local database suite t
 
 Do not share account passwords or token values in chat. Report errors and the step where they occurred.
 
+### Cloud reader connectivity
+
+The Codex cloud workspace may provide outbound access through `HTTP_PROXY` and `HTTPS_PROXY` while its container resolver cannot resolve public hosts directly. In Node 24, a plain built-in `fetch` does not automatically use those proxy variables and may report `getaddrinfo EAI_AGAIN` for the Supabase hostname even though the project is reachable.
+
+First test the route without credentials:
+
+```sh
+curl --silent --show-error --output /dev/null --write-out 'HTTP %{http_code}\n' \
+  https://xrkvbbmilgdubbwuffhu.supabase.co/auth/v1/health
+```
+
+An HTTP response, including the expected `401` when no API key is supplied, proves the proxy reached Supabase. Run Node-based read-only diagnostics with proxy support enabled:
+
+```sh
+node --use-env-proxy path/to/read-only-check.cjs
+```
+
+`NODE_USE_ENV_PROXY=1` is the equivalent environment setting. Check only whether required credential variables are present, never print their values, access tokens, or response headers containing authorization. Do not mistake the unproxied Node DNS failure for a Supabase outage, bad credentials, or missing records, and do not use an older campaign snapshot until the proxied live read has also failed.
+
 ## Development checks
 
 ```sh
