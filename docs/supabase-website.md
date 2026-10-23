@@ -20,6 +20,8 @@ When an authorized **For Real Dead?** status is Yes, People links have a blood-r
 
 Artwork still uses legacy GitHub-hosted paths. Protected Supabase Storage delivery and upload are not implemented in this change. Old published campaign JavaScript, SQL import snapshots, images, and Git history remain accessible according to repository/hosting access. Do not place new private material in those files; write it only to Supabase with the intended audience policies.
 
+Generated campaign and Storyteller-editor markup is sanitized with the locally vendored DOMPurify release before insertion into the live page. Existing contextual escaping remains in place. This prevents executable elements, event-handler attributes, and unsafe URL schemes from becoming active if a template misses an escape. See [campaign HTML sanitization](html-sanitization.md).
+
 ## Verify against your actual project
 
 Local browser tests mock the Supabase HTTP responses. The local database suite tests actual PostgreSQL RLS with Supabase Auth/Storage stubs. Neither replaces this real-project check:
