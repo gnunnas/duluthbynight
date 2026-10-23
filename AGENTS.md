@@ -6,6 +6,7 @@
 - Generated campaign pages, search results, ability dialogs, lazy Storyteller forms, and reveal dialogs now pass through `renderCampaignHTML`, backed by locally vendored DOMPurify 3.4.17. Individual contextual escaping remains in place.
 - Website release `20261023-html-sanitizer`; no SQL or campaign-data changes. Deploy `campaign.html`, `app.js`, `record-editor.js`, `campaign-sanitizer.js`, and `vendor/` together.
 - Dedicated browser coverage is `tests/html-sanitizer-browser.cjs`; it verifies scripts, event handlers, and `javascript:` URLs are removed while forms, data/ARIA attributes, and SVG survive. See `docs/html-sanitization.md`.
+- CPAP: implementation commit `8d286e5` was pushed to `origin/fix-client-side-xss`. GitHub GraphQL PR creation returned `Forbidden`; no PR was created by that call. Manual creation link: https://github.com/gnunnas/duluthbynight/pull/new/fix-client-side-xss . Do not merge automatically; deployment and the follow-up CodeQL scan remain unconfirmed.
 
 Read `README.md`, `docs/roadmap.md`, `docs/supabase-website.md`, and `docs/campaign-loading.md` before changing campaign loading or authoring workflows. Earlier Phase 1/static-snapshot reports are historical; the production campaign uses Supabase Auth and RLS.
 
