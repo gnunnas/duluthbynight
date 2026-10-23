@@ -21,3 +21,15 @@ CAMPAIGN_TEST_URL=http://127.0.0.1:8028 node tests/supabase-browser.cjs
 The dedicated test supplies scripts, an event handler, and a `javascript:` URL to the rendering boundary and confirms they cannot execute. It also confirms the sanitizer retains the controls and SVG used by ordinary pages.
 
 Deployment requires the updated `campaign.html`, `app.js`, `record-editor.js`, `campaign-sanitizer.js`, and both vendored DOMPurify files. It requires no SQL migration and changes no campaign data or reveal permissions.
+
+## Current handoff
+
+- Branch: `fix-client-side-xss`
+- Implementation commit: `8d286e5` (`Sanitize authenticated campaign HTML`)
+- Initial documentation commit: `4bc7868` (`Document XSS remediation handoff`)
+- Release marker: `20261023-html-sanitizer`
+- Pull request: not created automatically because GitHub rejected the GraphQL request; use <https://github.com/gnunnas/duluthbynight/pull/new/fix-client-side-xss>
+- Deployment: not completed
+- CodeQL confirmation: pending a scan of the merged `main` branch
+
+Do not dismiss the GitHub alert merely because the local browser test passes. Merge and deploy the complete asset set, then let CodeQL rescan `main`; investigate any remaining path it reports before dismissing the alert.
