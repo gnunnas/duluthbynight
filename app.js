@@ -288,7 +288,7 @@ function render() {
     item.classList.toggle('active', active);
     if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
   }
-  app.innerHTML = state.route==='coterie'&&!state.id ? Coterie.render(D,model) : state.route==='edit' ? CampaignEditor.render(state.id) : state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : state.route === 'storyteller' ? storytellerTools() : collections[state.route] ? listing(state.route) : missing();
+  renderCampaignHTML(app, state.route==='coterie'&&!state.id ? Coterie.render(D,model) : state.route==='edit' ? CampaignEditor.render(state.id) : state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : state.route === 'storyteller' ? storytellerTools() : collections[state.route] ? listing(state.route) : missing());
   markDeadCharacterLinks();
   document.title = `${state.route==='edit' ? 'Edit campaign record' : !state.id&&state.route==='threads'&&state.view==='completed'?'Completed threads':!state.id&&state.route==='chronicle'&&state.view==='past'?'Past session recaps':state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
 }
@@ -307,14 +307,14 @@ async function boot(focus = false) {
   state = { ...state, route: parts.length > 2 ? '__invalid__' : parts[0], id, query: new URLSearchParams(query).get('q') || '', category: new URLSearchParams(query).get('category') || null, view:new URLSearchParams(query).get('view')||null };
   closeMenu();
   if(window.campaignSession?.ensureRoute){
-    app.innerHTML='<p role="status">Loading…</p>';
+    renderCampaignHTML(app,'<p role="status">Loading…</p>');
     try{
       let fresh=await window.campaignSession.ensureRoute(state.route,state.id);
       if(version!==navigationVersion||!window.campaignAccess)return;
       if(validateCampaign(fresh).length)fresh=await window.campaignSession.reloadCampaign();
       if(version!==navigationVersion||!window.campaignAccess)return;
       applyCampaign(fresh);
-    }catch(error){if(version===navigationVersion&&window.campaignAccess)app.innerHTML=`<h1>Could not load this page</h1><p role="alert">${escapeHTML(error.message)}</p><button class="chip" data-retry-page>Try again</button>`;return;}
+    }catch(error){if(version===navigationVersion&&window.campaignAccess)renderCampaignHTML(app,`<h1>Could not load this page</h1><p role="alert">${escapeHTML(error.message)}</p><button class="chip" data-retry-page>Try again</button>`);return;}
   }
   state.searchMatches=null;state.searching=false;state.searchError='';render();
   if(state.route==='search'&&state.query)runSearch(0);
@@ -344,14 +344,14 @@ app.addEventListener('click',async event=>{
   event.preventDefault();abilityTrigger=trigger;
   const version=++abilityLoadVersion;
   if(window.campaignSession?.loadRecord){
-    abilityDialog.innerHTML='<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="status">Loading ability…</p>';
+    renderCampaignHTML(abilityDialog,'<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="status">Loading ability…</p>');
     abilityDialog.removeAttribute('aria-labelledby');abilityDialog.showModal();document.body.classList.add('ability-open');
     try{const fresh=await window.campaignSession.loadRecord(power.recordId);if(!abilityDialog.open||version!==abilityLoadVersion||!window.campaignAccess)return;applyCampaign(fresh);}
-    catch(error){if(abilityDialog.open&&version===abilityLoadVersion)abilityDialog.innerHTML=`<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="alert">${escapeHTML(error.message)}</p>`;return;}
+    catch(error){if(abilityDialog.open&&version===abilityLoadVersion)renderCampaignHTML(abilityDialog,`<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="alert">${escapeHTML(error.message)}</p>`);return;}
   }
   const currentPower=model.byId(power.recordId);
-  if(!currentPower){abilityDialog.innerHTML='<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="alert">This ability is no longer available to this account.</p>';return;}
-  abilityDialog.innerHTML=`<button class="ability-close" data-close-ability aria-label="Close ability reference" autofocus>Close ×</button>${disciplineDetail('powers',currentPower)}<p><a href="${url('powers',power.id)}">Open full ability page</a></p>`;
+  if(!currentPower){renderCampaignHTML(abilityDialog,'<button class="ability-close" data-close-ability autofocus>Close ×</button><p role="alert">This ability is no longer available to this account.</p>');return;}
+  renderCampaignHTML(abilityDialog,`<button class="ability-close" data-close-ability aria-label="Close ability reference" autofocus>Close ×</button>${disciplineDetail('powers',currentPower)}<p><a href="${url('powers',power.id)}">Open full ability page</a></p>`);
   abilityDialog.querySelector('h1').id='ability-dialog-title';
   abilityDialog.setAttribute('aria-labelledby','ability-dialog-title');
   if(!abilityDialog.open)abilityDialog.showModal();abilityDialog.scrollTop=0;
@@ -370,7 +370,7 @@ function runSearch(delay=250){
     catch(error){if(version!==searchVersion||state.route!=='search')return;state.searching=false;state.searchError=error.message;updateSearch();}
   },delay);
 }
-function updateSearch(){const results=document.querySelector('#searchResults');if(results){results.innerHTML=searchResults();markDeadCharacterLinks(results);}}
+function updateSearch(){const results=document.querySelector('#searchResults');if(results){renderCampaignHTML(results,searchResults());markDeadCharacterLinks(results);}}
 app.addEventListener('input',event=>{if(event.target.id!=='campaignSearch')return;state.query=event.target.value;history.replaceState(null,'','#search'+(state.query?'?q='+encodeURIComponent(state.query):''));runSearch();});
 app.addEventListener('submit',event=>{if(event.target.id==='searchForm'){event.preventDefault();runSearch(0);}});
 window.addEventListener('hashchange', () => boot(true));

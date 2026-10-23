@@ -20,6 +20,8 @@ Hash routes support direct record links and browser history without server rewri
 
 Production entry points are the public forum (`index.html`) and authenticated companion (`campaign.html`). `supabase-session.js` handles login and writes, `campaign-loader.js` caches catalog/detail/editor bundles, and `supabase-data.js` adapts RLS-authorized database rows. See [authenticated website behavior](docs/supabase-website.md) for current operation. The public snapshot/migration files below are retained for historical validation and are not loaded by the production companion.
 
+Generated authenticated-campaign markup passes through a local DOMPurify boundary before insertion into the document. See [campaign HTML sanitization](docs/html-sanitization.md) for the security boundary, pinned dependency, tests, and deployment files.
+
 - `data.js`: normalized **public** campaign data (`schemaVersion: 2`). Records have globally unique IDs, stable route keys, contextual names, sections/items, typed relationships, claims, explicit membership implications, and provenance. IDs distinguish the Bliss organization from the Bliss location.
 - `campaign-model.js`: validation, relationship resolution, membership derivation, search, and an adapter for the existing views. Its projected fields are computed, not a second editable dataset.
 - `campaign-additions.js`: authored public additions loaded after the reproducible Phase 1 baseline. Contains Alan Sovereign’s explicitly approved note and minimal linked records.
