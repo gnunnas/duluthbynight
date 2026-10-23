@@ -4,6 +4,12 @@
 
 Make the site functional for the campaign's Storyteller first: reliable record editing, linking, searching, notes and reveal controls. Player-character ownership and broader player editing are deferred; do not expand those permissions as part of routine Storyteller improvements.
 
+## Implemented: authenticated HTML sanitization
+
+Generated campaign pages and Storyteller forms now pass through a central, locally vendored DOMPurify boundary before being inserted into the document. Existing contextual escaping remains in place as the first defense. The change addresses the CodeQL client-side cross-site-scripting alert at the main application render sink and covers the other generated-markup insertion points as well. It requires a website deployment but no SQL migration or campaign-data changes. See [campaign HTML sanitization](html-sanitization.md) for the boundary, pinned version, verification and release files.
+
+The implementation is pushed on `fix-client-side-xss`. Automated pull-request creation was blocked by GitHub GraphQL permissions, so opening/merging the PR, deploying release `20261023-html-sanitizer`, and confirming the alert closes after a scan of `main` remain outstanding.
+
 ## Implemented: faster campaign loading
 
 Catalog-first login, on-demand character/ability/source details, tab-local caching, and permission-filtered server search are implemented. Storyteller editing now loads the selected record and builds forms on expansion. Complete dependency data loads before reveal review. See [scoped editing](scoped-record-editing.md) for performance evidence and the remaining first-review loading cost. See [loading architecture and rollout status](campaign-loading.md) before modifying these paths. Migration 010 was reported applied by the user on 2026-10-15; the user subsequently reported live login improving from about 20 seconds to 3 seconds, with initial character details taking under a second. These are user-reported timings.
