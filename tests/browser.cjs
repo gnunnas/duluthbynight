@@ -157,18 +157,23 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
   );
   applyCampaign(CAMPAIGN);render();
  });
- await visit(baseURL+'#disciplines/animalism');
- assert.equal(await page.locator('.npc-panel').count(),5);
- await page.mouse.move(0,0);
- const senseEntry=page.locator('.power-list-entry',{has:page.getByRole('link',{name:'Sense The Beast',exact:true})});
- const sensePreview=senseEntry.locator('.power-summary');
- const collapsedPreview=await sensePreview.evaluate(node=>({height:node.clientHeight,clamp:getComputedStyle(node).webkitLineClamp,overflow:getComputedStyle(node).overflow}));
- assert(collapsedPreview.clamp==='1'&&collapsedPreview.overflow==='hidden','Power overview should start as a one-line preview');
- await senseEntry.hover();
- assert(await sensePreview.evaluate((node,collapsedHeight)=>node.clientHeight>collapsedHeight,collapsedPreview.height),'Power overview should expand on hover');
- await page.getByRole('link',{name:'Sense The Beast',exact:true}).focus();
- assert(await sensePreview.evaluate((node,collapsedHeight)=>node.clientHeight>collapsedHeight,collapsedPreview.height),'Power overview should expand on keyboard focus');
- assert.equal(await senseEntry.locator('.power-link-mark').count(),1);
+ for(const width of [375,1280]){
+  await page.setViewportSize({width,height:900});
+  await visit(baseURL+'#disciplines/animalism');
+  assert.equal(await page.locator('.npc-panel').count(),5);
+  const disciplineBack=page.locator('.discipline-detail>.back'),disciplineHeading=page.locator('.discipline-name');
+  assert(await disciplineHeading.evaluate((heading,back)=>back.getBoundingClientRect().bottom<=heading.getBoundingClientRect().top,await disciplineBack.elementHandle()),'Discipline back link must not overlap its heading');
+  const senseEntry=page.locator('.power-list-entry',{has:page.getByRole('link',{name:'Sense The Beast',exact:true})});
+  const senseLink=senseEntry.getByRole('link',{name:'Sense The Beast',exact:true}),sensePreview=senseEntry.locator('.power-summary');
+  assert.equal(await sensePreview.innerText(),'Test first paragraph.');
+  const stableHeight=await senseEntry.evaluate(node=>node.getBoundingClientRect().height);
+  await senseEntry.hover();
+  assert.equal(await senseEntry.evaluate(node=>node.getBoundingClientRect().height),stableHeight,'Power preview must not expand on hover');
+  await senseLink.focus();
+  assert.equal(await senseEntry.evaluate(node=>node.getBoundingClientRect().height),stableHeight,'Power preview must not expand on keyboard focus');
+  assert(await senseLink.evaluate((link,entry)=>Math.abs(link.getBoundingClientRect().width-(entry.getBoundingClientRect().width-3))<3,await senseEntry.elementHandle()),'Power link should fill its card');
+  assert.equal(await senseEntry.locator('.power-link-mark').count(),1);
+ }
  await page.locator('main a[href="#powers/animalism-sense-the-beast"]').click();
  await page.getByRole('heading',{name:'Sense The Beast',exact:true}).waitFor();
  assert((await page.locator('main').innerText()).includes('Resolve + Animalism vs Composure + Subterfuge'));
