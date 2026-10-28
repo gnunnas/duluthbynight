@@ -15,6 +15,19 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 .session-recap .note-list p{white-space:pre-line}
 .connection-label-form{display:grid;gap:12px}.connection-label-form label{display:grid;gap:6px}.connection-label-form input{width:100%;min-width:0;padding:10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);font:inherit}.connection-label-form button{justify-self:start}
 .record-links li > .mechanic-notes { margin:0 0 1rem; }
+.discipline-name{position:relative;display:inline-block;padding:0 .8rem .32rem 0;text-shadow:0 2px 18px #000}
+.discipline-name::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,#a5323a 0,#604047 48%,transparent 100%);box-shadow:0 0 12px #8e1e2566}
+.power-list{display:block}
+.power-list-entry{position:relative}
+.power-list-entry+.power-list-entry{margin-top:1rem}
+.power-link{position:relative;justify-content:flex-start;min-height:58px;padding:12px 16px 12px 13px;border-left:3px solid #604047;background:linear-gradient(105deg,#171417 0,var(--panel) 50%,#0d1215 100%);box-shadow:inset 0 1px #ffffff05;transition:border-color .15s,background .15s,transform .15s}
+.power-link:hover,.power-link:focus-visible{border-color:#a43b43;background:linear-gradient(105deg,#211417 0,var(--panel2) 55%,#10161a 100%);transform:translateX(2px)}
+.record-link .power-link-mark{color:#a43b43;font-size:10px;flex:0 0 auto;filter:drop-shadow(0 0 5px #8e1e25)}
+.record-link .power-link-name{color:var(--ink);font-size:18px;font-weight:bold;letter-spacing:.015em;flex:1 1 auto}
+.record-link .power-link-arrow{color:#82949d;flex:0 0 auto}
+.power-list-entry .power-summary{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;margin:.45rem 0 0;padding:0 .75rem;color:#aeb5b8;cursor:default}
+.power-list-entry:is(:hover,:focus-within) .power-summary{display:block;-webkit-line-clamp:unset}
+@media(prefers-reduced-motion:reduce){.power-link{transition:none}.power-link:hover,.power-link:focus-visible{transform:none}}
 @media(min-width:700px){
   .power-detail .facts{grid-template-columns:1fr 2fr 1fr}
   .power-detail .facts>div:last-child:nth-child(3n+1){grid-column:1/-1}

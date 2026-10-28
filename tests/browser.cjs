@@ -157,6 +157,16 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
  });
  await visit(baseURL+'#disciplines/animalism');
  assert.equal(await page.locator('.npc-panel').count(),5);
+ await page.mouse.move(0,0);
+ const senseEntry=page.locator('.power-list-entry',{has:page.getByRole('link',{name:'Sense The Beast',exact:true})});
+ const sensePreview=senseEntry.locator('.power-summary');
+ const collapsedPreview=await sensePreview.evaluate(node=>({height:node.clientHeight,clamp:getComputedStyle(node).webkitLineClamp,overflow:getComputedStyle(node).overflow}));
+ assert(collapsedPreview.clamp==='1'&&collapsedPreview.overflow==='hidden','Power overview should start as a one-line preview');
+ await senseEntry.hover();
+ assert(await sensePreview.evaluate((node,collapsedHeight)=>node.clientHeight>collapsedHeight,collapsedPreview.height),'Power overview should expand on hover');
+ await page.getByRole('link',{name:'Sense The Beast',exact:true}).focus();
+ assert(await sensePreview.evaluate((node,collapsedHeight)=>node.clientHeight>collapsedHeight,collapsedPreview.height),'Power overview should expand on keyboard focus');
+ assert.equal(await senseEntry.locator('.power-link-mark').count(),1);
  await page.locator('main a[href="#powers/animalism-sense-the-beast"]').click();
  await page.getByRole('heading',{name:'Sense The Beast',exact:true}).waitFor();
  assert((await page.locator('main').innerText()).includes('Resolve + Animalism vs Composure + Subterfuge'));
