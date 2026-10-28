@@ -5,6 +5,7 @@
   "build": {
     "command": "npm run build"
   },
+  "previews": {},
   "assets": {
     "directory": "./dist"
   }

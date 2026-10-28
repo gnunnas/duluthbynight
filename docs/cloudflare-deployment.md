@@ -2,6 +2,8 @@
 
 The production site is a Cloudflare Worker with Static Assets. The repository root is **not** the public directory. `npm run build` creates `dist/` from an explicit runtime allowlist, and `wrangler.jsonc` deploys only that directory.
 
+Cloudflare Workers Builds uses `wrangler preview` for pull requests. The checked-in empty `previews` block explicitly enables that command while inheriting the same assets, compatibility settings and security headers as production.
+
 This prevents development material such as `README.md`, `AGENTS.md`, `docs/`, `tests/`, migrations, imports, setup SQL and retained public-snapshot JavaScript from being served from the campaign domain. Those files remain governed by the repository's own visibility and history. The build continues to copy `assets/`; legacy artwork is therefore public and must not contain private material. Move genuinely protected media to authenticated Supabase Storage rather than relying on an unrevealed attachment row.
 
 ## Cloudflare build settings
