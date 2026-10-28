@@ -4,10 +4,12 @@ const {exportDraft}=require('../scripts/export-supabase-draft.cjs');
 const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$/,'');
 (async()=>{
  const rows=exportDraft().tables;
+ const people={yes:'Aaron Test character yes',no:'Zulu Test character no',unknown:'Beta Test character unknown'};
  for(const status of ['yes','no','unknown']){
   const id='person:test-death-'+status;
-  rows.records.push({campaign_id:'duluth-by-night',id,record_type:'person',route_key:'test-death-'+status,display_name:'Test character '+status,audience:'storyteller'});
+  rows.records.push({campaign_id:'duluth-by-night',id,record_type:'person',route_key:'test-death-'+status,display_name:people[status],audience:'storyteller'});
   (rows.person_status||=[]).push({id:'status:'+id,person_record_id:id,permanently_dead:status,audience:'storyteller'});
+  rows.relationships.push({campaign_id:'duluth-by-night',id:'relationship:test-death-'+status+':spokes',audience:'storyteller',origin:'authored',relationship_type:'member_of',from_record_id:id,to_record_id:'organization:spokes-crew',knowledge_state:'recorded'});
  }
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
  try{
@@ -29,13 +31,18 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
   await page.getByRole('button',{name:'All',exact:true}).click();
   const versions=await page.evaluate(()=>[document.querySelector('link[href*="styles.css"]').href,document.querySelector('script[src*="supabase-session.js"]').src,document.querySelector('script[src*="app.js"]').src].map(src=>new URL(src).searchParams.get('v')));
   assert(versions[0]);assert(versions.every(version=>version===versions[0]),'Style, login and delayed app versions must match');
-  const dead=page.locator('a.card[href="#people/test-death-yes"]');assert.equal(await dead.locator('.death-mark').count(),1);assert((await dead.textContent()).includes('Test character yes'));assert.equal(await dead.getAttribute('aria-description'),'Permanently dead');
+  const testPeople=await page.locator('a.card[href^="#people/test-death-"]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')));
+  assert.deepEqual(testPeople,['#people/test-death-unknown','#people/test-death-no','#people/test-death-yes'],'People directory should alphabetize living/unknown people and put the really dead last');
+  const dead=page.locator('a.card[href="#people/test-death-yes"]');assert.equal(await dead.locator('.death-mark').count(),1);assert((await dead.textContent()).includes(people.yes));assert.equal(await dead.getAttribute('aria-description'),'Permanently dead');
   assert(await dead.evaluate(anchor=>{const heading=anchor.querySelector('h3'),range=document.createRange();range.selectNodeContents(heading.lastChild);return heading.querySelector('.death-mark').getBoundingClientRect().right<=range.getBoundingClientRect().left+1}),'X must not cover the name');
   for(const status of ['no','unknown'])assert.equal(await page.locator('a[href="#people/test-death-'+status+'"] .death-mark').count(),0);
-  await page.goto(base+'/campaign.html#search');await page.locator('#campaignSearch').fill('Test character yes');await page.locator('#searchResults .death-mark').waitFor();
+  await page.goto(base+'/campaign.html#organizations/spokes-crew');await page.getByRole('heading',{name:'Spokes Crew',exact:true}).waitFor();
+  const organizationPeople=await page.locator('.related a[href^="#people/test-death-"]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')));
+  assert.deepEqual(organizationPeople,['#people/test-death-unknown','#people/test-death-no','#people/test-death-yes'],'Organization roster should use the same living-first alphabetical order');
+  await page.goto(base+'/campaign.html#search');await page.locator('#campaignSearch').fill(people.yes);await page.locator('#searchResults .death-mark').waitFor();
   await page.evaluate(()=>{D.personStatus=D.personStatus.filter(status=>status.personRecordId!=='person:test-death-yes');render()});assert.equal(await page.locator('#searchResults .death-mark').count(),0,'Unavailable death status must not be disclosed');
   for(const status of ['yes','no','unknown']){
-   await page.evaluate(s=>location.hash='#people/test-death-'+s,status);await page.getByRole('heading',{name:'Test character '+status,exact:true}).waitFor();
+   await page.evaluate(s=>location.hash='#people/test-death-'+s,status);await page.getByRole('heading',{name:people[status],exact:true}).waitFor();
    // Restore the authorized Yes fixture after the hidden-status search assertion.
    if(status==='yes')await page.evaluate(()=>refreshCampaignViews());
    const cross=page.locator('.npc-detail h1 .death-name-cross');assert.equal(await cross.count(),status==='yes'?1:0);
@@ -49,6 +56,6 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
     await page.evaluate(()=>{D.personStatus=D.personStatus.filter(s=>s.personRecordId!=='person:test-death-yes');render()});assert.equal(await page.locator('.death-name-cross').count(),0,'Hidden status must not decorate the heading');
    }
   }
-  assert.deepEqual(errors,[]);console.log('PASS: versioned login bypasses stale app; readable link markers and translucent detail crosses, portrait/mobile layouts, search, No/Unknown and hidden-status behavior.');
+  assert.deepEqual(errors,[]);console.log('PASS: people and organization rosters sort living-first and alphabetically; versioned login bypasses stale app; readable death markers, detail crosses, portrait/mobile layouts, search, No/Unknown and hidden-status behavior.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1)});
