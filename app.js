@@ -3,10 +3,15 @@ const app = document.querySelector('#app');
 const nav = document.querySelector('#nav');
 const menu = document.querySelector('#menuBtn');
 let model = createCampaignModel(D);
+const recordName = record => record?.name || record?.title || '';
+const isReallyDead = record => record?.recordType === 'person' && (D.personStatus || []).some(status => status.personRecordId === record.recordId && status.permanentlyDead === 'yes');
+const alphabeticNameOrder = (a,b) => recordName(a).localeCompare(recordName(b),'en',{sensitivity:'base',numeric:true});
+const personDisplayOrder = (a,b) => Number(isReallyDead(a))-Number(isReallyDead(b)) || alphabeticNameOrder(a,b);
+const orderedPeople = records => [...records].sort(personDisplayOrder);
 function alphabeticalCollections(source) {
   const sorted = {...source};
-  for (const type of ['places', 'organizations', 'clans', 'disciplines']) {
-    sorted[type] = [...(source[type] || [])].sort((a, b) => (a.name || a.title || '').localeCompare(b.name || b.title || '', 'en', {sensitivity:'base', numeric:true}));
+  for (const type of ['people', 'places', 'organizations', 'clans', 'disciplines']) {
+    sorted[type] = type === 'people' ? orderedPeople(source[type] || []) : [...(source[type] || [])].sort(alphabeticNameOrder);
   }
   return sorted;
 }
@@ -20,7 +25,7 @@ const firstSentence = value => {
   return text.match(/^.*?[.!?](?=\s|$)/)?.[0] || text;
 };
 let by = model.by;
-const name = record => record.name || record.title;
+const name = recordName;
 const personType = record => /^thin[ -]?blood$/i.test(record.type || '') ? 'Thin-blood' : record.type;
 const url = (type, id) => `#${type}${id ? '/' + encodeURIComponent(id) : ''}`;
 function link(type, record) { return `<a href="${url(type, record.id)}">${escapeHTML(name(record))}</a>`; }
@@ -29,6 +34,7 @@ function card(record, type) {
   return `<a class="card" href="${url(type, record.id)}"><div class="meta">${escapeHTML(record.type || record.kind || record.date || (type==='threads'?(record.status==='completed'?'Completed thread':'Active thread'):labels[type]))}${record.clan ? ' · ' + escapeHTML(by('clans', record.clan)?.name || 'Unknown') : ''}</div><h3>${escapeHTML(name(record))}</h3>${['people','organizations'].includes(type) && !record.summary ? '' : `<p>${escapeHTML(record.summary || (type === 'notes' ? 'Read stored imported text.' : ['clans', 'organizations'].includes(type) ? 'View recorded connections.' : 'No summary recorded.'))}</p>`}</a>`;
 }
 function section(title, records, type) {
+  if(type === 'people')records=orderedPeople(records);
   return records.length ? `<section class="related"><h2 class="section-title">${escapeHTML(title)}</h2><div class="grid two">${records.map(x => card(x, type)).join('')}</div></section>` : '';
 }
 function relations(type, record) {
@@ -52,7 +58,7 @@ function relations(type, record) {
       displayedLinks.add(by('people', relationship.from === record.id ? relationship.to : relationship.from)?.recordId);
     }
   }
-  return Object.entries(model.related(type, record)).map(([key, records]) => [key, records.filter(target => !displayedLinks.has(target.recordId))]).map(([key, records]) => {
+  return Object.entries(model.related(type, record)).map(([key, records]) => [key, records.filter(target => !displayedLinks.has(target.recordId))]).map(([key, records]) => [key,key==='people'?orderedPeople(records):records]).map(([key, records]) => {
     if (!records.length) return '';
     const title = titles[key] || (key==='threads'?'Related threads':`Related ${labels[key].toLowerCase()}`);
     return `<section class="related"><h2 class="section-title">${escapeHTML(title)}</h2><ul class="record-links">${records.map(target => `<li><a class="record-link" href="${url(key, target.id)}">${escapeHTML(name(target))}<span aria-hidden="true">↗</span></a></li>`).join('')}</ul></section>`;
@@ -129,7 +135,7 @@ function personSections(record) {
   if (record.affiliations.length) connectionBoxes.push(panel('Political affiliations', membershipFacts(record.affiliations)));
   const relationships = model.personalRelationships(record.recordId);
   const covered = new Set(model.itemsFor(record.recordId).filter(x => x.titleRecordId).map(x => x.titleRecordId));
-  const additional = relationships.filter(x => x.kind==='association'&&x.label || !covered.has(by('people', x.from === record.id ? x.to : x.from)?.recordId));
+  const additional = relationships.filter(x => x.kind==='association'&&x.label || !covered.has(by('people', x.from === record.id ? x.to : x.from)?.recordId)).sort((a,b)=>personDisplayOrder(by('people',a.from===record.id?a.to:a.from),by('people',b.from===record.id?b.to:b.from)));
   if (additional.length) connectionBoxes.push(panel('Personal connections', `<ul class="note-list">${additional.map(x => {
     const target = by('people', x.from === record.id ? x.to : x.from);
     return `<li>${target ? link('people', target) : 'Unknown'} — ${escapeHTML(x.label || 'Associate')}</li>`;
@@ -240,7 +246,6 @@ function listing(type) {
   }
   if(type === 'notes')return `<h1>Imported notes</h1><p class="intro">Stored text snapshots of previously imported screenshot content. Future text or file imports can preserve the complete original here. Only notes available to your account are shown.</p><a class="back" href="#chronicle">← Chronicle</a><div class="grid two">${collections.notes.map(x=>card(x,'notes')).join('')}</div>`;
   let records = collections[type];
-  if(type === 'people') records = [...records].sort((a,b)=>name(a).localeCompare(name(b),'en',{sensitivity:'base',numeric:true}));
   if (type === 'organizations' && state.category) records = records.filter(x => x.category === state.category);
   let filters = '';
   if (type === 'people') {
