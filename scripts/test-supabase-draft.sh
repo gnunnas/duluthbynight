@@ -60,5 +60,6 @@ run_sql < tests/postgres/lazy-loading.sql
 run_sql < tests/postgres/connection-labels.sql
 run_sql < tests/postgres/summaries.sql
 run_sql < tests/postgres/organization-types.sql
+run_sql < tests/postgres/player-access-requests.sql
 
 echo 'PASS: versioned SQL applies; current dataset imports; role, note, reveal, archive, audit, AI approval, asset and integrity checks pass.'

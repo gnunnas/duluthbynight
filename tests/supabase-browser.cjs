@@ -7,7 +7,7 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
  const rows=exportDraft().tables;
  rows.campaign_status=[{campaign_id:'duluth-by-night',id:'hero-tagline',label:'Hero tagline',value:'The lake is black. The harbor never sleeps. Every favor leaves a mark.',sort_order:-1,audience:'players',revision:1},{campaign_id:'duluth-by-night',id:'date',label:'Current night',value:'After Sept. 11',sort_order:0,audience:'players',revision:1},{campaign_id:'duluth-by-night',id:'weather',label:'Weather',value:'',sort_order:1,audience:'players',revision:1}];
  for(const role of ['storyteller','player','player-revealed']){
-  const page=await browser.newPage({viewport:{width:375,height:850}});const errors=[],requested=[];let saves=0,statusSaves=0;rows.campaign_status[2]={campaign_id:'duluth-by-night',id:'weather',label:'Weather',value:'',sort_order:1,audience:'players',revision:1};page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requested.push(r.url()));
+  const page=await browser.newPage({viewport:{width:375,height:850}});const errors=[],requested=[];let saves=0,statusSaves=0,accessReviews=0;rows.campaign_status[2]={campaign_id:'duluth-by-night',id:'weather',label:'Weather',value:'',sort_order:1,audience:'players',revision:1};page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requested.push(r.url()));
   await page.route('https://xrkvbbmilgdubbwuffhu.supabase.co/**',async route=>{
    const url=new URL(route.request().url());let body;
    if(url.pathname.startsWith('/auth/v1/token'))body={access_token:'test-access',refresh_token:'test-refresh',expires_in:3600,user:{id:role}};
@@ -18,6 +18,8 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
     const visible=Object.fromEntries(Object.entries(rows).map(([t,list])=>[t,role==='player'?(t==='campaign_status'?list:[]):list.filter(r=>role!=='player-revealed'||(r.field_key!=='notes.storyteller'&&r.template_key!=='storyteller-notes'))]));
     if(table==='load_campaign_page'){const p=route.request().postDataJSON();body=pageBundle(visible,p.p_scope,p.p_record);}
     else if(table==='search_campaign_records')body=searchRecords(visible,route.request().postDataJSON().p_query);
+    else if(table==='list_pending_campaign_access_requests')body=role==='storyteller'?[{user_id:'00000000-0000-0000-0000-000000000002',email:'player@example.test',requested_at:'2026-10-28T12:00:00Z'}]:[];
+    else if(table==='review_campaign_access_request'){assert.equal(role,'storyteller');assert.deepEqual(route.request().postDataJSON(),{p_campaign:'duluth-by-night',p_user:'00000000-0000-0000-0000-000000000002',p_approve:true});accessReviews++;body=null;}
     else if(table==='campaign_status')body=rows.campaign_status;
     else if(table==='campaign_memberships')body=[{user_id:role,role:role==='storyteller'?'storyteller':'player',active:true}];
     else if(table==='campaigns')body=[{owner_user_id:'storyteller'}];
@@ -47,6 +49,7 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
   assert.equal(await page.getByText('Weather',{exact:true}).count(),0);
   if(role==='storyteller'){
    await page.getByRole('button',{name:'Open navigation'}).click();await page.getByRole('link',{name:'Storyteller',exact:true}).click();await page.getByRole('heading',{name:'Storyteller tools',exact:true}).waitFor();
+   await page.getByText('player@example.test',{exact:true}).waitFor();await page.getByRole('button',{name:'Approve player'}).click();await page.getByText('No player access requests are waiting.').waitFor();assert.equal(accessReviews,1);
    const weather=page.locator('form[data-status-id="weather"]');await weather.locator('[name=value]').fill('Test weather');await weather.getByRole('button',{name:'Save row'}).click();await weather.getByText('Saved. Tonight is updated.').waitFor();
    await weather.locator('[name=value]').fill('Stale weather draft');await weather.getByRole('button',{name:'Save row'}).click();await weather.getByText('This row changed or access was removed. Reload saved values and review the latest version before saving.').waitFor();assert.equal(await weather.locator('[name=value]').inputValue(),'Stale weather draft');
    await page.getByRole('button',{name:'Reload saved values'}).click();await page.getByText('Saved values reloaded.').waitFor();assert.equal(await page.locator('form[data-status-id="weather"] [name=value]').inputValue(),'Test weather');

@@ -1,5 +1,13 @@
 # Working context
 
+## Current task: self-service player accounts
+
+- Branch `self-service-player-signup` is based on fetched remote main after Cloudflare hardening PR #48.
+- Migration `20261028001600_player_access_requests.sql` separates Supabase Auth registration from campaign access. Players email-confirm their own accounts and submit access requests; only Storytellers can approve or decline. Approval grants/reactivates Player membership only and preserves any existing Storyteller role.
+- The campaign login page has Sign in/Create account views. Unapproved users see no campaign data and can request access. Storyteller tools list pending requests by email. Existing accounts and memberships are unchanged. No password recovery or character ownership is included.
+- Release `20261028-player-signup`. Configure Supabase Email signup and confirmation plus the existing production/preview redirect allowlist. Run migration 016 manually before production use; never apply it automatically. See `docs/player-account-signup.md`.
+- Validation passed: production bundle/credential scan; disposable PostgreSQL migration/import/RLS suite; self-signup and existing-auth browser suites; lazy loading, record editor and DOMPurify browser suites; JavaScript syntax and whitespace checks. No live Supabase write was made.
+
 ## Current task: complete player-visible discipline references
 
 - Cloudflare production hardening is on `harden-cloudflare-static-deploy`: explicit `dist/` runtime allowlist, Workers Static Assets configuration, restrictive `_headers`, and a bundle test that rejects development files and secret credential forms. Production artwork under `assets/` remains public; private media still requires authenticated Supabase Storage. Website only; no SQL or campaign-data changes. The user merges via PR.
