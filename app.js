@@ -199,17 +199,18 @@ function detail(type, id) {
 function disciplineDetail(type, record) {
   if(type === 'disciplines') {
     const abilities=collections.powers.filter(x=>x.disciplineId===record.recordId);
-    return `<article class="detail"><a class="back" href="#disciplines">← Disciplines</a><h1>${escapeHTML(record.name)}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}${abilities.length ? [1,2,3,4,5].map(level=>{
+    return `<article class="detail discipline-detail"><a class="back" href="#disciplines">← Disciplines</a><h1 class="discipline-name">${escapeHTML(record.name)}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : ''}${abilities.length ? [1,2,3,4,5].map(level=>{
       const entries=abilities.filter(x=>x.level===level);
-      return entries.length ? panel('Level '+level, `<ul class="record-links">${entries.map(x=>`<li><a class="record-link" href="${url('powers',x.id)}">${escapeHTML(x.name)}<span aria-hidden="true">↗</span></a>${x.summary ? `<p>${escapeHTML(x.summary)}</p>` : '<p class="mechanic-notes">Rules not yet recorded.</p>'}</li>`).join('')}</ul>`) : '';
+      return entries.length ? panel('Level '+level, `<ul class="record-links power-list">${entries.map(x=>`<li class="power-list-entry"><a class="record-link power-link" href="${url('powers',x.id)}"><span class="power-link-mark" aria-hidden="true">◆</span><span class="power-link-name">${escapeHTML(x.name)}</span><span class="power-link-arrow" aria-hidden="true">↗</span></a>${x.summary ? `<p class="mechanic-notes power-summary">${escapeHTML(x.summary)}</p>` : '<p class="mechanic-notes power-summary">Rules not yet recorded.</p>'}</li>`).join('')}</ul>`) : '';
     }).join('') : '<p class="empty">No abilities recorded yet.</p>'}</article>`;
   }
   const discipline=model.byId(record.disciplineId), items=model.itemsFor(record.recordId);
   if(!discipline||record.level===undefined)return `<article class="detail"><a class="back" href="#disciplines">← Disciplines</a><h1>${escapeHTML(record.name)}</h1><p>Discipline and level information is not available to this account.</p>${record.summary?`<p>${escapeHTML(record.summary)}</p>`:''}</article>`;
   const get=key=>items.find(x=>x.fieldKey===key);
+  const overview=record.summary ? record.summary.split(/\r?\n\s*\r?\n/).map(text=>`<p class="power-overview">${escapeHTML(text)}</p>`).join('') : '<p class="empty">Rules not yet recorded.</p>';
   const factLabels={prerequisite:'Prerequisite',amalgam:'Amalgam',cost:'Cost',dicePools:'Dice pools',duration:'Duration'};
   const facts=[['Level',String(record.level)],...Object.keys(factLabels).map(key=>[factLabels[key],get('power.'+key)?.body]).filter(([,value])=>value)];
-  return `<article class="detail power-detail"><nav class="crumbs" aria-label="Discipline hierarchy"><a href="#disciplines">Disciplines</a> / ${referenceLink(discipline.recordId)} / Level ${record.level}</nav><h1>${escapeHTML(record.name)}</h1>${record.summary ? `<p>${escapeHTML(record.summary)}</p>` : '<p class="empty">Rules not yet recorded.</p>'}<dl class="facts">${facts.map(([label,value])=>`<div><dt>${label}</dt><dd>${escapeHTML(value)}</dd></div>`).join('')}</dl>${['system','notes'].map(key=>get('power.'+key)?.body ? panel(key==='system'?'System':'Notes',`<p class="rules-text">${escapeHTML(get('power.'+key).body)}</p>`) : '').join('')}</article>`;
+  return `<article class="detail power-detail"><nav class="crumbs" aria-label="Discipline hierarchy"><a href="#disciplines">Disciplines</a> / ${referenceLink(discipline.recordId)} / Level ${record.level}</nav><h1>${escapeHTML(record.name)}</h1>${overview}<dl class="facts">${facts.map(([label,value])=>`<div><dt>${label}</dt><dd>${escapeHTML(value)}</dd></div>`).join('')}</dl>${['system','notes'].map(key=>get('power.'+key)?.body ? panel(key==='system'?'System':'Notes',`<p class="rules-text">${escapeHTML(get('power.'+key).body)}</p>`) : '').join('')}</article>`;
 }
 
 function home() {
