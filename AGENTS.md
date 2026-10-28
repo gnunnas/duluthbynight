@@ -2,6 +2,8 @@
 
 ## Current task: complete player-visible discipline references
 
+- Cloudflare production hardening is on `harden-cloudflare-static-deploy`: explicit `dist/` runtime allowlist, Workers Static Assets configuration, restrictive `_headers`, and a bundle test that rejects development files and secret credential forms. Production artwork under `assets/` remains public; private media still requires authenticated Supabase Storage. Website only; no SQL or campaign-data changes. The user merges via PR.
+
 - Follow-up branch `sort-people-dead-last` centralizes name-based person ordering: non-dead/unknown people alphabetically first, then RLS-visible permanently dead people alphabetically. It covers people listings, organization/clan/related rosters, search/home person sections, personal connections, and coterie members/pickers. Release `20261028-people-sorting`; website only, no SQL migration.
 
 - The user now supplies one complete discipline, including every power, before receiving one combined manual SQL import. Completed discipline reference pages, powers and structured rules must be fully player-visible; private screenshot/source archives remain Storyteller-only provenance.

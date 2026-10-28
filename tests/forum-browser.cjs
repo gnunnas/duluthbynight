@@ -31,7 +31,9 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
  const moderator=page.getByRole('link',{name:'Moderator Control Panel'});assert.equal(await moderator.evaluate(el=>getComputedStyle(el).fontSize),'15px');assert.equal(await moderator.evaluate(el=>getComputedStyle(el).color),'rgb(182, 255, 66)');
  await moderator.click();await page.locator('#signIn').waitFor();assert(page.url().endsWith('/campaign.html'));
  await page.goto(base+'/#people/alan-sovereign');await page.waitForURL('**/campaign.html#people/alan-sovereign');await page.locator('#signIn').waitFor();
- await page.goto(base+'/previews/verumdetenebris/');await page.waitForURL(base+'/#forum');
+ if(process.env.CAMPAIGN_PRODUCTION_BUNDLE!=='1'){
+  await page.goto(base+'/previews/verumdetenebris/');await page.waitForURL(base+'/#forum');
+ }
  await page.goto(base+'/#forum/unknown');await page.getByRole('heading',{name:'Transmission not found'}).waitFor();await page.getByRole('link',{name:'Return to the forum index',exact:true}).click();await page.getByText('Welcome, anonymous traveler.',{exact:true}).waitFor();
  await page.goto(base+'/#forum-main');assert(await page.locator('#forum-main .bar').count());
  await page.setViewportSize({width:2560,height:1300});await page.goto(base+'/');assert.equal(await page.locator('.page').evaluate(el=>el.getBoundingClientRect().width),1760);

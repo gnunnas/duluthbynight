@@ -16,6 +16,8 @@ When releasing campaign JavaScript or style changes, update the matching `v` rel
 
 Hash routes support direct record links and browser history without server rewrites. The manifest supplies install metadata; there is no service worker or offline guarantee.
 
+Production uses an explicit Cloudflare Static Assets bundle. Run `npm run build` to create the ignored `dist/` directory and `npm run test:public-bundle` to verify that development files, retained snapshots and credential-shaped values cannot ship. See [Cloudflare production deployment](docs/cloudflare-deployment.md). Never configure Cloudflare to publish the repository root.
+
 ## Current architecture
 
 Production entry points are the public forum (`index.html`) and authenticated companion (`campaign.html`). `supabase-session.js` handles login and writes, `campaign-loader.js` caches catalog/detail/editor bundles, and `supabase-data.js` adapts RLS-authorized database rows. See [authenticated website behavior](docs/supabase-website.md) for current operation. The public snapshot/migration files below are retained for historical validation and are not loaded by the production companion.
