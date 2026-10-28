@@ -22,6 +22,8 @@ Production uses an explicit Cloudflare Static Assets bundle. Run `npm run build`
 
 Production entry points are the public forum (`index.html`) and authenticated companion (`campaign.html`). `supabase-session.js` handles login and writes, `campaign-loader.js` caches catalog/detail/editor bundles, and `supabase-data.js` adapts RLS-authorized database rows. See [authenticated website behavior](docs/supabase-website.md) for current operation. The public snapshot/migration files below are retained for historical validation and are not loaded by the production companion.
 
+Players can create and email-confirm their own Auth accounts, then request campaign access. Storytellers approve or decline pending requests in the website; approval grants only the Player role. Install migration 016 and configure Supabase email signup before deploying that UI. See [player account signup and approval](docs/player-account-signup.md).
+
 Generated authenticated-campaign markup passes through a local DOMPurify boundary before insertion into the document. See [campaign HTML sanitization](docs/html-sanitization.md) for the security boundary, pinned dependency, tests, and deployment files.
 
 The sanitizer release is website-only: deploy the updated static assets together, including `campaign-sanitizer.js` and `vendor/`. It requires no SQL migration and does not alter campaign records or reveal permissions.

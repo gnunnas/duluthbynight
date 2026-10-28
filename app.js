@@ -18,7 +18,7 @@ function alphabeticalCollections(source) {
 let collections = alphabeticalCollections(model.collections);
 const labels = { coterie:'Coterie', storyteller:'Storyteller tools', people: 'People', places: 'Places', threads: 'Active threads', organizations: 'Organizations', clans: 'Clans', schemes: 'Schemes', events: 'Events', chronicle: 'Chronicle', disciplines: 'Disciplines', powers: 'Abilities', notes: 'Imported notes' };
 const areaKinds = new Set(['City', 'Community', 'District', 'Suburb', 'Territory']);
-let state = { route: 'home', id: null, filter: 'Kindred', query: '' };
+let state = { route: 'home', id: null, filter: 'Kindred', query: '', accessRequests: null, accessRequestsLoading: false, accessRequestsError: '' };
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const firstSentence = value => {
   const text=String(value ?? '').replace(/\s+/g,' ').trim();
@@ -266,10 +266,25 @@ function searchResults() {
   return `<p role="status">${count} ${count === 1 ? 'record' : 'records'} found.</p>${count ? matches.map(([type, records]) => section(type==='threads'?'Threads':labels[type], records, type)).join('') : '<p class="empty">No records match. Try another name or keyword.</p>'}`;
 }
 function search() { return `<h1>Campaign search</h1><form id="searchForm" role="search"><label for="campaignSearch">Search all campaign records</label><div class="search-row"><input id="campaignSearch" name="q" type="search" value="${escapeHTML(state.query)}" placeholder="Name, place, or keyword…" autocomplete="off"><button class="chip" type="submit">Search</button></div></form><div id="searchResults">${searchResults()}</div>`; }
+function accessRequestsMarkup(){
+ if(state.accessRequestsLoading)return '<p role="status">Loading access requests…</p>';
+ if(state.accessRequestsError)return `<p role="alert">${escapeHTML(state.accessRequestsError)}</p><button class="chip" type="button" data-reload-access-requests>Try again</button>`;
+ if(state.accessRequests===null)return '<p role="status">Loading access requests…</p>';
+ if(!state.accessRequests.length)return '<p class="empty">No player access requests are waiting.</p><button class="chip" type="button" data-reload-access-requests>Check again</button>';
+ return `<div class="access-request-list">${state.accessRequests.map(request=>`<div class="access-request-row" data-access-user="${escapeHTML(request.user_id)}"><div><strong>${escapeHTML(request.email)}</strong><small>Requested ${escapeHTML(new Date(request.requested_at).toLocaleString())}</small></div><div class="access-request-actions"><button class="chip" type="button" data-review-access="approve">Approve player</button><button class="chip" type="button" data-review-access="reject">Decline</button></div><p role="status" aria-live="polite"></p></div>`).join('')}</div><button class="chip" type="button" data-reload-access-requests>Refresh requests</button>`;
+}
+function updateAccessRequestsPanel(){const panel=document.querySelector('#accessRequestsPanel');if(panel)renderCampaignHTML(panel,accessRequestsMarkup());}
+async function loadAccessRequests(){
+ if(!window.campaignSession?.isStoryteller||state.accessRequestsLoading)return;
+ state.accessRequestsLoading=true;state.accessRequestsError='';updateAccessRequestsPanel();
+ try{state.accessRequests=await window.campaignSession.listAccessRequests();}
+ catch(error){state.accessRequestsError=error.message;}
+ finally{state.accessRequestsLoading=false;updateAccessRequestsPanel();}
+}
 function storytellerTools(){
  if(!window.campaignSession?.isStoryteller)return '<h1>Storyteller access required</h1><p>This editing screen is available to campaign Storytellers.</p><a href="#home">Return to Tonight</a>';
  const rows=(D.campaignStatus||[]).filter(x=>!x.archivedAt);
- return `<h1>Storyteller tools</h1>${CampaignEditor.dashboard()}<p class="intro">Update the Tonight details and hero tagline before play. Save each row separately. Blank values stay hidden.</p><p><a href="#home">View Tonight</a> · <button class="chip" type="button" data-reload-status>Reload saved values</button></p><p id="statusReloadMessage" role="status" aria-live="polite"></p>${rows.length?`<div class="status-editor">${rows.map(row=>`<form class="npc-panel status-row-form" data-status-id="${escapeHTML(row.id)}" data-revision="${escapeHTML(row.revision)}"><h2>${escapeHTML(row.label)}</h2><label>Label<input name="label" required value="${escapeHTML(row.label)}"></label><label>Value<input name="value" value="${escapeHTML(row.value)}" placeholder="Leave blank to hide"></label><div class="status-row-options"><label>Display order<input name="sortOrder" type="number" step="1" required value="${escapeHTML(row.sortOrder)}"></label><label>Who can see it?<select name="audience"><option value="players" ${row.audience==='players'?'selected':''}>All campaign players</option><option value="storyteller" ${row.audience==='storyteller'?'selected':''}>Storytellers only</option>${row.audience==='public'?'<option value="public" selected>All campaign members (existing public audience)</option>':''}</select></label></div><button type="submit" class="chip">Save row</button><p role="status" aria-live="polite"></p></form>`).join('')}</div>`:'<p class="empty">No status rows are available. Check that the campaign_status migration has been applied and its starter rows exist.</p>'}`;
+ return `<h1>Storyteller tools</h1><section class="npc-panel access-requests"><h2>Player access requests</h2><p class="intro">Players create and confirm their own accounts. Approving a request grants Player access only.</p><div id="accessRequestsPanel">${accessRequestsMarkup()}</div></section>${CampaignEditor.dashboard()}<p class="intro">Update the Tonight details and hero tagline before play. Save each row separately. Blank values stay hidden.</p><p><a href="#home">View Tonight</a> · <button class="chip" type="button" data-reload-status>Reload saved values</button></p><p id="statusReloadMessage" role="status" aria-live="polite"></p>${rows.length?`<div class="status-editor">${rows.map(row=>`<form class="npc-panel status-row-form" data-status-id="${escapeHTML(row.id)}" data-revision="${escapeHTML(row.revision)}"><h2>${escapeHTML(row.label)}</h2><label>Label<input name="label" required value="${escapeHTML(row.label)}"></label><label>Value<input name="value" value="${escapeHTML(row.value)}" placeholder="Leave blank to hide"></label><div class="status-row-options"><label>Display order<input name="sortOrder" type="number" step="1" required value="${escapeHTML(row.sortOrder)}"></label><label>Who can see it?<select name="audience"><option value="players" ${row.audience==='players'?'selected':''}>All campaign players</option><option value="storyteller" ${row.audience==='storyteller'?'selected':''}>Storytellers only</option>${row.audience==='public'?'<option value="public" selected>All campaign members (existing public audience)</option>':''}</select></label></div><button type="submit" class="chip">Save row</button><p role="status" aria-live="polite"></p></form>`).join('')}</div>`:'<p class="empty">No status rows are available. Check that the campaign_status migration has been applied and its starter rows exist.</p>'}`;
 }
 function missing() { return '<h1>Record not found</h1><p class="empty">This campaign link does not match a recorded page.</p><a href="#home">Return to Tonight</a> · <a href="#search">Search the campaign</a>'; }
 function closeMenu() { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); menu.setAttribute('aria-label', 'Open navigation'); }
@@ -301,6 +316,7 @@ function render() {
   }
   renderCampaignHTML(app, state.route==='coterie'&&!state.id ? Coterie.render(D,model) : state.route==='edit' ? CampaignEditor.render(state.id) : state.id ? detail(state.route, state.id) : state.route === 'home' ? home() : state.route === 'search' ? search() : state.route === 'storyteller' ? storytellerTools() : collections[state.route] ? listing(state.route) : missing());
   markDeadCharacterLinks();
+  if(state.route==='storyteller'&&state.accessRequests===null&&!state.accessRequestsLoading&&!state.accessRequestsError)queueMicrotask(loadAccessRequests);
   document.title = `${state.route==='edit' ? 'Edit campaign record' : !state.id&&state.route==='threads'&&state.view==='completed'?'Completed threads':!state.id&&state.route==='chronicle'&&state.view==='past'?'Past session recaps':state.id ? (by(state.route, state.id) ? name(by(state.route, state.id)) : 'Record not found') : labels[state.route] || (state.route === 'search' ? 'Campaign search' : state.route === 'home' ? 'Tonight' : 'Page not found')} · Duluth by Night`;
 }
 let navigationVersion=0;
@@ -413,6 +429,17 @@ app.addEventListener('click',async event=>{
  const message=document.querySelector('#statusReloadMessage');button.disabled=true;message.textContent='Loading saved values…';
  try{const rows=await window.campaignSession.reloadStatus();D.campaignStatus=rows.map(statusRowFromDatabase).filter(x=>!x.archivedAt).sort((a,b)=>a.sortOrder-b.sortOrder||a.id.localeCompare(b.id));if(state.route==='storyteller'){render();document.querySelector('#statusReloadMessage').textContent='Saved values reloaded.';}}
  catch(error){message.textContent=error.message;}finally{button.disabled=false;}
+});
+
+app.addEventListener('click',async event=>{
+ const reload=event.target.closest('[data-reload-access-requests]');
+ if(reload){state.accessRequests=null;state.accessRequestsError='';await loadAccessRequests();return;}
+ const button=event.target.closest('[data-review-access]');if(!button)return;
+ const row=button.closest('[data-access-user]'),approve=button.dataset.reviewAccess==='approve';
+ if(!approve&&!confirm('Decline this player access request? They can request access again later.'))return;
+ const buttons=[...row.querySelectorAll('button')],message=row.querySelector('[role="status"]');buttons.forEach(control=>control.disabled=true);message.textContent=approve?'Approving player…':'Declining request…';
+ try{await window.campaignSession.reviewAccessRequest(row.dataset.accessUser,approve);state.accessRequests=state.accessRequests.filter(request=>request.user_id!==row.dataset.accessUser);updateAccessRequestsPanel();}
+ catch(error){message.textContent=error.message;buttons.forEach(control=>control.disabled=false);}
 });
 
 window.refreshCampaignViews=async()=>{const fresh=await window.campaignSession.reloadCampaign();applyCampaign(fresh);render();};
