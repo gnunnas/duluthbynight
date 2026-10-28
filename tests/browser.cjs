@@ -149,6 +149,8 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
   const power='power:animalism:sense-the-beast',section='section:power:animalism:sense-the-beast:facts';
   const overview=CAMPAIGN.items.find(item=>item.recordId===power&&item.fieldKey==='overview');
   overview.body='Test first paragraph.\n\n'+overview.body;
+  const popupOverview=CAMPAIGN.items.find(item=>item.recordId==='power:auspex:heightened-senses'&&item.fieldKey==='overview');
+  popupOverview.body='Popup first paragraph.\n\n'+popupOverview.body;
   CAMPAIGN.items.push(
    {id:'item:test:sense-prerequisite',recordId:power,sectionId:section,itemKind:'note',fieldKey:'power.prerequisite',body:'Test prerequisite',knowledgeState:'recorded'},
    {id:'item:test:sense-amalgam',recordId:power,sectionId:section,itemKind:'note',fieldKey:'power.amalgam',body:'Test Discipline 2',knowledgeState:'recorded'}
@@ -179,9 +181,9 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
  await page.setViewportSize({width:1280,height:900});
  await visit(baseURL+'#powers/auspex-heightened-senses');
  assert(await page.locator('.power-detail .facts').evaluate(facts=>{
-  const container=facts.getBoundingClientRect(),last=facts.lastElementChild.getBoundingClientRect();
-  return facts.children.length===4&&Math.abs(last.width-(container.width-2))<2;
- }),'Final fact should fill an incomplete desktop row');
+  const rows=[...facts.children].map(node=>node.getBoundingClientRect());
+  return rows.length===4&&rows.every((row,index)=>Math.abs(row.width-rows[0].width)<2&&(index===0||row.top>rows[index-1].bottom));
+ }),'Power facts should use the readable stacked layout on desktop');
  await visit(baseURL+'#search?q=Resonance');
  assert(await page.locator('main a[href="#powers/animalism-sense-the-beast"]').count());
  // NPC abilities open without changing route or losing place; native dialog traps focus.
@@ -196,6 +198,8 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
   assert((await popup.innerText()).includes('Wits + Resolve'));
   assert((await popup.innerText()).includes('Free (but see below)'));
   assert((await popup.innerText()).includes('Until deactivated'));
+  assert.equal(await popup.locator('.power-overview').count(),2);
+  assert.equal(await popup.locator('.power-overview').first().innerText(),'Popup first paragraph.');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.keyboard.press('Tab');
   assert(await page.evaluate(()=>document.querySelector('dialog').contains(document.activeElement)));

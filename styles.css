@@ -10,6 +10,8 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 .npc-detail .facts{grid-template-columns:repeat(2,minmax(0,1fr))}.npc-detail .facts .fact-wide{grid-column:1/-1}
 /* Reference rules remain readable during play on narrow screens. */
 .power-detail .facts { grid-template-columns:1fr; }
+.power-detail .power-overview{margin:0}
+.power-detail .power-overview+.power-overview{margin-top:1.35rem}
 .rules-text { white-space:pre-wrap; overflow-wrap:anywhere; }
 .session-recap .note-list{list-style:none;padding-left:0}
 .session-recap .note-list p{white-space:pre-line}
@@ -28,11 +30,6 @@ a{color:var(--cold);text-underline-offset:4px}a:hover{color:var(--ink)}a.card{te
 .power-list-entry .power-summary{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;margin:.45rem 0 0;padding:0 .75rem;color:#aeb5b8;cursor:default}
 .power-list-entry:is(:hover,:focus-within) .power-summary{display:block;-webkit-line-clamp:unset}
 @media(prefers-reduced-motion:reduce){.power-link{transition:none}.power-link:hover,.power-link:focus-visible{transform:none}}
-@media(min-width:700px){
-  .power-detail .facts{grid-template-columns:1fr 2fr 1fr}
-  .power-detail .facts>div:last-child:nth-child(3n+1){grid-column:1/-1}
-  .power-detail .facts>div:last-child:nth-child(3n+2){grid-column:span 2}
-}
 .ability-dialog{width:min(800px,calc(100% - 28px));max-height:calc(100dvh - 40px);padding:22px;background:var(--bg);color:var(--ink);border:1px solid #604047;overflow:auto;overscroll-behavior:contain;box-shadow:0 20px 80px #0008}
 .ability-dialog::backdrop{background:rgba(0,0,0,.78)}
 .ability-close{display:block;margin:0 0 12px auto;min-height:44px;padding:8px 14px;background:var(--panel);border:1px solid var(--line);color:var(--ink);cursor:pointer}
