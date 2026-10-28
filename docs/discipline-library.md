@@ -19,7 +19,7 @@ An ability belongs to exactly one discipline through a `power_of` relationship. 
 | power.duration | Duration text |
 | power.notes | Optional notes text |
 
-Rules fields use item `body`; level uses numeric `value`. Missing rules stay absent. Ability pages and popups display Prerequisite and Amalgam as separate facts when recorded. Reference pages escape supplied text rather than interpreting it as markup. Future powers with other requirements can add explicit fields and relationships without interpreting prose as rules.
+Rules fields use item `body`; level uses numeric `value`. Missing rules stay absent. Ability pages and popups display Prerequisite and Amalgam as separate facts when recorded. Blank-line-separated overview paragraphs render as distinct paragraphs, and incomplete desktop fact rows expand rather than showing empty grid background. Reference pages escape supplied text rather than interpreting it as markup. Future powers with other requirements can add explicit fields and relationships without interpreting prose as rules.
 
 NPC mechanic items retain their separate rating, `value.referenceRecordId` pointing to a discipline, and `value.abilities` listing only explicitly selected powers. A selection can use `{recordId: 'power:animalism:sense-the-beast', notes: 'optional NPC-specific note'}`. Names resolve from the reference record; an optional name can override the link label. Validation rejects references to the wrong record type, powers from another discipline, and powers above the recorded rating. Ratings never automatically grant the whole reference list.
 

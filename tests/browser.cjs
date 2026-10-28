@@ -147,6 +147,8 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
  assert.equal(await page.locator('main a[href^="#people/"]').count(),0);
  await page.evaluate(()=>{
   const power='power:animalism:sense-the-beast',section='section:power:animalism:sense-the-beast:facts';
+  const overview=CAMPAIGN.items.find(item=>item.recordId===power&&item.fieldKey==='overview');
+  overview.body='Test first paragraph.\n\n'+overview.body;
   CAMPAIGN.items.push(
    {id:'item:test:sense-prerequisite',recordId:power,sectionId:section,itemKind:'note',fieldKey:'power.prerequisite',body:'Test prerequisite',knowledgeState:'recorded'},
    {id:'item:test:sense-amalgam',recordId:power,sectionId:section,itemKind:'note',fieldKey:'power.amalgam',body:'Test Discipline 2',knowledgeState:'recorded'}
@@ -161,7 +163,15 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
  assert.deepEqual(await page.locator('.power-detail .facts dt').allInnerTexts(),['LEVEL','PREREQUISITE','AMALGAM','COST','DICE POOLS','DURATION']);
  assert((await page.locator('.power-detail .facts').innerText()).includes('Test prerequisite'));
  assert((await page.locator('.power-detail .facts').innerText()).includes('Test Discipline 2'));
+ assert.equal(await page.locator('.power-detail .power-overview').count(),2);
+ assert.equal(await page.locator('.power-detail .power-overview').first().innerText(),'Test first paragraph.');
  assert.equal(await page.getByRole('heading',{name:'System',exact:true}).count(),1);
+ await page.setViewportSize({width:1280,height:900});
+ await visit(baseURL+'#powers/auspex-heightened-senses');
+ assert(await page.locator('.power-detail .facts').evaluate(facts=>{
+  const container=facts.getBoundingClientRect(),last=facts.lastElementChild.getBoundingClientRect();
+  return facts.children.length===4&&Math.abs(last.width-(container.width-2))<2;
+ }),'Final fact should fill an incomplete desktop row');
  await visit(baseURL+'#search?q=Resonance');
  assert(await page.locator('main a[href="#powers/animalism-sense-the-beast"]').count());
  // NPC abilities open without changing route or losing place; native dialog traps focus.
