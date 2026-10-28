@@ -11,13 +11,15 @@ An ability belongs to exactly one discipline through a `power_of` relationship. 
 | Record displayName | Ability name |
 | power.level | Integer, 1–5 |
 | overview | Description text |
+| power.prerequisite | Optional prerequisite power text |
+| power.amalgam | Optional amalgam discipline and rating text |
 | power.cost | Cost text |
 | power.dicePools | Dice pools text |
 | power.system | System text |
 | power.duration | Duration text |
 | power.notes | Optional notes text |
 
-Rules fields use item `body`; level uses numeric `value`. Missing rules stay absent. Reference pages escape supplied text rather than interpreting it as markup. Future powers with other prerequisites can add explicit fields and relationships without interpreting prose as rules.
+Rules fields use item `body`; level uses numeric `value`. Missing rules stay absent. Ability pages and popups display Prerequisite and Amalgam as separate facts when recorded. Reference pages escape supplied text rather than interpreting it as markup. Future powers with other requirements can add explicit fields and relationships without interpreting prose as rules.
 
 NPC mechanic items retain their separate rating, `value.referenceRecordId` pointing to a discipline, and `value.abilities` listing only explicitly selected powers. A selection can use `{recordId: 'power:animalism:sense-the-beast', notes: 'optional NPC-specific note'}`. Names resolve from the reference record; an optional name can override the link label. Validation rejects references to the wrong record type, powers from another discipline, and powers above the recorded rating. Ratings never automatically grant the whole reference list.
 
@@ -25,6 +27,8 @@ NPC pages render reference links once in the Disciplines box. Discipline pages, 
 
 ## Imported content
 
-Five known discipline names: Animalism, Auspex, Dominate, Fortitude, Presence. Thirteen fully visible Animalism abilities have known names and levels from the supplied screenshot. Sense The Beast and the subsequently supplied level 1 Auspex ability Heightened Senses have their supplied description, cost, dice pools, system and duration. Heightened Senses is explicitly assigned to Alan at the user’s request. Other rules remain unrecorded; optional notes remain absent. The truncated “Coax the Bestial Tem…” entry was omitted pending its full name. No Animalism rating or ability was assigned to Alan.
+The repository’s historical static snapshot contains five known discipline names, thirteen Animalism power placeholders, complete Sense The Beast rules, and complete Heightened Senses rules. Heightened Senses is explicitly assigned to Alan in that snapshot. The checked-in baseline remains useful for disposable tests but is not the live campaign’s current discipline catalog.
 
-The screenshot's January 4, 2025 timestamp is source metadata, not a campaign event date. Text was transcribed as supplied rather than reconciled with outside rules sources. These are public static references; future private notes require actual authentication and database permissions.
+On October 27, 2026, a read-only live audit verified the user-applied complete Animalism import: fourteen player-visible powers across Levels 1–5, including Coax the Bestial Temper, with all seventy-three supplied overview, prerequisite, amalgam, cost, dice-pool, system and duration fields. Its complete source archive remains Storyteller-only. Seven existing Animalism power selections were unchanged by the import; the import did not assign powers to characters.
+
+The January 4, 2025 screenshot date is source metadata, not a campaign event date. Complete future discipline imports follow the same visibility rule: structured discipline and power references are player-visible, while their original screenshot/source archives remain private.

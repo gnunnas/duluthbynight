@@ -8,7 +8,7 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
  await page.route(baseURL,async route=>{
   const response=await route.fetch();let html=await response.text();
   const start=html.indexOf('<script src="supabase-config.js">');
-  html=html.slice(0,start)+['data.js','campaign-additions.js','discipline-data.js','watchtower-data.js','source-notes.js','campaign-model.js','coterie.js','app.js'].map(file=>'<script src="'+file+'"></script>').join('')+'</body></html>';
+  html=html.slice(0,start)+['data.js','campaign-additions.js','discipline-data.js','watchtower-data.js','source-notes.js','vendor/dompurify.min.js','campaign-sanitizer.js','campaign-model.js','coterie.js','app.js'].map(file=>'<script src="'+file+'"></script>').join('')+'</body></html>';
   await route.fulfill({response,body:html});
  });
  async function visit(targetURL) {
@@ -143,13 +143,24 @@ const baseURL = (process.env.CAMPAIGN_TEST_URL || 'http://127.0.0.1:8000').repla
  await visit(baseURL+'#people/alan-sovereign');
  assert.equal(await page.locator('main a[href="#disciplines/dominate"]').count(),1);
  await page.locator('main a[href="#disciplines/dominate"]').click();
- await page.getByRole('heading',{name:'Dominate',exact:true}).waitFor();
+ await page.locator('main h1').filter({hasText:'Dominate'}).waitFor();
  assert.equal(await page.locator('main a[href^="#people/"]').count(),0);
+ await page.evaluate(()=>{
+  const power='power:animalism:sense-the-beast',section='section:power:animalism:sense-the-beast:facts';
+  CAMPAIGN.items.push(
+   {id:'item:test:sense-prerequisite',recordId:power,sectionId:section,itemKind:'note',fieldKey:'power.prerequisite',body:'Test prerequisite',knowledgeState:'recorded'},
+   {id:'item:test:sense-amalgam',recordId:power,sectionId:section,itemKind:'note',fieldKey:'power.amalgam',body:'Test Discipline 2',knowledgeState:'recorded'}
+  );
+  applyCampaign(CAMPAIGN);render();
+ });
  await visit(baseURL+'#disciplines/animalism');
  assert.equal(await page.locator('.npc-panel').count(),5);
  await page.locator('main a[href="#powers/animalism-sense-the-beast"]').click();
  await page.getByRole('heading',{name:'Sense The Beast',exact:true}).waitFor();
  assert((await page.locator('main').innerText()).includes('Resolve + Animalism vs Composure + Subterfuge'));
+ assert.deepEqual(await page.locator('.power-detail .facts dt').allInnerTexts(),['LEVEL','PREREQUISITE','AMALGAM','COST','DICE POOLS','DURATION']);
+ assert((await page.locator('.power-detail .facts').innerText()).includes('Test prerequisite'));
+ assert((await page.locator('.power-detail .facts').innerText()).includes('Test Discipline 2'));
  assert.equal(await page.getByRole('heading',{name:'System',exact:true}).count(),1);
  await visit(baseURL+'#search?q=Resonance');
  assert(await page.locator('main a[href="#powers/animalism-sense-the-beast"]').count());
