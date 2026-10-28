@@ -1,0 +1,8 @@
+{
+  "name": "duluth-by-night-static",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-static-site.cjs",
+    "test:public-bundle": "node tests/public-bundle.cjs"
+  }
+}
