@@ -37,6 +37,7 @@
   document.querySelector('.ability-dialog')?.remove();
   document.querySelector('.reveal-dialog')?.remove();
   if(window.campaignSession)window.campaignSession.isStoryteller=false;
+  document.querySelector('#sessionActions')?.replaceChildren();
   app.replaceChildren();const heading=document.createElement('h1');heading.textContent='Session ended';
   const text=document.createElement('p');text.textContent=message;
   const button=document.createElement('button');button.textContent='Sign in again';button.onclick=()=>location.reload();app.append(heading,text,button);
@@ -50,7 +51,7 @@
   },30000);
  }
  function signOutControl(){
-  const button=document.createElement('button');button.textContent='Sign out';button.onclick=async()=>{
+  const button=document.createElement('button');button.className='footer-signout';button.textContent='Sign out';button.onclick=async()=>{
    const token=session?.access_token;lock('You have signed out.');
    try{if(token)await auth('logout',null,token);}catch{}location.reload();
   };return button;
@@ -58,7 +59,7 @@
  async function showAccessRequest(){
   loader?.clear();window.CampaignEditor?.clear();window.campaignAccess=false;window.CAMPAIGN=null;
   document.querySelector('#nav').hidden=true;
-  const account=document.querySelector('#account');account.replaceChildren(signOutControl());
+  document.querySelector('#sessionActions').replaceChildren(signOutControl());
   app.innerHTML='<section class="login-panel access-request-panel"><h1>Campaign access</h1><p id="accessRequestText" role="status" aria-live="polite">Checking your request…</p><button id="requestAccess" type="button" hidden>Request player access</button><p class="auth-help">Your Storyteller must approve the request before campaign information becomes available.</p></section>';
   const text=document.querySelector('#accessRequestText'),button=document.querySelector('#requestAccess');
   try{
@@ -106,9 +107,7 @@
   window.CAMPAIGN=await loader.catalog();
   const rows=loader.rows;
   createCampaignModel(window.CAMPAIGN); // Validate the projection before showing any records.
-  const account=document.querySelector('#account');account.replaceChildren();
-  const role=document.createElement('span');role.textContent=owner||own.role==='storyteller'?'Storyteller':'Player';
-  account.append(role,signOutControl());
+  document.querySelector('#sessionActions').replaceChildren(signOutControl());
   window.campaignAccess=true;
   window.campaignSession={isStoryteller:owner||own.role==='storyteller',async saveNote(id,body,revision){
    if(!session)throw Error('Sign in again before saving.');

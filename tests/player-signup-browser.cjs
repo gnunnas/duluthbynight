@@ -25,6 +25,7 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8030').replace(/\/$
  assert.deepEqual(signupBody,{email:'new.player@example.test',password:'long-password'});
  await page.getByRole('button',{name:'Existing account',exact:true}).click();await page.locator('#signIn [name=email]').fill('new.player@example.test');await page.locator('#signIn [name=password]').fill('long-password');await page.locator('#signIn').getByRole('button',{name:'Sign in'}).click();
  await page.getByRole('heading',{name:'Campaign access'}).waitFor();await page.getByText('This account does not have access to Duluth by Night yet.').waitFor();
+ assert.equal(await page.locator('header #account').count(),0);assert.equal(await page.locator('footer #sessionActions').getByRole('button',{name:'Sign out'}).count(),1);
  assert.equal(await page.locator('#nav').isVisible(),false);assert(!requests.some(url=>/\/app\.js(?:\?|$)/.test(url)),'Unapproved account must not load the campaign app');
  await page.getByRole('button',{name:'Request player access'}).click();await page.getByText('Request sent. Your Storyteller can now approve it.').waitFor();assert.equal(requestCount,1);
  for(const width of [375,1280]){await page.setViewportSize({width,height:850});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}

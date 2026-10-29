@@ -1,5 +1,12 @@
 # Working context
 
+## Current task: footer sign-out placement
+
+- Branch `move-signout-to-footer` starts from fetched remote main `60c12da` (self-service signup PR #49 merged).
+- Player/Storyteller labels are removed from the header. Role enforcement and the Storyteller navigation link remain unchanged. Sign out is a styled footer action on authenticated and pending-access screens; the flex page shell keeps a short page's footer at the bottom of the viewport and separates it from the mobile menu.
+- Release `20261029-footer-signout`; website only, no SQL or campaign-data change.
+- Validation passed: production bundle/credential scan; self-signup and existing Supabase-auth browser suites at mobile and desktop widths; DOMPurify browser suite; JavaScript syntax and whitespace checks.
+
 ## Current task: self-service player accounts
 
 - Branch `self-service-player-signup` is based on fetched remote main after Cloudflare hardening PR #48.
