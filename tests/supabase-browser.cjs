@@ -44,6 +44,7 @@ const base=(process.env.CAMPAIGN_TEST_URL||'http://127.0.0.1:8007').replace(/\/$
   assert(!requested.some(x=>/\/(data|campaign-additions|discipline-data|watchtower-data|source-notes)\.js/.test(x)));
   await page.locator('[name=email]').fill('test@example.com');await page.locator('[name=password]').fill('test-password');await page.getByRole('button',{name:'Sign in',exact:true}).click();
   await page.getByRole('button',{name:'Sign out'}).waitFor();
+  assert.equal(await page.locator('header #account').count(),0);assert.equal(await page.locator('footer #sessionActions').getByRole('button',{name:'Sign out'}).count(),1);
   await page.locator('.status').waitFor();
   assert((await page.locator('.status').textContent()).includes('After Sept. 11'));
   assert.equal(await page.getByText('Weather',{exact:true}).count(),0);
